@@ -1,0 +1,16 @@
+{
+  "app_name": "PetCare",
+  "tabs": {
+    "profile": "Profile",
+    "records": "Records",
+    "health": "Health", 
+    "settings": "Settings"
+  },
+  "today_entries": "Today's Entries",
+  "add": "Add",
+  "pet": {
+    "weight": "Weight",
+    "neutered": "Neutered"
+  },
+  "reminder": "Reminder"
+}

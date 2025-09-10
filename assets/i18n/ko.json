@@ -1,0 +1,16 @@
+{
+  "app_name": "펫케어",
+  "tabs": {
+    "profile": "프로필",
+    "records": "기록", 
+    "health": "건강",
+    "settings": "설정"
+  },
+  "today_entries": "오늘 기록",
+  "add": "추가",
+  "pet": {
+    "weight": "체중",
+    "neutered": "중성화"
+  },
+  "reminder": "알림"
+}

@@ -1,0 +1,16 @@
+{
+  "app_name": "ペットケア",
+  "tabs": {
+    "profile": "プロフィール",
+    "records": "記録",
+    "health": "健康",
+    "settings": "設定"
+  },
+  "today_entries": "今日の記録",
+  "add": "追加",
+  "pet": {
+    "weight": "体重",
+    "neutered": "避妊去勢"
+  },
+  "reminder": "リマインダー"
+}
