@@ -12,7 +12,8 @@ part of 'pet.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 Pet _$PetFromJson(Map<String, dynamic> json) {
   return _Pet.fromJson(json);
@@ -35,8 +36,12 @@ mixin _$Pet {
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
 
+  /// Serializes this Pet to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of Pet
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $PetCopyWith<Pet> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -45,21 +50,22 @@ abstract class $PetCopyWith<$Res> {
   factory $PetCopyWith(Pet value, $Res Function(Pet) then) =
       _$PetCopyWithImpl<$Res, Pet>;
   @useResult
-  $Res call(
-      {String id,
-      String ownerId,
-      String name,
-      String species,
-      String? breed,
-      String? sex,
-      bool? neutered,
-      DateTime? birthDate,
-      String? bloodType,
-      double? weightKg,
-      String? avatarUrl,
-      String? note,
-      DateTime createdAt,
-      DateTime updatedAt});
+  $Res call({
+    String id,
+    String ownerId,
+    String name,
+    String species,
+    String? breed,
+    String? sex,
+    bool? neutered,
+    DateTime? birthDate,
+    String? bloodType,
+    double? weightKg,
+    String? avatarUrl,
+    String? note,
+    DateTime createdAt,
+    DateTime updatedAt,
+  });
 }
 
 /// @nodoc
@@ -71,6 +77,8 @@ class _$PetCopyWithImpl<$Res, $Val extends Pet> implements $PetCopyWith<$Res> {
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of Pet
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -89,64 +97,67 @@ class _$PetCopyWithImpl<$Res, $Val extends Pet> implements $PetCopyWith<$Res> {
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      ownerId: null == ownerId
-          ? _value.ownerId
-          : ownerId // ignore: cast_nullable_to_non_nullable
-              as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      species: null == species
-          ? _value.species
-          : species // ignore: cast_nullable_to_non_nullable
-              as String,
-      breed: freezed == breed
-          ? _value.breed
-          : breed // ignore: cast_nullable_to_non_nullable
-              as String?,
-      sex: freezed == sex
-          ? _value.sex
-          : sex // ignore: cast_nullable_to_non_nullable
-              as String?,
-      neutered: freezed == neutered
-          ? _value.neutered
-          : neutered // ignore: cast_nullable_to_non_nullable
-              as bool?,
-      birthDate: freezed == birthDate
-          ? _value.birthDate
-          : birthDate // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-      bloodType: freezed == bloodType
-          ? _value.bloodType
-          : bloodType // ignore: cast_nullable_to_non_nullable
-              as String?,
-      weightKg: freezed == weightKg
-          ? _value.weightKg
-          : weightKg // ignore: cast_nullable_to_non_nullable
-              as double?,
-      avatarUrl: freezed == avatarUrl
-          ? _value.avatarUrl
-          : avatarUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
-      note: freezed == note
-          ? _value.note
-          : note // ignore: cast_nullable_to_non_nullable
-              as String?,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      updatedAt: null == updatedAt
-          ? _value.updatedAt
-          : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            ownerId: null == ownerId
+                ? _value.ownerId
+                : ownerId // ignore: cast_nullable_to_non_nullable
+                      as String,
+            name: null == name
+                ? _value.name
+                : name // ignore: cast_nullable_to_non_nullable
+                      as String,
+            species: null == species
+                ? _value.species
+                : species // ignore: cast_nullable_to_non_nullable
+                      as String,
+            breed: freezed == breed
+                ? _value.breed
+                : breed // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            sex: freezed == sex
+                ? _value.sex
+                : sex // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            neutered: freezed == neutered
+                ? _value.neutered
+                : neutered // ignore: cast_nullable_to_non_nullable
+                      as bool?,
+            birthDate: freezed == birthDate
+                ? _value.birthDate
+                : birthDate // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            bloodType: freezed == bloodType
+                ? _value.bloodType
+                : bloodType // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            weightKg: freezed == weightKg
+                ? _value.weightKg
+                : weightKg // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            avatarUrl: freezed == avatarUrl
+                ? _value.avatarUrl
+                : avatarUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            note: freezed == note
+                ? _value.note
+                : note // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            createdAt: null == createdAt
+                ? _value.createdAt
+                : createdAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            updatedAt: null == updatedAt
+                ? _value.updatedAt
+                : updatedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -156,29 +167,32 @@ abstract class _$$PetImplCopyWith<$Res> implements $PetCopyWith<$Res> {
       __$$PetImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String id,
-      String ownerId,
-      String name,
-      String species,
-      String? breed,
-      String? sex,
-      bool? neutered,
-      DateTime? birthDate,
-      String? bloodType,
-      double? weightKg,
-      String? avatarUrl,
-      String? note,
-      DateTime createdAt,
-      DateTime updatedAt});
+  $Res call({
+    String id,
+    String ownerId,
+    String name,
+    String species,
+    String? breed,
+    String? sex,
+    bool? neutered,
+    DateTime? birthDate,
+    String? bloodType,
+    double? weightKg,
+    String? avatarUrl,
+    String? note,
+    DateTime createdAt,
+    DateTime updatedAt,
+  });
 }
 
 /// @nodoc
 class __$$PetImplCopyWithImpl<$Res> extends _$PetCopyWithImpl<$Res, _$PetImpl>
     implements _$$PetImplCopyWith<$Res> {
   __$$PetImplCopyWithImpl(_$PetImpl _value, $Res Function(_$PetImpl) _then)
-      : super(_value, _then);
+    : super(_value, _then);
 
+  /// Create a copy of Pet
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -197,85 +211,88 @@ class __$$PetImplCopyWithImpl<$Res> extends _$PetCopyWithImpl<$Res, _$PetImpl>
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
-    return _then(_$PetImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      ownerId: null == ownerId
-          ? _value.ownerId
-          : ownerId // ignore: cast_nullable_to_non_nullable
-              as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      species: null == species
-          ? _value.species
-          : species // ignore: cast_nullable_to_non_nullable
-              as String,
-      breed: freezed == breed
-          ? _value.breed
-          : breed // ignore: cast_nullable_to_non_nullable
-              as String?,
-      sex: freezed == sex
-          ? _value.sex
-          : sex // ignore: cast_nullable_to_non_nullable
-              as String?,
-      neutered: freezed == neutered
-          ? _value.neutered
-          : neutered // ignore: cast_nullable_to_non_nullable
-              as bool?,
-      birthDate: freezed == birthDate
-          ? _value.birthDate
-          : birthDate // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-      bloodType: freezed == bloodType
-          ? _value.bloodType
-          : bloodType // ignore: cast_nullable_to_non_nullable
-              as String?,
-      weightKg: freezed == weightKg
-          ? _value.weightKg
-          : weightKg // ignore: cast_nullable_to_non_nullable
-              as double?,
-      avatarUrl: freezed == avatarUrl
-          ? _value.avatarUrl
-          : avatarUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
-      note: freezed == note
-          ? _value.note
-          : note // ignore: cast_nullable_to_non_nullable
-              as String?,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      updatedAt: null == updatedAt
-          ? _value.updatedAt
-          : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ));
+    return _then(
+      _$PetImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        ownerId: null == ownerId
+            ? _value.ownerId
+            : ownerId // ignore: cast_nullable_to_non_nullable
+                  as String,
+        name: null == name
+            ? _value.name
+            : name // ignore: cast_nullable_to_non_nullable
+                  as String,
+        species: null == species
+            ? _value.species
+            : species // ignore: cast_nullable_to_non_nullable
+                  as String,
+        breed: freezed == breed
+            ? _value.breed
+            : breed // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        sex: freezed == sex
+            ? _value.sex
+            : sex // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        neutered: freezed == neutered
+            ? _value.neutered
+            : neutered // ignore: cast_nullable_to_non_nullable
+                  as bool?,
+        birthDate: freezed == birthDate
+            ? _value.birthDate
+            : birthDate // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        bloodType: freezed == bloodType
+            ? _value.bloodType
+            : bloodType // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        weightKg: freezed == weightKg
+            ? _value.weightKg
+            : weightKg // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        avatarUrl: freezed == avatarUrl
+            ? _value.avatarUrl
+            : avatarUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        note: freezed == note
+            ? _value.note
+            : note // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        createdAt: null == createdAt
+            ? _value.createdAt
+            : createdAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        updatedAt: null == updatedAt
+            ? _value.updatedAt
+            : updatedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$PetImpl implements _Pet {
-  const _$PetImpl(
-      {required this.id,
-      required this.ownerId,
-      required this.name,
-      required this.species,
-      this.breed,
-      this.sex,
-      this.neutered,
-      this.birthDate,
-      this.bloodType,
-      this.weightKg,
-      this.avatarUrl,
-      this.note,
-      required this.createdAt,
-      required this.updatedAt});
+  const _$PetImpl({
+    required this.id,
+    required this.ownerId,
+    required this.name,
+    required this.species,
+    this.breed,
+    this.sex,
+    this.neutered,
+    this.birthDate,
+    this.bloodType,
+    this.weightKg,
+    this.avatarUrl,
+    this.note,
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
   factory _$PetImpl.fromJson(Map<String, dynamic> json) =>
       _$$PetImplFromJson(json);
@@ -342,26 +359,29 @@ class _$PetImpl implements _Pet {
                 other.updatedAt == updatedAt));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      ownerId,
-      name,
-      species,
-      breed,
-      sex,
-      neutered,
-      birthDate,
-      bloodType,
-      weightKg,
-      avatarUrl,
-      note,
-      createdAt,
-      updatedAt);
+    runtimeType,
+    id,
+    ownerId,
+    name,
+    species,
+    breed,
+    sex,
+    neutered,
+    birthDate,
+    bloodType,
+    weightKg,
+    avatarUrl,
+    note,
+    createdAt,
+    updatedAt,
+  );
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Pet
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PetImplCopyWith<_$PetImpl> get copyWith =>
@@ -369,28 +389,27 @@ class _$PetImpl implements _Pet {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$PetImplToJson(
-      this,
-    );
+    return _$$PetImplToJson(this);
   }
 }
 
 abstract class _Pet implements Pet {
-  const factory _Pet(
-      {required final String id,
-      required final String ownerId,
-      required final String name,
-      required final String species,
-      final String? breed,
-      final String? sex,
-      final bool? neutered,
-      final DateTime? birthDate,
-      final String? bloodType,
-      final double? weightKg,
-      final String? avatarUrl,
-      final String? note,
-      required final DateTime createdAt,
-      required final DateTime updatedAt}) = _$PetImpl;
+  const factory _Pet({
+    required final String id,
+    required final String ownerId,
+    required final String name,
+    required final String species,
+    final String? breed,
+    final String? sex,
+    final bool? neutered,
+    final DateTime? birthDate,
+    final String? bloodType,
+    final double? weightKg,
+    final String? avatarUrl,
+    final String? note,
+    required final DateTime createdAt,
+    required final DateTime updatedAt,
+  }) = _$PetImpl;
 
   factory _Pet.fromJson(Map<String, dynamic> json) = _$PetImpl.fromJson;
 
@@ -422,8 +441,11 @@ abstract class _Pet implements Pet {
   DateTime get createdAt;
   @override
   DateTime get updatedAt;
+
+  /// Create a copy of Pet
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PetImplCopyWith<_$PetImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

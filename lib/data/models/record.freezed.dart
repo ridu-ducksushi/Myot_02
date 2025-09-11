@@ -12,7 +12,8 @@ part of 'record.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 Record _$RecordFromJson(Map<String, dynamic> json) {
   return _Record.fromJson(json);
@@ -32,8 +33,12 @@ mixin _$Record {
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
 
+  /// Serializes this Record to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of Record
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $RecordCopyWith<Record> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -42,17 +47,18 @@ abstract class $RecordCopyWith<$Res> {
   factory $RecordCopyWith(Record value, $Res Function(Record) then) =
       _$RecordCopyWithImpl<$Res, Record>;
   @useResult
-  $Res call(
-      {String id,
-      String petId,
-      String type,
-      String title,
-      String? content,
-      Map<String, dynamic>? value,
-      DateTime at,
-      List<String>? files,
-      DateTime createdAt,
-      DateTime updatedAt});
+  $Res call({
+    String id,
+    String petId,
+    String type,
+    String title,
+    String? content,
+    Map<String, dynamic>? value,
+    DateTime at,
+    List<String>? files,
+    DateTime createdAt,
+    DateTime updatedAt,
+  });
 }
 
 /// @nodoc
@@ -65,6 +71,8 @@ class _$RecordCopyWithImpl<$Res, $Val extends Record>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of Record
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -79,69 +87,74 @@ class _$RecordCopyWithImpl<$Res, $Val extends Record>
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      petId: null == petId
-          ? _value.petId
-          : petId // ignore: cast_nullable_to_non_nullable
-              as String,
-      type: null == type
-          ? _value.type
-          : type // ignore: cast_nullable_to_non_nullable
-              as String,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      content: freezed == content
-          ? _value.content
-          : content // ignore: cast_nullable_to_non_nullable
-              as String?,
-      value: freezed == value
-          ? _value.value
-          : value // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>?,
-      at: null == at
-          ? _value.at
-          : at // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      files: freezed == files
-          ? _value.files
-          : files // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      updatedAt: null == updatedAt
-          ? _value.updatedAt
-          : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            petId: null == petId
+                ? _value.petId
+                : petId // ignore: cast_nullable_to_non_nullable
+                      as String,
+            type: null == type
+                ? _value.type
+                : type // ignore: cast_nullable_to_non_nullable
+                      as String,
+            title: null == title
+                ? _value.title
+                : title // ignore: cast_nullable_to_non_nullable
+                      as String,
+            content: freezed == content
+                ? _value.content
+                : content // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            value: freezed == value
+                ? _value.value
+                : value // ignore: cast_nullable_to_non_nullable
+                      as Map<String, dynamic>?,
+            at: null == at
+                ? _value.at
+                : at // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            files: freezed == files
+                ? _value.files
+                : files // ignore: cast_nullable_to_non_nullable
+                      as List<String>?,
+            createdAt: null == createdAt
+                ? _value.createdAt
+                : createdAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            updatedAt: null == updatedAt
+                ? _value.updatedAt
+                : updatedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$RecordImplCopyWith<$Res> implements $RecordCopyWith<$Res> {
   factory _$$RecordImplCopyWith(
-          _$RecordImpl value, $Res Function(_$RecordImpl) then) =
-      __$$RecordImplCopyWithImpl<$Res>;
+    _$RecordImpl value,
+    $Res Function(_$RecordImpl) then,
+  ) = __$$RecordImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String id,
-      String petId,
-      String type,
-      String title,
-      String? content,
-      Map<String, dynamic>? value,
-      DateTime at,
-      List<String>? files,
-      DateTime createdAt,
-      DateTime updatedAt});
+  $Res call({
+    String id,
+    String petId,
+    String type,
+    String title,
+    String? content,
+    Map<String, dynamic>? value,
+    DateTime at,
+    List<String>? files,
+    DateTime createdAt,
+    DateTime updatedAt,
+  });
 }
 
 /// @nodoc
@@ -149,9 +162,12 @@ class __$$RecordImplCopyWithImpl<$Res>
     extends _$RecordCopyWithImpl<$Res, _$RecordImpl>
     implements _$$RecordImplCopyWith<$Res> {
   __$$RecordImplCopyWithImpl(
-      _$RecordImpl _value, $Res Function(_$RecordImpl) _then)
-      : super(_value, _then);
+    _$RecordImpl _value,
+    $Res Function(_$RecordImpl) _then,
+  ) : super(_value, _then);
 
+  /// Create a copy of Record
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -166,67 +182,69 @@ class __$$RecordImplCopyWithImpl<$Res>
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
-    return _then(_$RecordImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      petId: null == petId
-          ? _value.petId
-          : petId // ignore: cast_nullable_to_non_nullable
-              as String,
-      type: null == type
-          ? _value.type
-          : type // ignore: cast_nullable_to_non_nullable
-              as String,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      content: freezed == content
-          ? _value.content
-          : content // ignore: cast_nullable_to_non_nullable
-              as String?,
-      value: freezed == value
-          ? _value._value
-          : value // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>?,
-      at: null == at
-          ? _value.at
-          : at // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      files: freezed == files
-          ? _value._files
-          : files // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      updatedAt: null == updatedAt
-          ? _value.updatedAt
-          : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ));
+    return _then(
+      _$RecordImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        petId: null == petId
+            ? _value.petId
+            : petId // ignore: cast_nullable_to_non_nullable
+                  as String,
+        type: null == type
+            ? _value.type
+            : type // ignore: cast_nullable_to_non_nullable
+                  as String,
+        title: null == title
+            ? _value.title
+            : title // ignore: cast_nullable_to_non_nullable
+                  as String,
+        content: freezed == content
+            ? _value.content
+            : content // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        value: freezed == value
+            ? _value._value
+            : value // ignore: cast_nullable_to_non_nullable
+                  as Map<String, dynamic>?,
+        at: null == at
+            ? _value.at
+            : at // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        files: freezed == files
+            ? _value._files
+            : files // ignore: cast_nullable_to_non_nullable
+                  as List<String>?,
+        createdAt: null == createdAt
+            ? _value.createdAt
+            : createdAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        updatedAt: null == updatedAt
+            ? _value.updatedAt
+            : updatedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$RecordImpl implements _Record {
-  const _$RecordImpl(
-      {required this.id,
-      required this.petId,
-      required this.type,
-      required this.title,
-      this.content,
-      final Map<String, dynamic>? value,
-      required this.at,
-      final List<String>? files,
-      required this.createdAt,
-      required this.updatedAt})
-      : _value = value,
-        _files = files;
+  const _$RecordImpl({
+    required this.id,
+    required this.petId,
+    required this.type,
+    required this.title,
+    this.content,
+    final Map<String, dynamic>? value,
+    required this.at,
+    final List<String>? files,
+    required this.createdAt,
+    required this.updatedAt,
+  }) : _value = value,
+       _files = files;
 
   factory _$RecordImpl.fromJson(Map<String, dynamic> json) =>
       _$$RecordImplFromJson(json);
@@ -237,7 +255,7 @@ class _$RecordImpl implements _Record {
   final String petId;
   @override
   final String type;
-// meal|snack|litter|med|vaccine|visit|weight|other
+  // meal|snack|litter|med|vaccine|visit|weight|other
   @override
   final String title;
   @override
@@ -293,22 +311,25 @@ class _$RecordImpl implements _Record {
                 other.updatedAt == updatedAt));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      petId,
-      type,
-      title,
-      content,
-      const DeepCollectionEquality().hash(_value),
-      at,
-      const DeepCollectionEquality().hash(_files),
-      createdAt,
-      updatedAt);
+    runtimeType,
+    id,
+    petId,
+    type,
+    title,
+    content,
+    const DeepCollectionEquality().hash(_value),
+    at,
+    const DeepCollectionEquality().hash(_files),
+    createdAt,
+    updatedAt,
+  );
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Record
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$RecordImplCopyWith<_$RecordImpl> get copyWith =>
@@ -316,24 +337,23 @@ class _$RecordImpl implements _Record {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$RecordImplToJson(
-      this,
-    );
+    return _$$RecordImplToJson(this);
   }
 }
 
 abstract class _Record implements Record {
-  const factory _Record(
-      {required final String id,
-      required final String petId,
-      required final String type,
-      required final String title,
-      final String? content,
-      final Map<String, dynamic>? value,
-      required final DateTime at,
-      final List<String>? files,
-      required final DateTime createdAt,
-      required final DateTime updatedAt}) = _$RecordImpl;
+  const factory _Record({
+    required final String id,
+    required final String petId,
+    required final String type,
+    required final String title,
+    final String? content,
+    final Map<String, dynamic>? value,
+    required final DateTime at,
+    final List<String>? files,
+    required final DateTime createdAt,
+    required final DateTime updatedAt,
+  }) = _$RecordImpl;
 
   factory _Record.fromJson(Map<String, dynamic> json) = _$RecordImpl.fromJson;
 
@@ -342,8 +362,8 @@ abstract class _Record implements Record {
   @override
   String get petId;
   @override
-  String get type;
-  @override // meal|snack|litter|med|vaccine|visit|weight|other
+  String get type; // meal|snack|litter|med|vaccine|visit|weight|other
+  @override
   String get title;
   @override
   String? get content;
@@ -357,8 +377,11 @@ abstract class _Record implements Record {
   DateTime get createdAt;
   @override
   DateTime get updatedAt;
+
+  /// Create a copy of Record
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$RecordImplCopyWith<_$RecordImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
