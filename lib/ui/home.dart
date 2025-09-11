@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:petcare/features/labs/placeholder.dart';
 import 'package:petcare/features/pets/pets_screen.dart';
-import 'package:petcare/features/records/placeholder.dart';
+import 'package:petcare/features/records/records_screen.dart';
 import 'package:petcare/features/settings/placeholder.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final _screens = const [
     PetsScreen(),
-    RecordsPlaceholder(), 
+    RecordsScreen(), 
     LabsPlaceholder(),
     SettingsPlaceholder(),
   ];

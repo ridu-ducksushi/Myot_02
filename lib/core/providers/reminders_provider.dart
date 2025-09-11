@@ -36,7 +36,7 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
     
     try {
       // TODO: Implement actual data loading from repository
-      await Future.delayed(const Duration(seconds: 1));
+      await Future<void>.delayed(const Duration(seconds: 1));
       
       // Mock data for now
       final mockReminders = [
@@ -93,7 +93,7 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
     
     try {
       // TODO: Implement actual data saving to repository
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       
       final updatedReminders = [...state.reminders, reminder];
       state = state.copyWith(
@@ -114,7 +114,7 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
     
     try {
       // TODO: Implement actual data updating in repository
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       
       final updatedReminders = state.reminders.map((reminder) {
         return reminder.id == updatedReminder.id ? updatedReminder : reminder;
@@ -138,7 +138,7 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
     
     try {
       // TODO: Implement actual data updating in repository
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       
       final updatedReminders = state.reminders.map((reminder) {
         if (reminder.id == reminderId) {
@@ -165,7 +165,7 @@ class RemindersNotifier extends StateNotifier<RemindersState> {
     
     try {
       // TODO: Implement actual data deletion from repository
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       
       final updatedReminders = state.reminders.where((reminder) => reminder.id != reminderId).toList();
       state = state.copyWith(

@@ -1,16 +1,16 @@
-import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/data/models/record.dart';
 import 'package:petcare/data/models/reminder.dart';
 
-/// Local database service using Isar
+/// Local database service using in-memory storage
 class LocalDatabase {
   static LocalDatabase? _instance;
   static LocalDatabase get instance => _instance!;
   
-  late Isar _isar;
-  Isar get isar => _isar;
+  // In-memory storage
+  final List<Pet> _pets = [];
+  final List<Record> _records = [];
+  final List<Reminder> _reminders = [];
   
   LocalDatabase._();
   
@@ -21,85 +21,88 @@ class LocalDatabase {
   }
   
   Future<void> _init() async {
-    final dir = await getApplicationDocumentsDirectory();
-    
-    _isar = await Isar.open(
-      [
-        // TODO: Add Isar collection schemas here when generated
-        // PetSchema,
-        // RecordSchema,
-        // ReminderSchema,
-      ],
-      directory: dir.path,
-    );
+    // No initialization needed for in-memory storage
   }
   
   /// Close the database
   Future<void> close() async {
-    await _isar.close();
+    // No cleanup needed for in-memory storage
   }
   
   /// Clear all data (for testing/reset)
   Future<void> clearAll() async {
-    await _isar.writeTxn(() async {
-      await _isar.clear();
-    });
+    _pets.clear();
+    _records.clear();
+    _reminders.clear();
   }
   
   // Pet operations
   Future<List<Pet>> getAllPets() async {
-    // TODO: Implement with Isar collection
-    return [];
+    return List.from(_pets);
   }
   
   Future<Pet?> getPetById(String id) async {
-    // TODO: Implement with Isar collection
-    return null;
+    try {
+      return _pets.firstWhere((pet) => pet.id == id);
+    } catch (e) {
+      return null;
+    }
   }
   
   Future<void> savePet(Pet pet) async {
-    // TODO: Implement with Isar collection
+    final index = _pets.indexWhere((p) => p.id == pet.id);
+    if (index >= 0) {
+      _pets[index] = pet;
+    } else {
+      _pets.add(pet);
+    }
   }
   
   Future<void> deletePet(String id) async {
-    // TODO: Implement with Isar collection
+    _pets.removeWhere((pet) => pet.id == id);
   }
   
   // Record operations
   Future<List<Record>> getAllRecords() async {
-    // TODO: Implement with Isar collection
-    return [];
+    return List.from(_records);
   }
   
   Future<List<Record>> getRecordsForPet(String petId) async {
-    // TODO: Implement with Isar collection
-    return [];
+    return _records.where((record) => record.petId == petId).toList();
   }
   
   Future<void> saveRecord(Record record) async {
-    // TODO: Implement with Isar collection
+    final index = _records.indexWhere((r) => r.id == record.id);
+    if (index >= 0) {
+      _records[index] = record;
+    } else {
+      _records.add(record);
+    }
   }
   
   Future<void> deleteRecord(String id) async {
-    // TODO: Implement with Isar collection
+    _records.removeWhere((record) => record.id == id);
   }
   
   // Reminder operations
   Future<List<Reminder>> getAllReminders() async {
-    // TODO: Implement with Isar collection
-    return [];
+    return List.from(_reminders);
   }
   
   Future<List<Reminder>> getRemindersForPet(String petId) async {
-    // TODO: Implement with Isar collection
-    return [];
+    return _reminders.where((reminder) => reminder.petId == petId).toList();
   }
   
   Future<void> saveReminder(Reminder reminder) async {
-    // TODO: Implement with Isar collection
+    final index = _reminders.indexWhere((r) => r.id == reminder.id);
+    if (index >= 0) {
+      _reminders[index] = reminder;
+    } else {
+      _reminders.add(reminder);
+    }
   }
   
   Future<void> deleteReminder(String id) async {
-    // TODO: Implement with Isar collection
+    _reminders.removeWhere((reminder) => reminder.id == id);
   }
 }

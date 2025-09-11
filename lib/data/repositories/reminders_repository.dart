@@ -24,7 +24,7 @@ class RemindersRepository {
           .order('scheduled_at', ascending: true);
 
       final reminders = (response as List)
-          .map((json) => Reminder.fromJson(json))
+          .map((json) => Reminder.fromJson(json as Map<String, dynamic>))
           .toList();
 
       // Cache locally
@@ -57,7 +57,7 @@ class RemindersRepository {
             .order('scheduled_at', ascending: true);
 
         final reminders = (response as List)
-            .map((json) => Reminder.fromJson(json))
+            .map((json) => Reminder.fromJson(json as Map<String, dynamic>))
             .toList();
 
         // Cache locally
@@ -96,7 +96,7 @@ class RemindersRepository {
             .order('scheduled_at', ascending: true);
 
         return (response as List)
-            .map((json) => Reminder.fromJson(json))
+            .map((json) => Reminder.fromJson(json as Map<String, dynamic>))
             .toList();
       }
     } catch (e) {
@@ -131,7 +131,7 @@ class RemindersRepository {
             .order('scheduled_at', ascending: true);
 
         return (response as List)
-            .map((json) => Reminder.fromJson(json))
+            .map((json) => Reminder.fromJson(json as Map<String, dynamic>))
             .toList();
       }
     } catch (e) {
@@ -155,7 +155,7 @@ class RemindersRepository {
           .select()
           .single();
 
-      final savedReminder = Reminder.fromJson(response);
+      final savedReminder = Reminder.fromJson(response as Map<String, dynamic>);
       
       // Cache locally
       await localDb.saveReminder(savedReminder);
@@ -180,7 +180,7 @@ class RemindersRepository {
           .select()
           .single();
 
-      final updatedReminder = Reminder.fromJson(response);
+      final updatedReminder = Reminder.fromJson(response as Map<String, dynamic>);
       
       // Update locally
       await localDb.saveReminder(updatedReminder);
@@ -205,7 +205,7 @@ class RemindersRepository {
           .select()
           .single();
 
-      final updatedReminder = Reminder.fromJson(response);
+      final updatedReminder = Reminder.fromJson(response as Map<String, dynamic>);
       
       // Update locally
       await localDb.saveReminder(updatedReminder);

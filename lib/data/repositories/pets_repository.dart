@@ -26,7 +26,7 @@ class PetsRepository {
             .order('created_at', ascending: false);
 
         final pets = (response as List)
-            .map((json) => Pet.fromJson(json))
+            .map((json) => Pet.fromJson(json as Map<String, dynamic>))
             .toList();
 
         // Cache locally
@@ -55,7 +55,7 @@ class PetsRepository {
           .eq('id', id)
           .single();
 
-      final pet = Pet.fromJson(response);
+      final pet = Pet.fromJson(response as Map<String, dynamic>);
       
       // Cache locally
       await localDb.savePet(pet);
@@ -84,7 +84,7 @@ class PetsRepository {
           .select()
           .single();
 
-      final savedPet = Pet.fromJson(response);
+      final savedPet = Pet.fromJson(response as Map<String, dynamic>);
       
       // Cache locally
       await localDb.savePet(savedPet);
@@ -109,7 +109,7 @@ class PetsRepository {
           .select()
           .single();
 
-      final updatedPet = Pet.fromJson(response);
+      final updatedPet = Pet.fromJson(response as Map<String, dynamic>);
       
       // Update locally
       await localDb.savePet(updatedPet);

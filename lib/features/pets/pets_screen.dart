@@ -87,7 +87,7 @@ class _PetsScreenState extends ConsumerState<PetsScreen> {
   }
 
   void _showAddPetDialog(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => const _AddPetSheet(),

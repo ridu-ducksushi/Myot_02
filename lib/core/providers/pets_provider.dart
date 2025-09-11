@@ -36,7 +36,7 @@ class PetsNotifier extends StateNotifier<PetsState> {
     
     try {
       // TODO: Implement actual data loading from repository
-      await Future.delayed(const Duration(seconds: 1)); // Simulating API call
+      await Future<void>.delayed(const Duration(seconds: 1)); // Simulating API call
       
       // Mock data for now
       final mockPets = [
@@ -86,7 +86,7 @@ class PetsNotifier extends StateNotifier<PetsState> {
     
     try {
       // TODO: Implement actual data saving to repository
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       
       final updatedPets = [...state.pets, pet];
       state = state.copyWith(
@@ -107,7 +107,7 @@ class PetsNotifier extends StateNotifier<PetsState> {
     
     try {
       // TODO: Implement actual data updating in repository
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       
       final updatedPets = state.pets.map((pet) {
         return pet.id == updatedPet.id ? updatedPet : pet;
@@ -131,7 +131,7 @@ class PetsNotifier extends StateNotifier<PetsState> {
     
     try {
       // TODO: Implement actual data deletion from repository
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       
       final updatedPets = state.pets.where((pet) => pet.id != petId).toList();
       state = state.copyWith(
@@ -172,7 +172,11 @@ final selectedPetProvider = StateProvider<Pet?>((ref) => null);
 /// Pet by ID provider
 final petByIdProvider = Provider.family<Pet?, String>((ref, petId) {
   final petsState = ref.watch(petsProvider);
-  return petsState.pets.where((pet) => pet.id == petId).firstOrNull;
+  try {
+    return petsState.pets.firstWhere((pet) => pet.id == petId);
+  } catch (e) {
+    return null;
+  }
 });
 
 /// Pets count provider

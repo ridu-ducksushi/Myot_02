@@ -24,7 +24,7 @@ class RecordsRepository {
           .order('at', ascending: false);
 
       final records = (response as List)
-          .map((json) => Record.fromJson(json))
+          .map((json) => Record.fromJson(json as Map<String, dynamic>))
           .toList();
 
       // Cache locally
@@ -57,7 +57,7 @@ class RecordsRepository {
             .order('at', ascending: false);
 
         final records = (response as List)
-            .map((json) => Record.fromJson(json))
+            .map((json) => Record.fromJson(json as Map<String, dynamic>))
             .toList();
 
         // Cache locally
@@ -96,7 +96,7 @@ class RecordsRepository {
             .order('at', ascending: false);
 
         return (response as List)
-            .map((json) => Record.fromJson(json))
+            .map((json) => Record.fromJson(json as Map<String, dynamic>))
             .toList();
       }
     } catch (e) {
@@ -120,7 +120,7 @@ class RecordsRepository {
           .select()
           .single();
 
-      final savedRecord = Record.fromJson(response);
+      final savedRecord = Record.fromJson(response as Map<String, dynamic>);
       
       // Cache locally
       await localDb.saveRecord(savedRecord);
@@ -145,7 +145,7 @@ class RecordsRepository {
           .select()
           .single();
 
-      final updatedRecord = Record.fromJson(response);
+      final updatedRecord = Record.fromJson(response as Map<String, dynamic>);
       
       // Update locally
       await localDb.saveRecord(updatedRecord);
@@ -193,7 +193,7 @@ class RecordsRepository {
             .order('at', ascending: false);
 
         return (response as List)
-            .map((json) => Record.fromJson(json))
+            .map((json) => Record.fromJson(json as Map<String, dynamic>))
             .toList();
       }
     } catch (e) {

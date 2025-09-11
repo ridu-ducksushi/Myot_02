@@ -39,8 +39,8 @@ dependencies:
   
   # Backend & Database
   supabase_flutter: ^2.0.0
-  isar: ^3.1.0+1
-  isar_flutter_libs: ^3.1.0+1
+  # isar: ^3.1.0+1
+  # isar_flutter_libs: ^3.1.0+1
   path_provider: ^2.1.1
   
   # Code Generation
@@ -75,7 +75,7 @@ dev_dependencies:
   build_runner: ^2.4.7
   freezed: ^2.4.6
   json_serializable: ^6.7.1
-  isar_generator: ^3.1.0+1
+  # isar_generator: ^3.1.0+1
   
   # Linting
   very_good_analysis: ^5.1.0

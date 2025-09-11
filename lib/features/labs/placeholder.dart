@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:petcare/features/reminders/reminders_screen.dart';
 
 class LabsPlaceholder extends StatelessWidget {
   const LabsPlaceholder({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Health')),
-      body: const Center(child: Text('Health Screen - Coming Soon')),
-    );
+    return const RemindersScreen();
   }
 }

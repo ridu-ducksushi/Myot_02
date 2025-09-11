@@ -36,7 +36,7 @@ class RecordsNotifier extends StateNotifier<RecordsState> {
     
     try {
       // TODO: Implement actual data loading from repository
-      await Future.delayed(const Duration(seconds: 1));
+      await Future<void>.delayed(const Duration(seconds: 1));
       
       // Mock data for now
       final mockRecords = [
@@ -95,7 +95,7 @@ class RecordsNotifier extends StateNotifier<RecordsState> {
     
     try {
       // TODO: Implement actual data saving to repository
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       
       final updatedRecords = [record, ...state.records];
       state = state.copyWith(
@@ -116,7 +116,7 @@ class RecordsNotifier extends StateNotifier<RecordsState> {
     
     try {
       // TODO: Implement actual data updating in repository
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       
       final updatedRecords = state.records.map((record) {
         return record.id == updatedRecord.id ? updatedRecord : record;
@@ -140,7 +140,7 @@ class RecordsNotifier extends StateNotifier<RecordsState> {
     
     try {
       // TODO: Implement actual data deletion from repository
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       
       final updatedRecords = state.records.where((record) => record.id != recordId).toList();
       state = state.copyWith(
