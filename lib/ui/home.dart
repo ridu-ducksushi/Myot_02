@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:petcare/features/labs/placeholder.dart';
-import 'package:petcare/features/pets/placeholder.dart';
+import 'package:petcare/features/pets/pets_screen.dart';
 import 'package:petcare/features/records/placeholder.dart';
 import 'package:petcare/features/settings/placeholder.dart';
 
@@ -16,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final _screens = const [
-    PetsPlaceholder(),
+    PetsScreen(),
     RecordsPlaceholder(), 
     LabsPlaceholder(),
     SettingsPlaceholder(),

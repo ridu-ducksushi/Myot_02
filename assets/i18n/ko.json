@@ -8,9 +8,30 @@
   },
   "today_entries": "오늘 기록",
   "add": "추가",
-  "pet": {
-    "weight": "체중",
-    "neutered": "중성화"
+  "pets": {
+    "title": "펫",
+    "empty_title": "등록된 펫이 없습니다",
+    "empty_message": "첫 번째 펫을 등록해보세요!",
+    "add_first": "펫 추가하기",
+    "add_new": "새 펫 추가",
+    "name": "이름",
+    "name_required": "이름을 입력해주세요",
+    "species": "종류",
+    "breed": "품종",
+    "sex": "성별",
+    "neutered": "중성화 여부",
+    "neutered_description": "중성화 수술을 받았습니까?",
+    "weight_kg": "체중 (kg)",
+    "weight_invalid": "올바른 체중을 입력해주세요",
+    "birth_date": "생년월일",
+    "select_birth_date": "생년월일 선택",
+    "notes": "메모"
+  },
+  "common": {
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "수정"
   },
   "reminder": "알림"
 }

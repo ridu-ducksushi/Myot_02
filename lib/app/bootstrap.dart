@@ -1,13 +1,49 @@
-class AppConfig {
-  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-  static const String storageBucket = String.fromEnvironment('STORAGE_BUCKET', defaultValue: 'pets');
-  static const int imgThumbMax = int.fromEnvironment('IMG_THUMB_MAX', defaultValue: 512);
-  static const String syncStrategy = String.fromEnvironment('SYNC_STRATEGY', defaultValue: 'latest_wins');
-  static const bool analyticsEnabled = bool.fromEnvironment('ANALYTICS_ENABLED', defaultValue: true);
-  static const bool crashlyticsEnabled = bool.fromEnvironment('CRASHLYTICS_ENABLED', defaultValue: true);
-  static const String defaultLocale = String.fromEnvironment('DEFAULT_LOCALE', defaultValue: 'ko');
-  static const String supportedLocales = String.fromEnvironment('SUPPORTED_LOCALES', defaultValue: 'ko,en,ja');
+import 'package:flutter/foundation.dart';
+import 'package:petcare/data/local/database.dart';
 
-  static bool get isConfigured => supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
+/// Bootstrap the application with necessary initializations
+class AppBootstrap {
+  static bool _initialized = false;
+
+  /// Initialize the app with required services
+  static Future<void> initialize() async {
+    if (_initialized) return;
+
+    try {
+      // Initialize local database
+      await LocalDatabase.initialize();
+      
+      if (kDebugMode) {
+        print('✅ Local database initialized');
+      }
+
+      _initialized = true;
+      
+      if (kDebugMode) {
+        print('✅ App bootstrap completed successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ App bootstrap failed: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Clean up resources
+  static Future<void> dispose() async {
+    if (!_initialized) return;
+
+    try {
+      await LocalDatabase.instance.close();
+      
+      if (kDebugMode) {
+        print('✅ App cleanup completed');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ App cleanup failed: $e');
+      }
+    }
+  }
 }

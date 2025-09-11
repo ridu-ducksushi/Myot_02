@@ -1,16 +1,37 @@
 {
   "app_name": "PetCare",
   "tabs": {
-    "profile": "Profile",
-    "records": "Records",
-    "health": "Health", 
+    "profile": "Pets",
+    "records": "Records", 
+    "health": "Health",
     "settings": "Settings"
   },
-  "today_entries": "Today's Entries",
+  "today_entries": "Today's Records",
   "add": "Add",
-  "pet": {
-    "weight": "Weight",
-    "neutered": "Neutered"
+  "pets": {
+    "title": "Pets",
+    "empty_title": "No pets registered",
+    "empty_message": "Add your first pet to get started!",
+    "add_first": "Add Pet",
+    "add_new": "Add New Pet",
+    "name": "Name",
+    "name_required": "Please enter a name",
+    "species": "Species",
+    "breed": "Breed",
+    "sex": "Sex",
+    "neutered": "Neutered",
+    "neutered_description": "Has your pet been neutered?",
+    "weight_kg": "Weight (kg)",
+    "weight_invalid": "Please enter a valid weight",
+    "birth_date": "Birth Date",
+    "select_birth_date": "Select birth date",
+    "notes": "Notes"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit"
   },
   "reminder": "Reminder"
 }
