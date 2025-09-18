@@ -1,16 +1,20 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/data/models/record.dart';
 import 'package:petcare/data/models/reminder.dart';
 
-/// Local database service using in-memory storage
+/// Local database service using SharedPreferences for persistent storage
 class LocalDatabase {
   static LocalDatabase? _instance;
   static LocalDatabase get instance => _instance!;
   
-  // In-memory storage
-  final List<Pet> _pets = [];
-  final List<Record> _records = [];
-  final List<Reminder> _reminders = [];
+  SharedPreferences? _prefs;
+  
+  // Keys for SharedPreferences
+  static const String _petsKey = 'pets';
+  static const String _recordsKey = 'records';
+  static const String _remindersKey = 'reminders';
   
   LocalDatabase._();
   
@@ -21,88 +25,178 @@ class LocalDatabase {
   }
   
   Future<void> _init() async {
-    // No initialization needed for in-memory storage
+    _prefs = await SharedPreferences.getInstance();
+    print('✅ LocalDatabase 초기화 완료 (SharedPreferences 사용)');
   }
   
   /// Close the database
   Future<void> close() async {
-    // No cleanup needed for in-memory storage
+    // No cleanup needed for SharedPreferences
   }
   
   /// Clear all data (for testing/reset)
   Future<void> clearAll() async {
-    _pets.clear();
-    _records.clear();
-    _reminders.clear();
+    await _prefs?.remove(_petsKey);
+    await _prefs?.remove(_recordsKey);
+    await _prefs?.remove(_remindersKey);
+    print('🗑️ 모든 로컬 데이터 삭제 완료');
   }
   
   // Pet operations
   Future<List<Pet>> getAllPets() async {
-    return List.from(_pets);
+    try {
+      final petsJson = _prefs?.getString(_petsKey);
+      if (petsJson == null) return [];
+      
+      final List<dynamic> petsList = json.decode(petsJson);
+      final pets = petsList.map((json) => Pet.fromJson(json as Map<String, dynamic>)).toList();
+      print('📱 로컬에서 ${pets.length}개 펫 로드');
+      return pets;
+    } catch (e) {
+      print('❌ 펫 데이터 로드 실패: $e');
+      return [];
+    }
   }
   
   Future<Pet?> getPetById(String id) async {
     try {
-      return _pets.firstWhere((pet) => pet.id == id);
+      final pets = await getAllPets();
+      return pets.firstWhere((pet) => pet.id == id);
     } catch (e) {
       return null;
     }
   }
   
   Future<void> savePet(Pet pet) async {
-    final index = _pets.indexWhere((p) => p.id == pet.id);
-    if (index >= 0) {
-      _pets[index] = pet;
-    } else {
-      _pets.add(pet);
+    try {
+      final pets = await getAllPets();
+      final index = pets.indexWhere((p) => p.id == pet.id);
+      
+      if (index >= 0) {
+        pets[index] = pet;
+        print('📝 펫 업데이트: ${pet.name}');
+      } else {
+        pets.add(pet);
+        print('➕ 새 펫 추가: ${pet.name}');
+      }
+      
+      final petsJson = json.encode(pets.map((p) => p.toJson()).toList());
+      await _prefs?.setString(_petsKey, petsJson);
+      print('💾 펫 데이터 저장 완료 (총 ${pets.length}개)');
+    } catch (e) {
+      print('❌ 펫 저장 실패: $e');
     }
   }
   
   Future<void> deletePet(String id) async {
-    _pets.removeWhere((pet) => pet.id == id);
+    try {
+      final pets = await getAllPets();
+      final initialCount = pets.length;
+      pets.removeWhere((pet) => pet.id == id);
+      
+      final petsJson = json.encode(pets.map((p) => p.toJson()).toList());
+      await _prefs?.setString(_petsKey, petsJson);
+      print('🗑️ 펫 삭제 완료 (${initialCount} → ${pets.length})');
+    } catch (e) {
+      print('❌ 펫 삭제 실패: $e');
+    }
   }
   
   // Record operations
   Future<List<Record>> getAllRecords() async {
-    return List.from(_records);
+    try {
+      final recordsJson = _prefs?.getString(_recordsKey);
+      if (recordsJson == null) return [];
+      
+      final List<dynamic> recordsList = json.decode(recordsJson);
+      return recordsList.map((json) => Record.fromJson(json as Map<String, dynamic>)).toList();
+    } catch (e) {
+      print('❌ 기록 데이터 로드 실패: $e');
+      return [];
+    }
   }
   
   Future<List<Record>> getRecordsForPet(String petId) async {
-    return _records.where((record) => record.petId == petId).toList();
+    final records = await getAllRecords();
+    return records.where((record) => record.petId == petId).toList();
   }
   
   Future<void> saveRecord(Record record) async {
-    final index = _records.indexWhere((r) => r.id == record.id);
-    if (index >= 0) {
-      _records[index] = record;
-    } else {
-      _records.add(record);
+    try {
+      final records = await getAllRecords();
+      final index = records.indexWhere((r) => r.id == record.id);
+      
+      if (index >= 0) {
+        records[index] = record;
+      } else {
+        records.add(record);
+      }
+      
+      final recordsJson = json.encode(records.map((r) => r.toJson()).toList());
+      await _prefs?.setString(_recordsKey, recordsJson);
+    } catch (e) {
+      print('❌ 기록 저장 실패: $e');
     }
   }
   
   Future<void> deleteRecord(String id) async {
-    _records.removeWhere((record) => record.id == id);
+    try {
+      final records = await getAllRecords();
+      records.removeWhere((record) => record.id == id);
+      
+      final recordsJson = json.encode(records.map((r) => r.toJson()).toList());
+      await _prefs?.setString(_recordsKey, recordsJson);
+    } catch (e) {
+      print('❌ 기록 삭제 실패: $e');
+    }
   }
   
   // Reminder operations
   Future<List<Reminder>> getAllReminders() async {
-    return List.from(_reminders);
+    try {
+      final remindersJson = _prefs?.getString(_remindersKey);
+      if (remindersJson == null) return [];
+      
+      final List<dynamic> remindersList = json.decode(remindersJson);
+      return remindersList.map((json) => Reminder.fromJson(json as Map<String, dynamic>)).toList();
+    } catch (e) {
+      print('❌ 리마인더 데이터 로드 실패: $e');
+      return [];
+    }
   }
   
   Future<List<Reminder>> getRemindersForPet(String petId) async {
-    return _reminders.where((reminder) => reminder.petId == petId).toList();
+    final reminders = await getAllReminders();
+    return reminders.where((reminder) => reminder.petId == petId).toList();
   }
   
   Future<void> saveReminder(Reminder reminder) async {
-    final index = _reminders.indexWhere((r) => r.id == reminder.id);
-    if (index >= 0) {
-      _reminders[index] = reminder;
-    } else {
-      _reminders.add(reminder);
+    try {
+      final reminders = await getAllReminders();
+      final index = reminders.indexWhere((r) => r.id == reminder.id);
+      
+      if (index >= 0) {
+        reminders[index] = reminder;
+      } else {
+        reminders.add(reminder);
+      }
+      
+      final remindersJson = json.encode(reminders.map((r) => r.toJson()).toList());
+      await _prefs?.setString(_remindersKey, remindersJson);
+    } catch (e) {
+      print('❌ 리마인더 저장 실패: $e');
     }
   }
   
   Future<void> deleteReminder(String id) async {
-    _reminders.removeWhere((reminder) => reminder.id == id);
+    try {
+      final reminders = await getAllReminders();
+      reminders.removeWhere((reminder) => reminder.id == id);
+      
+      final remindersJson = json.encode(reminders.map((r) => r.toJson()).toList());
+      await _prefs?.setString(_remindersKey, remindersJson);
+    } catch (e) {
+      print('❌ 리마인더 삭제 실패: $e');
+    }
   }
 }

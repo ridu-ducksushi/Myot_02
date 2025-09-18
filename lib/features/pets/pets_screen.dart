@@ -95,6 +95,77 @@ class _PetsScreenState extends ConsumerState<PetsScreen> {
   }
 }
 
+class _DismissiblePetCard extends StatelessWidget {
+  const _DismissiblePetCard({
+    required this.pet,
+    required this.onDelete,
+  });
+
+  final Pet pet;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: Key('pet_${pet.id}'),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        // 스와이프로 삭제 확인 다이얼로그 표시
+        return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('pets.delete_confirm_title'.tr()),
+            content: Text('pets.delete_confirm_message'.tr(args: [pet.name])),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('common.cancel'.tr()),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+                child: Text('common.delete'.tr()),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (direction) {
+        onDelete();
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.error,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.delete,
+              color: Theme.of(context).colorScheme.onError,
+              size: 32,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'common.delete'.tr(),
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onError,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+      child: _PetCard(pet: pet),
+    );
+  }
+}
+
 class _PetCard extends ConsumerWidget {
   const _PetCard({required this.pet});
 
@@ -107,6 +178,7 @@ class _PetCard extends ConsumerWidget {
 
     return AppCard(
       onTap: () => _showPetDetails(context, pet),
+      onLongPress: () => _showPetOptions(context, ref, pet),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -226,6 +298,150 @@ class _PetCard extends ConsumerWidget {
 
   void _showPetDetails(BuildContext context, Pet pet) {
     context.push('/pets/${pet.id}');
+  }
+
+  void _showPetOptions(BuildContext context, WidgetRef ref, Pet pet) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outline,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            // Pet Info Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.getSpeciesColor(pet.species).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: AppColors.getSpeciesColor(pet.species).withOpacity(0.3),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.pets,
+                      color: AppColors.getSpeciesColor(pet.species),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          pet.name,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          pet.species,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const Divider(height: 1),
+            
+            // Options
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: Text('common.edit'.tr()),
+              onTap: () {
+                Navigator.of(context).pop();
+                // TODO: 펫 편집 기능 구현
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('편집 기능은 곧 추가될 예정입니다')),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.delete,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                'common.delete'.tr(),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+              onTap: () async {
+                Navigator.of(context).pop();
+                
+                final shouldDelete = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('pets.delete_confirm_title'.tr()),
+                    content: Text('pets.delete_confirm_message'.tr(args: [pet.name])),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text('common.cancel'.tr()),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                        child: Text('common.delete'.tr()),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (shouldDelete == true) {
+                  try {
+                    await ref.read(petsProvider.notifier).deletePet(pet.id);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('pets.delete_success'.tr(args: [pet.name])),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('pets.delete_error'.tr(args: [pet.name])),
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+            ),
+            
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
   }
 }
 

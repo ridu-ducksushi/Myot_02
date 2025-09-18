@@ -29,7 +29,11 @@
     "age": "나이",
     "weight": "체중",
     "not_found": "펫을 찾을 수 없습니다",
-    "not_found_message": "요청한 펫 정보를 찾을 수 없습니다"
+    "not_found_message": "요청한 펫 정보를 찾을 수 없습니다",
+    "delete_confirm_title": "펫 삭제",
+    "delete_confirm_message": "{0}을(를) 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "delete_success": "{0}이(가) 삭제되었습니다",
+    "delete_error": "{0} 삭제 중 오류가 발생했습니다"
   },
   "common": {
     "save": "저장",

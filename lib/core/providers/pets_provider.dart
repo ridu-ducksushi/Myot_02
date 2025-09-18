@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:petcare/data/models/pet.dart';
+import 'package:petcare/data/repositories/pets_repository.dart';
 
 /// State class for pets list
 class PetsState {
@@ -28,51 +29,25 @@ class PetsState {
 
 /// Pets provider notifier
 class PetsNotifier extends StateNotifier<PetsState> {
-  PetsNotifier() : super(const PetsState());
+  PetsNotifier(this._petsRepository) : super(const PetsState());
+  
+  final PetsRepository _petsRepository;
 
   /// Load all pets
   Future<void> loadPets() async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      // TODO: Implement actual data loading from repository
-      await Future<void>.delayed(const Duration(seconds: 1)); // Simulating API call
-      
-      // Mock data for now
-      final mockPets = [
-        Pet(
-          id: '1',
-          ownerId: 'user1',
-          name: 'Buddy',
-          species: 'Dog',
-          breed: 'Golden Retriever',
-          sex: 'Male',
-          neutered: true,
-          birthDate: DateTime(2020, 5, 15),
-          weightKg: 25.5,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-        Pet(
-          id: '2',
-          ownerId: 'user1',
-          name: 'Whiskers',
-          species: 'Cat',
-          breed: 'Persian',
-          sex: 'Female',
-          neutered: true,
-          birthDate: DateTime(2019, 8, 20),
-          weightKg: 4.2,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      ];
+      print('🔄 펫 데이터 로드 시작...');
+      final pets = await _petsRepository.getAllPets();
+      print('✅ ${pets.length}개 펫 로드 완료');
       
       state = state.copyWith(
-        pets: mockPets,
+        pets: pets,
         isLoading: false,
       );
     } catch (e) {
+      print('❌ 펫 로드 실패: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -85,15 +60,17 @@ class PetsNotifier extends StateNotifier<PetsState> {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      // TODO: Implement actual data saving to repository
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+      print('➕ 새 펫 추가 시작: ${pet.name}');
+      final savedPet = await _petsRepository.createPet(pet);
       
-      final updatedPets = [...state.pets, pet];
+      final updatedPets = [...state.pets, savedPet];
       state = state.copyWith(
         pets: updatedPets,
         isLoading: false,
       );
+      print('✅ 펫 추가 완료: ${savedPet.name}');
     } catch (e) {
+      print('❌ 펫 추가 실패: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -106,18 +83,20 @@ class PetsNotifier extends StateNotifier<PetsState> {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      // TODO: Implement actual data updating in repository
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+      print('📝 펫 업데이트 시작: ${updatedPet.name}');
+      final savedPet = await _petsRepository.updatePet(updatedPet);
       
       final updatedPets = state.pets.map((pet) {
-        return pet.id == updatedPet.id ? updatedPet : pet;
+        return pet.id == savedPet.id ? savedPet : pet;
       }).toList();
       
       state = state.copyWith(
         pets: updatedPets,
         isLoading: false,
       );
+      print('✅ 펫 업데이트 완료: ${savedPet.name}');
     } catch (e) {
+      print('❌ 펫 업데이트 실패: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -130,15 +109,17 @@ class PetsNotifier extends StateNotifier<PetsState> {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      // TODO: Implement actual data deletion from repository
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+      print('🗑️ 펫 삭제 시작: $petId');
+      await _petsRepository.deletePet(petId);
       
       final updatedPets = state.pets.where((pet) => pet.id != petId).toList();
       state = state.copyWith(
         pets: updatedPets,
         isLoading: false,
       );
+      print('✅ 펫 삭제 완료: $petId');
     } catch (e) {
+      print('❌ 펫 삭제 실패: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -163,7 +144,8 @@ class PetsNotifier extends StateNotifier<PetsState> {
 
 /// Pets provider
 final petsProvider = StateNotifierProvider<PetsNotifier, PetsState>((ref) {
-  return PetsNotifier();
+  final petsRepository = ref.watch(petsRepositoryProvider);
+  return PetsNotifier(petsRepository);
 });
 
 /// Selected pet provider

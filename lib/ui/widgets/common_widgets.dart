@@ -11,6 +11,7 @@ class AppCard extends StatelessWidget {
     this.elevation,
     this.color,
     this.onTap,
+    this.onLongPress,
     this.borderRadius,
   });
 
@@ -20,6 +21,7 @@ class AppCard extends StatelessWidget {
   final double? elevation;
   final Color? color;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final BorderRadius? borderRadius;
 
   @override
@@ -36,9 +38,10 @@ class AppCard extends StatelessWidget {
           : child,
     );
 
-    if (onTap != null) {
+    if (onTap != null || onLongPress != null) {
       return InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: borderRadius ?? BorderRadius.circular(16),
         child: card,
       );
