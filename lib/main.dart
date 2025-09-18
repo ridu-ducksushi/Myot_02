@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:petcare/app/notifications.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+// import 'package:petcare/app/notifications.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'firebase_options.dart';
 import 'package:petcare/routes.dart';
 import 'package:petcare/ui/theme/app_theme.dart';
 import 'package:petcare/app/bootstrap.dart';
@@ -14,22 +14,23 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // Initialize Firebase (임시 비활성화)
+  // await Firebase.initializeApp(
+  //   options: DefaultFirebaseOptions.currentPlatform,
+  // );
   
   // Initialize Supabase
   await Supabase.initialize(
-    url: const String.fromEnvironment('SUPABASE_URL'),
-    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
+    url: 'https://uvbyxqdkxyhlbntvzyuo.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2Ynl4cWRreHlobGJudHZ6eXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNDIxNDMsImV4cCI6MjA3MjkxODE0M30.ftMFqFomXgaxR3FaynZyNxViH1eREMBLSc0rseanaxM',
   );
+  print('✅ 실제 Supabase 연결 완료');
 
   // Initialize app services
   await AppBootstrap.initialize();
 
-  // Initialize FCM (non-breaking if Firebase not configured)
-  await initNotifications();
+  // Initialize FCM (임시 비활성화)
+  // await initNotifications();
 
   runApp(
     EasyLocalization(
