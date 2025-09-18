@@ -12,6 +12,7 @@ import 'dart:async';
 final _authChangeNotifier = GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange);
 
 final router = GoRouter(
+  initialLocation: '/login',
   // Listen to auth state changes and rebuild the router when they occur.
   refreshListenable: _authChangeNotifier,
   routes: [
