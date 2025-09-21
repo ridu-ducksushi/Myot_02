@@ -27,6 +27,53 @@ class SettingsPlaceholder extends ConsumerWidget {
     }
   }
 
+  Future<void> _showDeletePetDialog(BuildContext context, WidgetRef ref, Pet pet) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('pets.delete_confirm_title'.tr()),
+        content: Text('pets.delete_confirm_message'.tr(args: [pet.name])),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('common.cancel'.tr()),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text('common.delete'.tr()),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      try {
+        await ref.read(petsProvider.notifier).deletePet(pet.id);
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('pets.delete_success'.tr(args: [pet.name])),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('pets.delete_error'.tr(args: [pet.name])),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final petsState = ref.watch(petsProvider);
@@ -62,7 +109,7 @@ class SettingsPlaceholder extends ConsumerWidget {
           SectionHeader(title: '등록된 펫'),
           ...petsState.pets.map((pet) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: _buildPetCard(context, pet),
+            child: _buildPetCard(context, ref, pet),
           )),
           
           const SizedBox(height: 16),
@@ -168,11 +215,12 @@ class SettingsPlaceholder extends ConsumerWidget {
     );
   }
 
-  Widget _buildPetCard(BuildContext context, pet) {
+  Widget _buildPetCard(BuildContext context, WidgetRef ref, pet) {
     final speciesColor = AppColors.getSpeciesColor(pet.species);
     
     return AppCard(
       onTap: () => context.go('/pets/${pet.id}'),
+      onLongPress: () => _showDeletePetDialog(context, ref, pet),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -505,5 +553,6 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
       Navigator.of(context).pop();
     }
   }
+
 }
 
