@@ -75,7 +75,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
             // Upcoming Reminders
             _buildUpcomingReminders(context, petReminders),
             
-            const SizedBox(height: 100), // Bottom padding
+            const SizedBox(height: 100), // Bottom padding for navigation bar
           ],
         ),
       ),
@@ -290,7 +290,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
         SectionHeader(
           title: 'reminders.upcoming'.tr(),
           action: TextButton(
-            onPressed: () => context.push('/pets/${widget.petId}/reminders'),
+            onPressed: () => context.push('/pets/${widget.petId}/health'),
             child: Text('common.see_all'.tr()),
           ),
         ),

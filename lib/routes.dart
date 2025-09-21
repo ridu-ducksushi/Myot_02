@@ -4,6 +4,11 @@ import 'package:petcare/features/auth/login_screen.dart';
 import 'package:petcare/features/auth/signup_screen.dart';
 import 'package:petcare/features/settings/placeholder.dart';
 import 'package:petcare/features/pets/pet_detail_screen.dart';
+import 'package:petcare/features/pets/pets_screen.dart';
+import 'package:petcare/features/records/records_screen.dart';
+import 'package:petcare/features/records/pet_records_screen.dart';
+import 'package:petcare/features/labs/placeholder.dart';
+import 'package:petcare/features/labs/pet_health_screen.dart';
 import 'package:petcare/ui/home.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
@@ -18,29 +23,45 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const HomeScreen(),
+      builder: (context, state) => const PetsScreen(), // 하단 탭 없이 펫 목록만 표시
+    ),
+    GoRoute(
+      path: '/pets/:petId',
+      builder: (context, state) => HomeScreen(
+        child: PetDetailScreen(
+          petId: state.pathParameters['petId']!,
+        ),
+      ),
       routes: [
         GoRoute(
-          path: 'pets/:petId',
-          builder: (context, state) => PetDetailScreen(
-            petId: state.pathParameters['petId']!,
+          path: 'records',
+          builder: (context, state) => HomeScreen(
+            child: PetRecordsScreen(
+              petId: state.pathParameters['petId']!,
+            ),
           ),
-          routes: [
-            GoRoute(
-              path: 'records',
-              builder: (context, state) => const SettingsPlaceholder(), // TODO: Pet Records Screen
+        ),
+        GoRoute(
+          path: 'health',
+          builder: (context, state) => HomeScreen(
+            child: PetHealthScreen(
+              petId: state.pathParameters['petId']!,
             ),
-            GoRoute(
-              path: 'reminders',
-              builder: (context, state) => const SettingsPlaceholder(), // TODO: Pet Reminders Screen
-            ),
-          ],
+          ),
         ),
       ],
     ),
     GoRoute(
+      path: '/records',
+      builder: (context, state) => const HomeScreen(child: RecordsScreen()),
+    ),
+    GoRoute(
+      path: '/health',
+      builder: (context, state) => const HomeScreen(child: LabsPlaceholder()),
+    ),
+    GoRoute(
       path: '/settings',
-      builder: (context, state) => const SettingsPlaceholder(),
+      builder: (context, state) => const HomeScreen(child: SettingsPlaceholder()),
     ),
     GoRoute(
       path: '/login',
