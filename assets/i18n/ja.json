@@ -29,7 +29,18 @@
     "age": "年齢",
     "weight": "体重",
     "not_found": "ペットが見つかりません",
-    "not_found_message": "リクエストされたペット情報が見つかりません"
+    "not_found_message": "リクエストされたペット情報が見つかりません",
+    "delete_confirm_title": "ペット削除",
+    "delete_confirm_message": "{0}を本当に削除しますか？この操作は元に戻せません。",
+    "delete_success": "{0}が削除されました",
+    "delete_error": "{0}の削除中にエラーが発生しました",
+    "edit_title": "ペット情報編集",
+    "edit_success": "{0}の情報が更新されました",
+    "edit_error": "{0}の更新中にエラーが発生しました",
+    "image_updated": "{0}のプロフィール画像が更新されました",
+    "image_update_error": "{0}の画像更新中にエラーが発生しました",
+    "image_deleted": "{0}のプロフィール画像が削除されました",
+    "image_delete_error": "{0}の画像削除中にエラーが発生しました"
   },
   "common": {
     "save": "保存",

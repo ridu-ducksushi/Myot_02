@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,7 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/data/models/pet.dart';
+import 'package:petcare/data/services/image_service.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
+import 'package:petcare/ui/widgets/profile_image_picker.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 
 class PetsScreen extends ConsumerStatefulWidget {
@@ -196,8 +199,8 @@ class _PetCard extends ConsumerWidget {
               child: pet.avatarUrl != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(30),
-                      child: Image.network(
-                        pet.avatarUrl!,
+                      child: Image.file(
+                        File(pet.avatarUrl!),
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
                             Icon(Icons.pets, color: speciesColor, size: 30),
@@ -469,6 +472,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   String? _selectedSex;
   bool? _isNeutered;
   DateTime? _birthDate;
+  File? _selectedImage;
   
   final List<String> _species = [
     'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Reptile', 'Other'
@@ -518,6 +522,20 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                   Text(
                     'pets.add_new'.tr(),
                     style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Profile Image Picker
+                  Center(
+                    child: ProfileImagePicker(
+                      imagePath: _selectedImage?.path,
+                      onImageSelected: (image) {
+                        setState(() {
+                          _selectedImage = image;
+                        });
+                      },
+                      size: 120,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   
@@ -685,6 +703,11 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   Future<void> _savePet() async {
     if (!_formKey.currentState!.validate()) return;
     
+    String? avatarUrl;
+    if (_selectedImage != null) {
+      avatarUrl = await ImageService.saveImageToAppDirectory(_selectedImage!);
+    }
+    
     final pet = Pet(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       ownerId: '', // Will be set by repository
@@ -695,6 +718,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
       neutered: _isNeutered,
       birthDate: _birthDate,
       weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),
+      avatarUrl: avatarUrl,
       note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -728,6 +752,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   String? _selectedSex;
   bool? _isNeutered;
   DateTime? _birthDate;
+  File? _selectedImage;
   
   final List<String> _species = [
     'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Reptile', 'Other'
@@ -752,6 +777,15 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     _selectedSex = pet.sex;
     _isNeutered = pet.neutered;
     _birthDate = pet.birthDate;
+    
+    // Load existing image if available
+    if (pet.avatarUrl != null && pet.avatarUrl!.isNotEmpty) {
+      try {
+        _selectedImage = File(pet.avatarUrl!);
+      } catch (e) {
+        print('❌ 기존 이미지 로드 실패: $e');
+      }
+    }
   }
 
   @override
@@ -796,6 +830,20 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                   Text(
                     'pets.edit_title'.tr(),
                     style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Profile Image Picker
+                  Center(
+                    child: ProfileImagePicker(
+                      imagePath: _selectedImage?.path,
+                      onImageSelected: (image) {
+                        setState(() {
+                          _selectedImage = image;
+                        });
+                      },
+                      size: 120,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   
@@ -963,6 +1011,14 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   Future<void> _updatePet() async {
     if (!_formKey.currentState!.validate()) return;
     
+    String? avatarUrl;
+    if (_selectedImage != null) {
+      avatarUrl = await ImageService.saveImageToAppDirectory(_selectedImage!);
+    } else if (widget.pet.avatarUrl != null) {
+      // 기존 이미지를 유지
+      avatarUrl = widget.pet.avatarUrl;
+    }
+    
     final updatedPet = widget.pet.copyWith(
       name: _nameController.text.trim(),
       species: _selectedSpecies,
@@ -971,6 +1027,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
       neutered: _isNeutered,
       birthDate: _birthDate,
       weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),
+      avatarUrl: avatarUrl,
       note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       updatedAt: DateTime.now(),
     );

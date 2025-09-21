@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -115,8 +116,8 @@ class SettingsPlaceholder extends ConsumerWidget {
               child: pet.avatarUrl != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(30),
-                      child: Image.network(
-                        pet.avatarUrl!,
+                      child: Image.file(
+                        File(pet.avatarUrl!),
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
                             Icon(Icons.pets, color: speciesColor, size: 30),
@@ -188,8 +189,8 @@ class SettingsPlaceholder extends ConsumerWidget {
               child: pet.avatarUrl != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(25),
-                      child: Image.network(
-                        pet.avatarUrl!,
+                      child: Image.file(
+                        File(pet.avatarUrl!),
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
                             Icon(Icons.pets, color: speciesColor, size: 25),

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +8,9 @@ import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/core/providers/records_provider.dart';
 import 'package:petcare/core/providers/reminders_provider.dart';
 import 'package:petcare/data/models/pet.dart';
+import 'package:petcare/data/services/image_service.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
+import 'package:petcare/ui/widgets/profile_image_picker.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 
 class PetDetailScreen extends ConsumerStatefulWidget {
@@ -23,6 +26,8 @@ class PetDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
+  File? _selectedImage;
+
   @override
   void initState() {
     super.initState();
@@ -98,26 +103,77 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              // Avatar
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: speciesColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(50),
-                  border: Border.all(color: speciesColor.withOpacity(0.3), width: 2),
-                ),
-                child: pet.avatarUrl != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(50),
-                        child: Image.network(
-                          pet.avatarUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Icon(Icons.pets, color: speciesColor, size: 50),
-                        ),
-                      )
-                    : Icon(Icons.pets, color: speciesColor, size: 50),
+              // Profile Image Picker
+              ProfileImagePicker(
+                imagePath: _selectedImage?.path ?? pet.avatarUrl,
+                onImageSelected: (image) async {
+                  if (image != null) {
+                    // 이미지 저장 및 펫 업데이트
+                    final avatarUrl = await ImageService.saveImageToAppDirectory(image);
+                    final updatedPet = pet.copyWith(
+                      avatarUrl: avatarUrl,
+                      updatedAt: DateTime.now(),
+                    );
+                    
+                    try {
+                      await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                      setState(() {
+                        _selectedImage = image;
+                      });
+                      
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('pets.image_updated'.tr(args: [pet.name])),
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('pets.image_update_error'.tr(args: [pet.name])),
+                            backgroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                        );
+                      }
+                    }
+                  } else {
+                    // 이미지 삭제
+                    final updatedPet = pet.copyWith(
+                      avatarUrl: null,
+                      updatedAt: DateTime.now(),
+                    );
+                    
+                    try {
+                      await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                      setState(() {
+                        _selectedImage = null;
+                      });
+                      
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('pets.image_deleted'.tr(args: [pet.name])),
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('pets.image_delete_error'.tr(args: [pet.name])),
+                            backgroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
+                size: 120,
+                showEditIcon: true,
               ),
               const SizedBox(height: 16),
               

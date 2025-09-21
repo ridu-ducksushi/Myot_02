@@ -29,7 +29,18 @@
     "age": "Age",
     "weight": "Weight",
     "not_found": "Pet not found",
-    "not_found_message": "The requested pet information could not be found"
+    "not_found_message": "The requested pet information could not be found",
+    "delete_confirm_title": "Delete Pet",
+    "delete_confirm_message": "Are you sure you want to delete {0}? This action cannot be undone.",
+    "delete_success": "{0} has been deleted",
+    "delete_error": "Error deleting {0}",
+    "edit_title": "Edit Pet",
+    "edit_success": "{0} has been updated",
+    "edit_error": "Error updating {0}",
+    "image_updated": "{0}'s profile image has been updated",
+    "image_update_error": "Error updating {0}'s image",
+    "image_deleted": "{0}'s profile image has been deleted",
+    "image_delete_error": "Error deleting {0}'s image"
   },
   "common": {
     "save": "Save",
