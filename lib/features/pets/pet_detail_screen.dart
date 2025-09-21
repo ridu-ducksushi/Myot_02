@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/core/providers/records_provider.dart';
 import 'package:petcare/core/providers/reminders_provider.dart';
@@ -332,9 +333,10 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
   }
 
   void _editPet(BuildContext context, Pet pet) {
-    // TODO: Navigate to edit pet screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Edit ${pet.name} - Coming Soon')),
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _EditPetSheet(pet: pet),
     );
   }
 
@@ -533,5 +535,297 @@ class _ReminderListItem extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _EditPetSheet extends ConsumerStatefulWidget {
+  const _EditPetSheet({required this.pet});
+
+  final Pet pet;
+
+  @override
+  ConsumerState<_EditPetSheet> createState() => _EditPetSheetState();
+}
+
+class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _breedController = TextEditingController();
+  final _weightController = TextEditingController();
+  final _noteController = TextEditingController();
+  
+  String _selectedSpecies = 'Dog';
+  String? _selectedSex;
+  bool? _isNeutered;
+  DateTime? _birthDate;
+  
+  final List<String> _species = [
+    'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Reptile', 'Other'
+  ];
+  
+  final List<String> _sexOptions = ['Male', 'Female'];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeForm();
+  }
+
+  void _initializeForm() {
+    final pet = widget.pet;
+    _nameController.text = pet.name;
+    _breedController.text = pet.breed ?? '';
+    _weightController.text = pet.weightKg?.toString() ?? '';
+    _noteController.text = pet.note ?? '';
+    
+    _selectedSpecies = pet.species;
+    _selectedSex = pet.sex;
+    _isNeutered = pet.neutered;
+    _birthDate = pet.birthDate;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _breedController.dispose();
+    _weightController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        maxChildSize: 0.9,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.outline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Title
+                  Text(
+                    'pets.edit_title'.tr(),
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Form fields
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      children: [
+                        AppTextField(
+                          controller: _nameController,
+                          labelText: 'pets.name'.tr(),
+                          prefixIcon: const Icon(Icons.pets),
+                          validator: (value) {
+                            if (value?.trim().isEmpty ?? true) {
+                              return 'pets.name_required'.tr();
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        DropdownButtonFormField<String>(
+                          value: _selectedSpecies,
+                          decoration: InputDecoration(
+                            labelText: 'pets.species'.tr(),
+                            prefixIcon: const Icon(Icons.category),
+                          ),
+                          items: _species.map((species) {
+                            return DropdownMenuItem(
+                              value: species,
+                              child: Text(species),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedSpecies = value!;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        AppTextField(
+                          controller: _breedController,
+                          labelText: 'pets.breed'.tr(),
+                          prefixIcon: const Icon(Icons.info_outline),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        DropdownButtonFormField<String>(
+                          value: _selectedSex,
+                          decoration: InputDecoration(
+                            labelText: 'pets.sex'.tr(),
+                            prefixIcon: const Icon(Icons.wc),
+                          ),
+                          items: _sexOptions.map((sex) {
+                            return DropdownMenuItem(
+                              value: sex,
+                              child: Text(sex),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedSex = value;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        CheckboxListTile(
+                          title: Text('pets.neutered'.tr()),
+                          subtitle: Text('pets.neutered_description'.tr()),
+                          value: _isNeutered ?? false,
+                          onChanged: (value) {
+                            setState(() {
+                              _isNeutered = value;
+                            });
+                          },
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        AppTextField(
+                          controller: _weightController,
+                          labelText: 'pets.weight_kg'.tr(),
+                          prefixIcon: const Icon(Icons.monitor_weight),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value?.isNotEmpty == true) {
+                              final weight = double.tryParse(value!);
+                              if (weight == null || weight <= 0) {
+                                return 'pets.weight_invalid'.tr();
+                              }
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        ListTile(
+                          leading: const Icon(Icons.cake),
+                          title: Text('pets.birth_date'.tr()),
+                          subtitle: Text(
+                            _birthDate != null
+                                ? DateFormat.yMMMd().format(_birthDate!)
+                                : 'pets.select_birth_date'.tr(),
+                          ),
+                          onTap: _selectBirthDate,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        AppTextField(
+                          controller: _noteController,
+                          labelText: 'pets.notes'.tr(),
+                          prefixIcon: const Icon(Icons.note),
+                          maxLines: 3,
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Buttons
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text('common.cancel'.tr()),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: _updatePet,
+                          child: Text('common.save'.tr()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _selectBirthDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _birthDate ?? DateTime.now().subtract(const Duration(days: 365)),
+      firstDate: DateTime.now().subtract(const Duration(days: 365 * 30)),
+      lastDate: DateTime.now(),
+    );
+    
+    if (date != null) {
+      setState(() {
+        _birthDate = date;
+      });
+    }
+  }
+
+  Future<void> _updatePet() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    final updatedPet = widget.pet.copyWith(
+      name: _nameController.text.trim(),
+      species: _selectedSpecies,
+      breed: _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
+      sex: _selectedSex,
+      neutered: _isNeutered,
+      birthDate: _birthDate,
+      weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),
+      note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+      updatedAt: DateTime.now(),
+    );
+    
+    try {
+      await ref.read(petsProvider.notifier).updatePet(updatedPet);
+      
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('pets.edit_success'.tr(args: [updatedPet.name])),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('pets.edit_error'.tr(args: [widget.pet.name])),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 }

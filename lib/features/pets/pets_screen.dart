@@ -296,9 +296,13 @@ class _PetCard extends ConsumerWidget {
     }
   }
 
-  void _showPetDetails(BuildContext context, Pet pet) {
-    context.push('/pets/${pet.id}');
-  }
+         void _showPetDetails(BuildContext context, Pet pet) {
+           context.push('/pets/${pet.id}');
+         }
+
+         void _editPet(BuildContext context, WidgetRef ref, Pet pet) {
+           context.push('/pets/${pet.id}');
+         }
 
   void _showPetOptions(BuildContext context, WidgetRef ref, Pet pet) {
     showModalBottomSheet<void>(
@@ -371,10 +375,7 @@ class _PetCard extends ConsumerWidget {
               title: Text('common.edit'.tr()),
               onTap: () {
                 Navigator.of(context).pop();
-                // TODO: 펫 편집 기능 구현
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('편집 기능은 곧 추가될 예정입니다')),
-                );
+                _editPet(context, ref, pet);
               },
             ),
             ListTile(
