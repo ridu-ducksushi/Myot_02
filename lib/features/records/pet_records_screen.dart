@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
@@ -34,7 +35,6 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   @override
   Widget build(BuildContext context) {
     final pet = ref.watch(petByIdProvider(widget.petId));
-    final recordsState = ref.watch(recordsProvider);
 
     if (pet == null) {
       return Scaffold(
@@ -63,49 +63,38 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           ],
         ),
       ),
+      floatingActionButton: SpeedDial(
+        icon: Icons.add,
+        activeIcon: Icons.close,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.restaurant),
+            label: 'records.type.food'.tr(),
+            onTap: () => _addRecord(context, pet, 'food'),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.sports_tennis),
+            label: 'records.type.play'.tr(),
+            onTap: () => _addRecord(context, pet, 'play'),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.cleaning_services),
+            label: 'records.type.poop'.tr(),
+            onTap: () => _addRecord(context, pet, 'poop'),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.favorite),
+            label: 'records.type.health'.tr(),
+            onTap: () => _addRecord(context, pet, 'health'),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildBody(BuildContext context, dynamic recordsState, Pet pet) {
-    if (recordsState.isLoading && recordsState.records.isEmpty) {
-      return const Center(
-        child: AppLoadingIndicator(message: 'Loading records...'),
-      );
-    }
-
-    if (recordsState.error != null) {
-      return AppErrorState(
-        message: recordsState.error!,
-        onRetry: () => ref.read(recordsProvider.notifier).loadRecords(widget.petId),
-      );
-    }
-
-    final petRecords = recordsState.records.where((record) => record.petId == widget.petId).toList();
-
-    if (petRecords.isEmpty) {
-      return AppEmptyState(
-        icon: Icons.list_alt,
-        title: 'records.empty_title'.tr(),
-        message: 'records.empty_message'.tr(),
-        action: ElevatedButton.icon(
-          onPressed: () => _addRecord(context, pet),
-          icon: const Icon(Icons.add),
-          label: Text('records.add_first'.tr()),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 80), // Space for FAB
-      itemCount: petRecords.length,
-      itemBuilder: (context, index) {
-        final record = petRecords[index];
-        return _RecordCard(record: record, pet: pet);
-      },
-    );
-  }
-
-  void _addRecord(BuildContext context, Pet pet) {
+  void _addRecord(BuildContext context, Pet pet, String type) {
     // TODO: Navigate to add record with pre-selected pet
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Add record for ${pet.name} - Coming Soon')),

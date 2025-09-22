@@ -61,7 +61,12 @@
     "add_new": "새 기록 추가",
     "select_pet": "펫 선택",
     "pet_required": "펫을 선택해주세요",
-    "type": "유형",
+    "type": {
+      "food": "사료",
+      "play": "놀이",
+      "poop": "배변",
+      "health": "건강"
+    },
     "title": "제목",
     "title_required": "제목을 입력해주세요",
     "content": "내용",

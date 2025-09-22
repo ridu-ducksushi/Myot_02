@@ -68,7 +68,13 @@
     "datetime": "Date & Time",
     "recent": "Recent Records",
     "no_recent": "No recent records",
-    "add": "Add Record"
+    "add": "Add Record",
+    "type": {
+      "food": "Food",
+      "play": "Play",
+      "poop": "Poop",
+      "health": "Health"
+    }
   },
   "reminders": {
     "title": "Reminders",
