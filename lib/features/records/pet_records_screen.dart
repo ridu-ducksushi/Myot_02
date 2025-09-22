@@ -22,6 +22,10 @@ class PetRecordsScreen extends ConsumerStatefulWidget {
 }
 
 class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
+  bool _isFoodMenuVisible = false;
+  bool _isActivityMenuVisible = false;
+  bool _isPoopMenuVisible = false;
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +33,154 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(recordsProvider.notifier).loadRecords(widget.petId);
     });
+  }
+
+  Widget _buildSubMenuItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFoodSubMenu(Pet pet) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildSubMenuItem(
+            icon: Icons.dinner_dining,
+            label: 'Food',
+            onTap: () => _addRecord(context, pet, 'food_meal'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.cookie,
+            label: 'Snack',
+            onTap: () => _addRecord(context, pet, 'food_snack'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.water_drop,
+            label: 'Water',
+            onTap: () => _addRecord(context, pet, 'food_water'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.local_hospital,
+            label: 'Med',
+            onTap: () => _addRecord(context, pet, 'health_med'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.medication,
+            label: 'Supplement',
+            onTap: () => _addRecord(context, pet, 'health_supplement'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivitySubMenu(Pet pet) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildSubMenuItem(
+            icon: Icons.gamepad_outlined,
+            label: 'Play',
+            onTap: () => _addRecord(context, pet, 'activity_play'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.explore_outlined,
+            label: 'Explore',
+            onTap: () => _addRecord(context, pet, 'activity_explore'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.directions_walk,
+            label: 'Outing',
+            onTap: () => _addRecord(context, pet, 'activity_outing'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.hotel_outlined,
+            label: 'Rest',
+            onTap: () => _addRecord(context, pet, 'activity_rest'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.more_horiz,
+            label: 'etc',
+            onTap: () => _addRecord(context, pet, 'activity_other'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPoopSubMenu(Pet pet) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildSubMenuItem(
+            icon: Icons.opacity,
+            label: 'Urine',
+            onTap: () => _addRecord(context, pet, 'poop_urine'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.pets,
+            label: 'Feces',
+            onTap: () => _addRecord(context, pet, 'poop_feces'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.more_horiz,
+            label: 'etc',
+            onTap: () => _addRecord(context, pet, 'poop_other'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -66,31 +218,86 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          FloatingActionButton(
-            heroTag: "record-food",
-            tooltip: 'records.type.food'.tr(),
-            onPressed: () => _addRecord(context, pet, 'food'),
-            child: const Icon(Icons.restaurant),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (_isFoodMenuVisible)
+                _buildFoodSubMenu(pet),
+              if (_isFoodMenuVisible)
+                const SizedBox(width: 12),
+              FloatingActionButton(
+                heroTag: "record-food",
+                tooltip: 'records.type.food'.tr(),
+                onPressed: () {
+                  setState(() {
+                    _isFoodMenuVisible = !_isFoodMenuVisible;
+                    _isActivityMenuVisible = false;
+                    _isPoopMenuVisible = false;
+                  });
+                },
+                child: const Icon(Icons.restaurant),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: "record-play",
-            tooltip: 'records.type.play'.tr(),
-            onPressed: () => _addRecord(context, pet, 'play'),
-            child: const Icon(Icons.sports_tennis),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (_isActivityMenuVisible)
+                _buildActivitySubMenu(pet),
+              if (_isActivityMenuVisible)
+                const SizedBox(width: 12),
+              FloatingActionButton(
+                heroTag: "record-play",
+                tooltip: 'records.type.play'.tr(),
+                onPressed: () {
+                  setState(() {
+                    _isActivityMenuVisible = !_isActivityMenuVisible;
+                    _isFoodMenuVisible = false;
+                    _isPoopMenuVisible = false;
+                  });
+                },
+                child: const Icon(Icons.sports_tennis),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: "record-poop",
-            tooltip: 'records.type.poop'.tr(),
-            onPressed: () => _addRecord(context, pet, 'poop'),
-            child: const Icon(Icons.cleaning_services),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (_isPoopMenuVisible)
+                _buildPoopSubMenu(pet),
+              if (_isPoopMenuVisible)
+                const SizedBox(width: 12),
+              FloatingActionButton(
+                heroTag: "record-poop",
+                tooltip: 'records.type.poop'.tr(),
+                onPressed: () {
+                  setState(() {
+                    _isPoopMenuVisible = !_isPoopMenuVisible;
+                    _isFoodMenuVisible = false;
+                    _isActivityMenuVisible = false;
+                  });
+                },
+                child: const Icon(Icons.cleaning_services),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           FloatingActionButton(
             heroTag: "record-health",
             tooltip: 'records.type.health'.tr(),
-            onPressed: () => _addRecord(context, pet, 'health'),
+            onPressed: () {
+              setState(() {
+                _isFoodMenuVisible = false;
+                _isActivityMenuVisible = false;
+                _isPoopMenuVisible = false;
+              });
+              _addRecord(context, pet, 'health');
+            },
             child: const Icon(Icons.favorite),
           ),
         ],
@@ -99,9 +306,34 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   }
 
   void _addRecord(BuildContext context, Pet pet, String type) {
-    // TODO: Navigate to add record with pre-selected pet
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Add record for ${pet.name} - Coming Soon')),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final TextEditingController noteController = TextEditingController();
+        return AlertDialog(
+          title: Text('${'records.add_new'.tr()}: $type'),
+          content: TextField(
+            controller: noteController,
+            decoration: InputDecoration(hintText: 'records.content'.tr()),
+            autofocus: true,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('common.cancel'.tr()),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('common.save'.tr()),
+              onPressed: () {
+                // TODO: Save the record with the note
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
