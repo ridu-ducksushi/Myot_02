@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:petcare/data/local/database.dart';
 import 'package:petcare/data/models/record.dart';
 
 /// State class for records list
@@ -28,57 +29,23 @@ class RecordsState {
 
 /// Records provider notifier
 class RecordsNotifier extends StateNotifier<RecordsState> {
-  RecordsNotifier() : super(const RecordsState());
+  RecordsNotifier() : super(const RecordsState()) {
+    _localDB = LocalDatabase.instance;
+  }
+
+  late final LocalDatabase _localDB;
 
   /// Load all records
   Future<void> loadRecords([String? petId]) async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      // TODO: Implement actual data loading from repository
-      await Future<void>.delayed(const Duration(seconds: 1));
-      
-      // Mock data for now
-      final mockRecords = [
-        Record(
-          id: '1',
-          petId: '1',
-          type: 'meal',
-          title: 'Morning Feed',
-          content: 'Regular dry food, 1 cup',
-          at: DateTime.now().subtract(const Duration(hours: 2)),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-        Record(
-          id: '2',
-          petId: '1',
-          type: 'walk',
-          title: 'Morning Walk',
-          content: '30 minutes in the park',
-          at: DateTime.now().subtract(const Duration(hours: 1)),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-        Record(
-          id: '3',
-          petId: '2',
-          type: 'litter',
-          title: 'Litter Box Clean',
-          content: 'Changed litter box',
-          at: DateTime.now().subtract(const Duration(minutes: 30)),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      ];
-      
-      // Filter by pet if petId is provided
-      final filteredRecords = petId != null
-          ? mockRecords.where((record) => record.petId == petId).toList()
-          : mockRecords;
+      final records = petId != null
+          ? await _localDB.getRecordsForPet(petId)
+          : await _localDB.getAllRecords();
       
       state = state.copyWith(
-        records: filteredRecords,
+        records: records,
         isLoading: false,
       );
     } catch (e) {
@@ -91,67 +58,42 @@ class RecordsNotifier extends StateNotifier<RecordsState> {
 
   /// Add a new record
   Future<void> addRecord(Record record) async {
-    state = state.copyWith(isLoading: true, error: null);
-    
+    final oldRecords = state.records;
+    final updatedRecords = [record, ...oldRecords];
+    state = state.copyWith(records: updatedRecords); // Optimistic update
+
     try {
-      // TODO: Implement actual data saving to repository
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      
-      final updatedRecords = [record, ...state.records];
-      state = state.copyWith(
-        records: updatedRecords,
-        isLoading: false,
-      );
+      await _localDB.saveRecord(record);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(records: oldRecords, error: e.toString()); // Revert on error
     }
   }
 
   /// Update an existing record
   Future<void> updateRecord(Record updatedRecord) async {
-    state = state.copyWith(isLoading: true, error: null);
+    final oldRecords = state.records;
+    final updatedRecords = state.records.map((record) {
+      return record.id == updatedRecord.id ? updatedRecord : record;
+    }).toList();
+    state = state.copyWith(records: updatedRecords); // Optimistic update
     
     try {
-      // TODO: Implement actual data updating in repository
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      
-      final updatedRecords = state.records.map((record) {
-        return record.id == updatedRecord.id ? updatedRecord : record;
-      }).toList();
-      
-      state = state.copyWith(
-        records: updatedRecords,
-        isLoading: false,
-      );
+      await _localDB.saveRecord(updatedRecord);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(records: oldRecords, error: e.toString()); // Revert
     }
   }
 
   /// Delete a record
   Future<void> deleteRecord(String recordId) async {
-    state = state.copyWith(isLoading: true, error: null);
-    
+    final oldRecords = state.records;
+    final updatedRecords = state.records.where((record) => record.id != recordId).toList();
+    state = state.copyWith(records: updatedRecords); // Optimistic update
+
     try {
-      // TODO: Implement actual data deletion from repository
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      
-      final updatedRecords = state.records.where((record) => record.id != recordId).toList();
-      state = state.copyWith(
-        records: updatedRecords,
-        isLoading: false,
-      );
+      await _localDB.deleteRecord(recordId);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(records: oldRecords, error: e.toString()); // Revert
     }
   }
 
@@ -182,6 +124,41 @@ final todaysRecordsProvider = Provider<List<Record>>((ref) {
     return recordDate.year == today.year &&
            recordDate.month == today.month &&
            recordDate.day == today.day;
+  }).toList();
+});
+
+/// Weekly records provider
+final weeklyRecordsProvider = Provider<List<Record>>((ref) {
+  final recordsState = ref.watch(recordsProvider);
+  final today = DateTime.now();
+  final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+  final endOfWeek = startOfWeek.add(const Duration(days: 6));
+
+  return recordsState.records.where((record) {
+    final recordDate = record.at;
+    return recordDate.isAfter(startOfWeek) && recordDate.isBefore(endOfWeek.add(const Duration(days: 1)));
+  }).toList();
+});
+
+/// Monthly records provider
+final monthlyRecordsProvider = Provider<List<Record>>((ref) {
+  final recordsState = ref.watch(recordsProvider);
+  final today = DateTime.now();
+
+  return recordsState.records.where((record) {
+    final recordDate = record.at;
+    return recordDate.year == today.year && recordDate.month == today.month;
+  }).toList();
+});
+
+/// Yearly records provider
+final yearlyRecordsProvider = Provider<List<Record>>((ref) {
+  final recordsState = ref.watch(recordsProvider);
+  final today = DateTime.now();
+
+  return recordsState.records.where((record) {
+    final recordDate = record.at;
+    return recordDate.year == today.year;
   }).toList();
 });
 

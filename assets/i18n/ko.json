@@ -99,5 +99,11 @@
     "no_repeat": "반복 안함",
     "no_upcoming": "예정된 알림이 없습니다"
   },
-  "reminder": "알림"
+  "reminder": "알림",
+  "views": {
+    "daily": "일간",
+    "weekly": "주간",
+    "monthly": "월간",
+    "yearly": "연간"
+  }
 }

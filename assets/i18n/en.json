@@ -100,5 +100,11 @@
     "no_repeat": "No repeat",
     "no_upcoming": "No upcoming reminders"
   },
-  "reminder": "Reminder"
+  "reminder": "Reminder",
+  "views": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly"
+  }
 }

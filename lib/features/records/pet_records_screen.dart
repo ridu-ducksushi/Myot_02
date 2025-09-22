@@ -6,8 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/core/providers/records_provider.dart';
 import 'package:petcare/data/models/pet.dart';
+import 'package:petcare/data/models/record.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
+
+enum RecordViewType { daily, weekly, monthly, yearly }
 
 class PetRecordsScreen extends ConsumerStatefulWidget {
   const PetRecordsScreen({
@@ -22,6 +25,7 @@ class PetRecordsScreen extends ConsumerStatefulWidget {
 }
 
 class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
+  RecordViewType _selectedView = RecordViewType.daily;
   bool _isFoodMenuVisible = false;
   bool _isActivityMenuVisible = false;
   bool _isPoopMenuVisible = false;
@@ -187,31 +191,75 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   Widget build(BuildContext context) {
     final pet = ref.watch(petByIdProvider(widget.petId));
 
+    final List<Record> records;
+    switch (_selectedView) {
+      case RecordViewType.daily:
+        records = ref.watch(todaysRecordsProvider);
+        break;
+      case RecordViewType.weekly:
+        records = ref.watch(weeklyRecordsProvider);
+        break;
+      case RecordViewType.monthly:
+        records = ref.watch(monthlyRecordsProvider);
+        break;
+      case RecordViewType.yearly:
+        records = ref.watch(yearlyRecordsProvider);
+        break;
+    }
+
     if (pet == null) {
       return Scaffold(
-        appBar: AppBar(title: Text('pets.not_found'.tr())),
-        body: AppEmptyState(
-          icon: Icons.pets,
-          title: 'pets.not_found'.tr(),
-          message: 'pets.not_found_message'.tr(),
+        body: SafeArea(
+          child: AppEmptyState(
+            icon: Icons.pets,
+            title: 'pets.not_found'.tr(),
+            message: 'pets.not_found_message'.tr(),
+          ),
         ),
       );
     }
 
+    Widget recordsView;
+    if (_selectedView == RecordViewType.daily) {
+      recordsView = _Time24Table(records: records);
+    } else {
+      recordsView = ListView.builder(
+        itemCount: records.length,
+        itemBuilder: (context, index) {
+          return _RecordCard(record: records[index], pet: pet);
+        },
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('${pet.name} - ${'records.title'.tr()}'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/pets/${widget.petId}'),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: const [
-            Expanded(child: _Time24Table()),
-          ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              SegmentedButton<RecordViewType>(
+                segments: <ButtonSegment<RecordViewType>>[
+                  ButtonSegment(value: RecordViewType.daily, label: Text('views.daily'.tr())),
+                  ButtonSegment(value: RecordViewType.weekly, label: Text('views.weekly'.tr())),
+                  ButtonSegment(value: RecordViewType.monthly, label: Text('views.monthly'.tr())),
+                  ButtonSegment(value: RecordViewType.yearly, label: Text('views.yearly'.tr())),
+                ],
+                selected: <RecordViewType>{_selectedView},
+                onSelectionChanged: (Set<RecordViewType> newSelection) {
+                  setState(() {
+                    _selectedView = newSelection.first;
+                  });
+                },
+              ),
+              const SizedBox(height: 12),
+              Text(
+                DateFormat.yMMMMd(context.locale.toString()).format(DateTime.now()),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              Expanded(child: recordsView),
+            ],
+          ),
         ),
       ),
       floatingActionButton: Column(
@@ -310,28 +358,75 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       context: context,
       builder: (BuildContext context) {
         final TextEditingController noteController = TextEditingController();
-        return AlertDialog(
-          title: Text('${'records.add_new'.tr()}: $type'),
-          content: TextField(
-            controller: noteController,
-            decoration: InputDecoration(hintText: 'records.content'.tr()),
-            autofocus: true,
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('common.cancel'.tr()),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('common.save'.tr()),
-              onPressed: () {
-                // TODO: Save the record with the note
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
+        TimeOfDay selectedTime = TimeOfDay.now();
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('${'records.add_new'.tr()}: $type'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: noteController,
+                    decoration: InputDecoration(hintText: 'records.content'.tr()),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.access_time),
+                        onPressed: () async {
+                          final TimeOfDay? picked = await showTimePicker(
+                            context: context,
+                            initialTime: selectedTime,
+                          );
+                          if (picked != null && picked != selectedTime) {
+                            setState(() {
+                              selectedTime = picked;
+                            });
+                          }
+                        },
+                      ),
+                      Text('Time: ${selectedTime.format(context)}'),
+                    ],
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('common.cancel'.tr()),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                Consumer(
+                  builder: (context, ref, child) {
+                    return TextButton(
+                      child: Text('common.save'.tr()),
+                      onPressed: () {
+                        final now = DateTime.now();
+                        final recordAt = DateTime(now.year, now.month, now.day, selectedTime.hour, selectedTime.minute);
+                        final newRecord = Record(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          petId: pet.id,
+                          type: type,
+                          title: type, // Using type as title for now
+                          content: noteController.text,
+                          at: recordAt,
+                          createdAt: now,
+                          updatedAt: now,
+                        );
+                        ref.read(recordsProvider.notifier).addRecord(newRecord);
+                        Navigator.of(context).pop();
+                      },
+                    );
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -339,7 +434,9 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
 }
 
 class _Time24Table extends StatelessWidget {
-  const _Time24Table();
+  const _Time24Table({required this.records});
+
+  final List<Record> records;
 
   @override
   Widget build(BuildContext context) {
@@ -355,6 +452,7 @@ class _Time24Table extends StatelessWidget {
       ),
       child: Column(
         children: List.generate(24, (i) {
+          final recordsForHour = records.where((r) => r.at.hour == i).toList();
           final String label = _labelForRow(i);
           final BorderSide bottomLine = i == 23 ? BorderSide.none : BorderSide(color: outline);
           return Expanded(
@@ -387,6 +485,16 @@ class _Time24Table extends StatelessWidget {
                         bottom: bottomLine,
                       ),
                     ),
+                    child: recordsForHour.isEmpty
+                        ? null
+                        : ListView(
+                            children: recordsForHour.map((record) {
+                              return Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Text('${record.title}: ${record.content}'),
+                              );
+                            }).toList(),
+                          ),
                   ),
                 ),
               ],
@@ -412,12 +520,13 @@ class _RecordCard extends StatelessWidget {
     required this.pet,
   });
 
-  final dynamic record;
+  final Record record;
   final Pet pet;
 
   @override
   Widget build(BuildContext context) {
     final typeColor = AppColors.getRecordTypeColor(record.type);
+    final content = record.content;
 
     return AppCard(
       child: Padding(
@@ -477,7 +586,7 @@ class _RecordCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (record.content != null && record.content.isNotEmpty) ...[
+            if (content != null && content.isNotEmpty) ...[
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
@@ -487,7 +596,7 @@ class _RecordCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  record.content,
+                  content,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
