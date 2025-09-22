@@ -55,14 +55,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           onPressed: () => context.go('/pets/${widget.petId}'),
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: () => ref.read(recordsProvider.notifier).loadRecords(widget.petId),
-        child: _buildBody(context, recordsState, pet),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _addRecord(context, pet),
-        icon: const Icon(Icons.add),
-        label: Text('records.add_new'.tr()),
+      body: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: const [
+            Expanded(child: _Time24Table()),
+          ],
+        ),
       ),
     );
   }
@@ -111,6 +110,74 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Add record for ${pet.name} - Coming Soon')),
     );
+  }
+}
+
+class _Time24Table extends StatelessWidget {
+  const _Time24Table();
+
+  @override
+  Widget build(BuildContext context) {
+    final Color outline = Theme.of(context).colorScheme.outlineVariant;
+    final Color surface = Theme.of(context).colorScheme.surface;
+    final Color onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: outline),
+      ),
+      child: Column(
+        children: List.generate(24, (i) {
+          final String label = _labelForRow(i);
+          final BorderSide bottomLine = i == 23 ? BorderSide.none : BorderSide(color: outline);
+          return Expanded(
+            child: Row(
+              children: [
+                // Left time label cell
+                Container(
+                  width: 64,
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      right: BorderSide(color: outline),
+                      bottom: bottomLine,
+                    ),
+                  ),
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                // Right content cell
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: bottomLine,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  String _labelForRow(int index) {
+    if (index == 0) return '12:00';
+    if (index == 23) return '24:00';
+    final int hour = index;
+    final String two = hour.toString().padLeft(2, '0');
+    return '$two:00';
   }
 }
 
