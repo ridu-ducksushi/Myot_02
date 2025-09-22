@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
@@ -63,31 +62,36 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           ],
         ),
       ),
-      floatingActionButton: SpeedDial(
-        icon: Icons.add,
-        activeIcon: Icons.close,
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          SpeedDialChild(
+          FloatingActionButton(
+            heroTag: "record-food",
+            tooltip: 'records.type.food'.tr(),
+            onPressed: () => _addRecord(context, pet, 'food'),
             child: const Icon(Icons.restaurant),
-            label: 'records.type.food'.tr(),
-            onTap: () => _addRecord(context, pet, 'food'),
           ),
-          SpeedDialChild(
+          const SizedBox(height: 12),
+          FloatingActionButton(
+            heroTag: "record-play",
+            tooltip: 'records.type.play'.tr(),
+            onPressed: () => _addRecord(context, pet, 'play'),
             child: const Icon(Icons.sports_tennis),
-            label: 'records.type.play'.tr(),
-            onTap: () => _addRecord(context, pet, 'play'),
           ),
-          SpeedDialChild(
+          const SizedBox(height: 12),
+          FloatingActionButton(
+            heroTag: "record-poop",
+            tooltip: 'records.type.poop'.tr(),
+            onPressed: () => _addRecord(context, pet, 'poop'),
             child: const Icon(Icons.cleaning_services),
-            label: 'records.type.poop'.tr(),
-            onTap: () => _addRecord(context, pet, 'poop'),
           ),
-          SpeedDialChild(
+          const SizedBox(height: 12),
+          FloatingActionButton(
+            heroTag: "record-health",
+            tooltip: 'records.type.health'.tr(),
+            onPressed: () => _addRecord(context, pet, 'health'),
             child: const Icon(Icons.favorite),
-            label: 'records.type.health'.tr(),
-            onTap: () => _addRecord(context, pet, 'health'),
           ),
         ],
       ),
