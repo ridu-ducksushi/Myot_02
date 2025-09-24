@@ -1,0 +1,5 @@
+---
+description:convert camelcase to snake_case when saving or fetching from supabase
+globs:
+alwaysApply: true
+---
