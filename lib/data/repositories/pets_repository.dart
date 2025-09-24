@@ -13,6 +13,43 @@ class PetsRepository {
   final SupabaseClient supabase;
   final LocalDatabase localDb;
 
+  Map<String, dynamic> _toSupabaseRow(Pet pet, String ownerId) {
+    return {
+      // Do NOT send id: let Supabase generate UUID
+      'owner_id': ownerId,
+      'name': pet.name,
+      'species': pet.species,
+      'breed': pet.breed,
+      'sex': pet.sex,
+      'neutered': pet.neutered,
+      'birth_date': pet.birthDate?.toIso8601String(),
+      'blood_type': pet.bloodType,
+      'weight_kg': pet.weightKg,
+      'avatar_url': pet.avatarUrl,
+      'note': pet.note,
+      // created_at/updated_at are defaulted by DB triggers if set; omit to avoid format mismatches
+    }..removeWhere((k, v) => v == null);
+  }
+
+  Pet _fromSupabaseRow(Map<String, dynamic> row) {
+    return Pet(
+      id: row['id'] as String,
+      ownerId: row['owner_id'] as String,
+      name: row['name'] as String,
+      species: row['species'] as String,
+      breed: row['breed'] as String?,
+      sex: row['sex'] as String?,
+      neutered: row['neutered'] as bool?,
+      birthDate: row['birth_date'] != null ? DateTime.tryParse(row['birth_date'] as String) : null,
+      bloodType: row['blood_type'] as String?,
+      weightKg: (row['weight_kg'] as num?)?.toDouble(),
+      avatarUrl: row['avatar_url'] as String?,
+      note: row['note'] as String?,
+      createdAt: DateTime.tryParse((row['created_at'] as String?) ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse((row['updated_at'] as String?) ?? '') ?? DateTime.now(),
+    );
+  }
+
   /// Get all pets for the current user
   Future<List<Pet>> getAllPets() async {
     try {
@@ -29,7 +66,7 @@ class PetsRepository {
               .order('created_at', ascending: false);
 
           final pets = (response as List)
-              .map((json) => Pet.fromJson(json as Map<String, dynamic>))
+              .map((row) => _fromSupabaseRow(row as Map<String, dynamic>))
               .toList();
 
           print('✅ Supabase에서 ${pets.length}개 펫 로드');
@@ -80,7 +117,7 @@ class PetsRepository {
           .eq('id', id)
           .single();
 
-      final pet = Pet.fromJson(response as Map<String, dynamic>);
+      final pet = _fromSupabaseRow(response as Map<String, dynamic>);
       
       // Cache locally
       await localDb.savePet(pet);
@@ -100,20 +137,15 @@ class PetsRepository {
       print('🔍 현재 사용자: ${user?.email ?? 'null'} (ID: ${user?.id ?? 'null'})');
       
       if (user != null) {
-        // Create pet with user ID
-        final petWithOwner = pet.copyWith(ownerId: user.id);
-        
-        // Save to Supabase (avatarUrl 제거)
-        final petJson = petWithOwner.toJson();
-        petJson.remove('avatarUrl'); // Supabase 테이블에 없는 컬럼 제거
-        
+        // Build row for Supabase
+        final insertRow = _toSupabaseRow(pet, user.id);
         final response = await supabase
             .from('pets')
-            .insert(petJson)
+            .insert(insertRow)
             .select()
             .single();
 
-        final savedPet = Pet.fromJson(response as Map<String, dynamic>);
+        final savedPet = _fromSupabaseRow(response as Map<String, dynamic>);
         
         // Cache locally
         await localDb.savePet(savedPet);
@@ -140,14 +172,16 @@ class PetsRepository {
   Future<Pet> updatePet(Pet pet) async {
     try {
       // Update in Supabase
+      final userId = supabase.auth.currentUser?.id;
+      final updateRow = userId != null ? _toSupabaseRow(pet, userId) : _toSupabaseRow(pet, pet.ownerId);
       final response = await supabase
           .from('pets')
-          .update(pet.toJson())
+          .update(updateRow)
           .eq('id', pet.id)
           .select()
           .single();
 
-      final updatedPet = Pet.fromJson(response as Map<String, dynamic>);
+      final updatedPet = _fromSupabaseRow(response as Map<String, dynamic>);
       
       // Update locally
       await localDb.savePet(updatedPet);
