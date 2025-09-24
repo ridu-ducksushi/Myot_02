@@ -38,12 +38,10 @@ class _PetsScreenState extends ConsumerState<PetsScreen> {
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
     if (currentUserId != _lastUserId) {
       _lastUserId = currentUserId;
-      // 사용자 전환 시 로컬 캐시를 정리하고 목록을 다시 불러옵니다.
-      LocalDatabase.instance.clearAll().then((_) {
-        if (mounted) {
-          ref.read(petsProvider.notifier).loadPets();
-        }
-      });
+      // 사용자 전환 시 해당 사용자 스코프의 데이터로만 재로딩
+      if (mounted) {
+        ref.read(petsProvider.notifier).loadPets();
+      }
     }
   }
 

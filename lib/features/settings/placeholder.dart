@@ -16,12 +16,10 @@ class SettingsPlaceholder extends ConsumerWidget {
 
   Future<void> _signOut(BuildContext context) async {
     try {
-      await LocalDatabase.instance.clearAll();
+      // 캐시는 사용자 스코프 키로 분리되어 있으므로 전역 삭제하지 않음
       await Supabase.instance.client.auth.signOut();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그아웃 완료. 로컬 캐시가 초기화되었습니다.')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('로그아웃 완료.')));
       }
       // The GoRouter redirect will handle navigation to the login screen.
     } catch (e) {
