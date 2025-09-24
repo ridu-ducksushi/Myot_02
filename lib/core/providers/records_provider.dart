@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:petcare/data/local/database.dart';
 import 'package:petcare/data/models/record.dart';
+import 'package:petcare/data/repositories/records_repository.dart';
 
 /// State class for records list
 class RecordsState {
@@ -29,11 +30,9 @@ class RecordsState {
 
 /// Records provider notifier
 class RecordsNotifier extends StateNotifier<RecordsState> {
-  RecordsNotifier() : super(const RecordsState()) {
-    _localDB = LocalDatabase.instance;
-  }
+  RecordsNotifier(this._repository) : super(const RecordsState());
 
-  late final LocalDatabase _localDB;
+  final RecordsRepository _repository;
 
   /// Load all records
   Future<void> loadRecords([String? petId]) async {
@@ -41,8 +40,8 @@ class RecordsNotifier extends StateNotifier<RecordsState> {
     
     try {
       final records = petId != null
-          ? await _localDB.getRecordsForPet(petId)
-          : await _localDB.getAllRecords();
+          ? await _repository.getRecordsForPet(petId)
+          : await _repository.getAllRecords();
       
       state = state.copyWith(
         records: records,
@@ -63,7 +62,10 @@ class RecordsNotifier extends StateNotifier<RecordsState> {
     state = state.copyWith(records: updatedRecords); // Optimistic update
 
     try {
-      await _localDB.saveRecord(record);
+      final savedRecord = await _repository.createRecord(record);
+      // Update with the saved record (which has server-generated ID)
+      final finalRecords = [savedRecord, ...oldRecords];
+      state = state.copyWith(records: finalRecords);
     } catch (e) {
       state = state.copyWith(records: oldRecords, error: e.toString()); // Revert on error
     }
@@ -78,7 +80,11 @@ class RecordsNotifier extends StateNotifier<RecordsState> {
     state = state.copyWith(records: updatedRecords); // Optimistic update
     
     try {
-      await _localDB.saveRecord(updatedRecord);
+      final savedRecord = await _repository.updateRecord(updatedRecord);
+      final finalRecords = state.records.map((record) {
+        return record.id == savedRecord.id ? savedRecord : record;
+      }).toList();
+      state = state.copyWith(records: finalRecords);
     } catch (e) {
       state = state.copyWith(records: oldRecords, error: e.toString()); // Revert
     }
@@ -91,7 +97,7 @@ class RecordsNotifier extends StateNotifier<RecordsState> {
     state = state.copyWith(records: updatedRecords); // Optimistic update
 
     try {
-      await _localDB.deleteRecord(recordId);
+      await _repository.deleteRecord(recordId);
     } catch (e) {
       state = state.copyWith(records: oldRecords, error: e.toString()); // Revert
     }
@@ -105,7 +111,7 @@ class RecordsNotifier extends StateNotifier<RecordsState> {
 
 /// Records provider
 final recordsProvider = StateNotifierProvider<RecordsNotifier, RecordsState>((ref) {
-  return RecordsNotifier();
+  return RecordsNotifier(ref.read(recordsRepositoryProvider));
 });
 
 /// Records for specific pet provider

@@ -13,6 +13,39 @@ class RecordsRepository {
   final SupabaseClient supabase;
   final LocalDatabase localDb;
 
+  Map<String, dynamic> _toSupabaseRow(Record record) {
+    return {
+      // Do NOT send id; let Supabase generate
+      'pet_id': record.petId,
+      'type': record.type,
+      'title': record.title,
+      'content': record.content,
+      'value': record.value,
+      'at': record.at.toIso8601String(),
+      'files': record.files,
+    }..removeWhere((k, v) => v == null);
+  }
+
+  bool _isValidUUID(String str) {
+    final uuidRegex = RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', caseSensitive: false);
+    return uuidRegex.hasMatch(str);
+  }
+
+  Record _fromSupabaseRow(Map<String, dynamic> row) {
+    return Record(
+      id: row['id'] as String,
+      petId: (row['pet_id'] as String),
+      type: row['type'] as String,
+      title: row['title'] as String? ?? '',
+      content: row['content'] as String?,
+      value: row['value'] as Map<String, dynamic>?,
+      at: DateTime.tryParse(row['at'] as String? ?? '') ?? DateTime.now(),
+      files: (row['files'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
+      createdAt: DateTime.tryParse(row['created_at'] as String? ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(row['updated_at'] as String? ?? '') ?? DateTime.now(),
+    );
+  }
+
   /// Get all records for a pet
   Future<List<Record>> getRecordsForPet(String petId) async {
     try {
@@ -25,7 +58,7 @@ class RecordsRepository {
           .order('at', ascending: false);
 
       final records = (response as List)
-          .map((json) => Record.fromJson(json as Map<String, dynamic>))
+          .map((row) => _fromSupabaseRow(row as Map<String, dynamic>))
           .toList();
 
       // Cache locally
@@ -62,7 +95,7 @@ class RecordsRepository {
           .order('at', ascending: false);
 
         final records = (response as List)
-            .map((json) => Record.fromJson(json as Map<String, dynamic>))
+            .map((row) => _fromSupabaseRow(row as Map<String, dynamic>))
             .toList();
 
         // Cache locally
@@ -105,7 +138,7 @@ class RecordsRepository {
             .order('at', ascending: false);
 
         return (response as List)
-            .map((json) => Record.fromJson(json as Map<String, dynamic>))
+            .map((row) => _fromSupabaseRow(row as Map<String, dynamic>))
             .toList();
       }
     } catch (e) {
@@ -122,14 +155,21 @@ class RecordsRepository {
   /// Create a new record
   Future<Record> createRecord(Record record) async {
     try {
-      // Save to Supabase
+      // If petId is not a UUID (likely local only), save locally only
+      if (!_isValidUUID(record.petId)) {
+        print('⚠️ PetId is not a UUID, saving locally only: ${record.petId}');
+        await localDb.saveRecord(record);
+        return record;
+      }
+      
+      final insertRow = _toSupabaseRow(record);
       final response = await supabase
           .from('records')
-          .insert(record.toJson())
+          .insert(insertRow)
           .select()
           .single();
 
-      final savedRecord = Record.fromJson(response as Map<String, dynamic>);
+      final savedRecord = _fromSupabaseRow(response as Map<String, dynamic>);
       
       // Cache locally
       await localDb.saveRecord(savedRecord);
@@ -146,15 +186,22 @@ class RecordsRepository {
   /// Update an existing record
   Future<Record> updateRecord(Record record) async {
     try {
-      // Update in Supabase
+      // If petId is not a UUID (likely local only), save locally only
+      if (!_isValidUUID(record.petId)) {
+        print('⚠️ PetId is not a UUID, updating locally only: ${record.petId}');
+        await localDb.saveRecord(record);
+        return record;
+      }
+      
+      final updateRow = _toSupabaseRow(record);
       final response = await supabase
           .from('records')
-          .update(record.toJson())
+          .update(updateRow)
           .eq('id', record.id)
           .select()
           .single();
 
-      final updatedRecord = Record.fromJson(response as Map<String, dynamic>);
+      final updatedRecord = _fromSupabaseRow(response as Map<String, dynamic>);
       
       // Update locally
       await localDb.saveRecord(updatedRecord);
@@ -202,7 +249,7 @@ class RecordsRepository {
             .order('at', ascending: false);
 
         return (response as List)
-            .map((json) => Record.fromJson(json as Map<String, dynamic>))
+            .map((row) => _fromSupabaseRow(row as Map<String, dynamic>))
             .toList();
       }
     } catch (e) {
