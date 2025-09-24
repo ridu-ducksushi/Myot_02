@@ -50,6 +50,20 @@ class PetsRepository {
     );
   }
 
+  Future<void> _ensureUserExists() async {
+    final authUser = supabase.auth.currentUser;
+    if (authUser == null) return;
+    try {
+      await supabase.from('users').upsert({
+        'id': authUser.id,
+        'email': authUser.email,
+        'display_name': authUser.userMetadata?['name'] ?? authUser.email,
+      });
+    } catch (_) {
+      // Ignore if exists or RLS prevents; FK will reveal issues otherwise
+    }
+  }
+
   /// Get all pets for the current user
   Future<List<Pet>> getAllPets() async {
     try {
@@ -137,6 +151,7 @@ class PetsRepository {
       print('🔍 현재 사용자: ${user?.email ?? 'null'} (ID: ${user?.id ?? 'null'})');
       
       if (user != null) {
+        await _ensureUserExists();
         // Build row for Supabase
         final insertRow = _toSupabaseRow(pet, user.id);
         final response = await supabase
