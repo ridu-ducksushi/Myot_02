@@ -52,14 +52,14 @@ class RecordsRepository {
       final user = supabase.auth.currentUser;
       if (user != null) {
         // Get records for user's pets
-        final response = await supabase
-            .from('records')
-            .select('''
+      final response = await supabase
+          .from('records')
+          .select('''
               *,
               pets!inner(owner_id)
             ''')
-            .eq('pets.owner_id', user.id)
-            .order('at', ascending: false);
+          .eq('pets.owner_id', user.id)
+          .order('at', ascending: false);
 
         final records = (response as List)
             .map((json) => Record.fromJson(json as Map<String, dynamic>))
@@ -76,8 +76,12 @@ class RecordsRepository {
       print('Failed to fetch records from Supabase: $e');
     }
 
-    // Fallback to local database
-    return await localDb.getAllRecords();
+    // Fallback to local database (사용자 기준 필터링)
+    final all = await localDb.getAllRecords();
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return all.where((r) => false).toList();
+    // 로컬에는 ownerId가 없으므로, 현재는 전체 레코드 중 서버에서 동기화된 항목만 남도록 서버 우선으로 로드하도록 유도
+    return all; // 최소 변경: 필요 시 Record 모델에 ownerId 추가 후 강제 필터링
   }
 
   /// Get today's records

@@ -21,13 +21,30 @@ class PetsScreen extends ConsumerStatefulWidget {
 }
 
 class _PetsScreenState extends ConsumerState<PetsScreen> {
+  String? _lastUserId;
   @override
   void initState() {
     super.initState();
     // Load pets when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _lastUserId = Supabase.instance.client.auth.currentUser?.id;
       ref.read(petsProvider.notifier).loadPets();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    if (currentUserId != _lastUserId) {
+      _lastUserId = currentUserId;
+      // 사용자 전환 시 로컬 캐시를 정리하고 목록을 다시 불러옵니다.
+      LocalDatabase.instance.clearAll().then((_) {
+        if (mounted) {
+          ref.read(petsProvider.notifier).loadPets();
+        }
+      });
+    }
   }
 
   @override

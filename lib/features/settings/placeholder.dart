@@ -18,6 +18,11 @@ class SettingsPlaceholder extends ConsumerWidget {
     try {
       await LocalDatabase.instance.clearAll();
       await Supabase.instance.client.auth.signOut();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('로그아웃 완료. 로컬 캐시가 초기화되었습니다.')),
+        );
+      }
       // The GoRouter redirect will handle navigation to the login screen.
     } catch (e) {
       if (context.mounted) {
