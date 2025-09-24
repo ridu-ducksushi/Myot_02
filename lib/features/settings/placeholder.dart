@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:intl/intl.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
+import 'package:petcare/data/local/database.dart';
 import 'package:petcare/features/pets/pets_screen.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
@@ -16,6 +16,7 @@ class SettingsPlaceholder extends ConsumerWidget {
 
   Future<void> _signOut(BuildContext context) async {
     try {
+      await LocalDatabase.instance.clearAll();
       await Supabase.instance.client.auth.signOut();
       // The GoRouter redirect will handle navigation to the login screen.
     } catch (e) {

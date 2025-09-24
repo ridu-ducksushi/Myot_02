@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/data/models/record.dart';
 import 'package:petcare/data/models/reminder.dart';
@@ -17,6 +19,50 @@ class LocalDatabase {
   static const String _remindersKey = 'reminders';
   
   LocalDatabase._();
+
+  String _userScopedKey(String baseKey) {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    return '${baseKey}_${userId ?? 'guest'}';
+  }
+
+  String? _getScopedString(String baseKey) {
+    final prefs = _prefs;
+    if (prefs == null) return null;
+
+    final scopedKey = _userScopedKey(baseKey);
+    final scopedValue = prefs.getString(scopedKey);
+    if (scopedValue != null) {
+      return scopedValue;
+    }
+
+    final legacyValue = prefs.getString(baseKey);
+    if (legacyValue != null) {
+      unawaited(prefs.setString(scopedKey, legacyValue));
+      unawaited(prefs.remove(baseKey));
+    }
+    return legacyValue;
+  }
+
+  Future<void> _setScopedString(String baseKey, String value) async {
+    final prefs = _prefs;
+    if (prefs == null) return;
+
+    final scopedKey = _userScopedKey(baseKey);
+    await prefs.setString(scopedKey, value);
+    if (prefs.containsKey(baseKey)) {
+      await prefs.remove(baseKey);
+    }
+  }
+
+  Future<void> _removeScopedKey(String baseKey) async {
+    final prefs = _prefs;
+    if (prefs == null) return;
+
+    await prefs.remove(_userScopedKey(baseKey));
+    if (prefs.containsKey(baseKey)) {
+      await prefs.remove(baseKey);
+    }
+  }
   
   /// Initialize the database
   static Future<void> initialize() async {
@@ -36,16 +82,16 @@ class LocalDatabase {
   
   /// Clear all data (for testing/reset)
   Future<void> clearAll() async {
-    await _prefs?.remove(_petsKey);
-    await _prefs?.remove(_recordsKey);
-    await _prefs?.remove(_remindersKey);
+    await _removeScopedKey(_petsKey);
+    await _removeScopedKey(_recordsKey);
+    await _removeScopedKey(_remindersKey);
     print('🗑️ 모든 로컬 데이터 삭제 완료');
   }
   
   // Pet operations
   Future<List<Pet>> getAllPets() async {
     try {
-      final petsJson = _prefs?.getString(_petsKey);
+      final petsJson = _getScopedString(_petsKey);
       if (petsJson == null) return [];
       
       final List<dynamic> petsList = json.decode(petsJson);
@@ -81,7 +127,7 @@ class LocalDatabase {
       }
       
       final petsJson = json.encode(pets.map((p) => p.toJson()).toList());
-      await _prefs?.setString(_petsKey, petsJson);
+      await _setScopedString(_petsKey, petsJson);
       print('💾 펫 데이터 저장 완료 (총 ${pets.length}개)');
     } catch (e) {
       print('❌ 펫 저장 실패: $e');
@@ -95,7 +141,7 @@ class LocalDatabase {
       pets.removeWhere((pet) => pet.id == id);
       
       final petsJson = json.encode(pets.map((p) => p.toJson()).toList());
-      await _prefs?.setString(_petsKey, petsJson);
+      await _setScopedString(_petsKey, petsJson);
       print('🗑️ 펫 삭제 완료 (${initialCount} → ${pets.length})');
     } catch (e) {
       print('❌ 펫 삭제 실패: $e');
@@ -105,7 +151,7 @@ class LocalDatabase {
   // Record operations
   Future<List<Record>> getAllRecords() async {
     try {
-      final recordsJson = _prefs?.getString(_recordsKey);
+      final recordsJson = _getScopedString(_recordsKey);
       if (recordsJson == null) return [];
       
       final List<dynamic> recordsList = json.decode(recordsJson);
@@ -133,7 +179,7 @@ class LocalDatabase {
       }
       
       final recordsJson = json.encode(records.map((r) => r.toJson()).toList());
-      await _prefs?.setString(_recordsKey, recordsJson);
+      await _setScopedString(_recordsKey, recordsJson);
     } catch (e) {
       print('❌ 기록 저장 실패: $e');
     }
@@ -145,7 +191,7 @@ class LocalDatabase {
       records.removeWhere((record) => record.id == id);
       
       final recordsJson = json.encode(records.map((r) => r.toJson()).toList());
-      await _prefs?.setString(_recordsKey, recordsJson);
+      await _setScopedString(_recordsKey, recordsJson);
     } catch (e) {
       print('❌ 기록 삭제 실패: $e');
     }
@@ -154,7 +200,7 @@ class LocalDatabase {
   // Reminder operations
   Future<List<Reminder>> getAllReminders() async {
     try {
-      final remindersJson = _prefs?.getString(_remindersKey);
+      final remindersJson = _getScopedString(_remindersKey);
       if (remindersJson == null) return [];
       
       final List<dynamic> remindersList = json.decode(remindersJson);
@@ -182,7 +228,7 @@ class LocalDatabase {
       }
       
       final remindersJson = json.encode(reminders.map((r) => r.toJson()).toList());
-      await _prefs?.setString(_remindersKey, remindersJson);
+      await _setScopedString(_remindersKey, remindersJson);
     } catch (e) {
       print('❌ 리마인더 저장 실패: $e');
     }
@@ -194,7 +240,7 @@ class LocalDatabase {
       reminders.removeWhere((reminder) => reminder.id == id);
       
       final remindersJson = json.encode(reminders.map((r) => r.toJson()).toList());
-      await _prefs?.setString(_remindersKey, remindersJson);
+      await _setScopedString(_remindersKey, remindersJson);
     } catch (e) {
       print('❌ 리마인더 삭제 실패: $e');
     }

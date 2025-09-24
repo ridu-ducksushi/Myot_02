@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/data/models/pet.dart';
@@ -10,6 +11,7 @@ import 'package:petcare/data/services/image_service.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/widgets/profile_image_picker.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
+import 'package:petcare/data/local/database.dart';
 
 class PetsScreen extends ConsumerStatefulWidget {
   const PetsScreen({super.key});
@@ -39,6 +41,13 @@ class _PetsScreenState extends ConsumerState<PetsScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () => _showAddPetDialog(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await LocalDatabase.instance.clearAll();
+              await Supabase.instance.client.auth.signOut();
+            },
           ),
         ],
       ),
@@ -710,7 +719,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
     
     final pet = Pet(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      ownerId: '', // Will be set by repository
+      ownerId: Supabase.instance.client.auth.currentUser?.id ?? 'guest',
       name: _nameController.text.trim(),
       species: _selectedSpecies,
       breed: _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),

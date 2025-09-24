@@ -17,6 +17,7 @@ class RecordsRepository {
   Future<List<Record>> getRecordsForPet(String petId) async {
     try {
       // Try to fetch from Supabase first
+      final user = supabase.auth.currentUser;
       final response = await supabase
           .from('records')
           .select()
@@ -32,7 +33,11 @@ class RecordsRepository {
         await localDb.saveRecord(record);
       }
 
-      return records;
+      if (user == null) {
+        return records;
+      }
+
+      return records.where((record) => record.petId == petId).toList();
     } catch (e) {
       print('Failed to fetch records from Supabase: $e');
       // Fallback to local database

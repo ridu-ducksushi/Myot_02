@@ -39,19 +39,15 @@ class PetsRepository {
             await localDb.savePet(pet);
           }
 
-          // 로컬 데이터와 합치기
           final localPets = await localDb.getAllPets();
-          final allPets = [...pets];
+          final filteredPets = localPets.where((pet) {
+            if (pet.ownerId == user.id) return true;
+            if (pet.ownerId == 'local-user') return true;
+            return false;
+          }).toList();
           
-          // 로컬에만 있는 펫들 추가 (중복 제거)
-          for (final localPet in localPets) {
-            if (!allPets.any((p) => p.id == localPet.id)) {
-              allPets.add(localPet);
-            }
-          }
-          
-          print('✅ 총 ${allPets.length}개 펫 반환 (Supabase: ${pets.length}, 로컬: ${localPets.length})');
-          return allPets;
+          print('✅ 총 ${filteredPets.length}개 펫 반환 (Supabase: ${pets.length}, 로컬: ${localPets.length})');
+          return filteredPets;
         } catch (e) {
           print('❌ Supabase에서 펫 로드 실패: $e');
         }
@@ -63,8 +59,15 @@ class PetsRepository {
     // Fallback to local database
     print('🔄 로컬 데이터베이스에서 로드');
     final localPets = await localDb.getAllPets();
-    print('📱 로컬에서 ${localPets.length}개 펫 로드');
-    return localPets;
+    final userId = supabase.auth.currentUser?.id;
+    final filtered = localPets.where((pet) {
+      if (userId == null) {
+        return pet.ownerId == 'local-user';
+      }
+      return pet.ownerId == userId || pet.ownerId == 'local-user';
+    }).toList();
+    print('📱 로컬에서 ${filtered.length}개 펫 로드 (필터링 적용)');
+    return filtered;
   }
 
   /// Get pet by ID
@@ -120,18 +123,16 @@ class PetsRepository {
       } else {
         // 로그인하지 않은 경우 로컬에만 저장
         print('⚠️ 사용자가 로그인하지 않음 - 로컬 저장');
-        final localPet = pet.copyWith(ownerId: 'local-user');
-        await localDb.savePet(localPet);
-        print('📱 로컬에만 펫 저장: ${localPet.name}');
-        return localPet;
+        await localDb.savePet(pet);
+        print('📱 로컬에만 펫 저장: ${pet.name}');
+        return pet;
       }
     } catch (e) {
       // Supabase 오류 시 로컬에만 저장
       print('❌ Supabase 저장 실패 상세: $e');
       print('🔄 로컬 저장으로 대체');
-      final localPet = pet.copyWith(ownerId: 'local-user');
-      await localDb.savePet(localPet);
-      return localPet;
+      await localDb.savePet(pet);
+      return pet;
     }
   }
 
