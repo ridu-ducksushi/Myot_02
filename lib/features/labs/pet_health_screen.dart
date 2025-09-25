@@ -56,7 +56,29 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
           onPressed: () => context.go('/pets/${widget.petId}'),
         ),
       ),
-      body: _LabTable(species: pet.species, petId: pet.id),
+      body: _LabTable(species: pet.species, petId: pet.id, key: ValueKey(pet.id)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddItemDialog(pet.species, pet.id),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        elevation: 4,
+        child: const Icon(Icons.add, size: 28),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  void _showAddItemDialog(String species, String petId) {
+    showDialog(
+      context: context,
+      builder: (context) => _AddLabItemDialog(
+        species: species,
+        petId: petId,
+        onItemAdded: () {
+          // Force rebuild the widget by changing the key
+          setState(() {});
+        },
+      ),
     );
   }
 }
@@ -126,7 +148,7 @@ class _ReminderSection extends StatelessWidget {
 }
 
 class _LabTable extends StatefulWidget {
-  const _LabTable({required this.species, required this.petId});
+  const _LabTable({required this.species, required this.petId, Key? key}) : super(key: key);
   final String species; // 'Dog' or 'Cat'
   final String petId;
 
@@ -163,6 +185,13 @@ class _LabTableState extends State<_LabTable> {
       _valueCtrls[key] = TextEditingController();
       _valueCtrls[key]!.addListener(_onChanged);
     }
+    _loadFromSupabase();
+  }
+
+  @override
+  void didUpdateWidget(_LabTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Widget이 업데이트되면 데이터를 다시 로드
     _loadFromSupabase();
   }
 
@@ -320,7 +349,7 @@ class _LabTableState extends State<_LabTable> {
   }
 
   List<String> _orderedKeys() {
-    return [
+    final baseKeys = [
       // CBC
       'RBC', 'WBC', 'Hb', 'HCT', 'PLT',
       // 혈청화학
@@ -328,6 +357,12 @@ class _LabTableState extends State<_LabTable> {
       // 전해질
       'Na', 'K', 'Cl', 'Ca', 'P',
     ];
+    
+    // Add any custom keys that exist in controllers but not in base keys
+    final customKeys = _valueCtrls.keys.where((k) => !baseKeys.contains(k)).toList();
+    customKeys.sort(); // Sort custom keys alphabetically
+    
+    return [...baseKeys, ...customKeys];
   }
 
   void _initRefs() {
@@ -413,10 +448,43 @@ class _LabTableState extends State<_LabTable> {
       if (currentRow != null && currentRow['items'] is Map) {
         final Map items = currentRow['items'] as Map;
         print('✅ Current found with ${items.length} items');
-        for (final k in _orderedKeys()) {
+        
+        // Create controllers for any new items that don't exist yet
+        for (final k in items.keys) {
+          if (!_valueCtrls.containsKey(k)) {
+            _valueCtrls[k] = TextEditingController();
+            _valueCtrls[k]!.addListener(_onChanged);
+            
+            // Set unit and reference values from the stored data
+            final v = items[k];
+            if (v is Map) {
+              if (v['unit'] is String) {
+                _units[k] = v['unit'] as String;
+              }
+              if (v['reference'] is String) {
+                final isCat = widget.species.toLowerCase() == 'cat';
+                if (isCat) {
+                  _refCat[k] = v['reference'] as String;
+                } else {
+                  _refDog[k] = v['reference'] as String;
+                }
+              }
+            }
+          }
+        }
+        
+        // Update existing controllers with values
+        for (final k in items.keys) {
           final v = items[k];
           final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
           _valueCtrls[k]?.text = value;
+        }
+        
+        // Clear controllers for items not in current data
+        for (final k in _orderedKeys()) {
+          if (!items.containsKey(k)) {
+            _valueCtrls[k]?.text = '';
+          }
         }
       } else {
         // Clear current inputs if none
@@ -654,6 +722,183 @@ class _EditLabValueDialogState extends State<_EditLabValueDialog> {
             }
           },
           child: const Text('저장'),
+        ),
+      ],
+    );
+  }
+}
+
+class _AddLabItemDialog extends StatefulWidget {
+  final String species;
+  final String petId;
+  final VoidCallback onItemAdded;
+
+  const _AddLabItemDialog({
+    required this.species,
+    required this.petId,
+    required this.onItemAdded,
+  });
+
+  @override
+  State<_AddLabItemDialog> createState() => _AddLabItemDialogState();
+}
+
+class _AddLabItemDialogState extends State<_AddLabItemDialog> {
+  late TextEditingController _itemKeyController;
+  late TextEditingController _valueController;
+  late TextEditingController _referenceController;
+  late TextEditingController _unitController;
+
+  @override
+  void initState() {
+    super.initState();
+    _itemKeyController = TextEditingController();
+    _valueController = TextEditingController();
+    _referenceController = TextEditingController();
+    _unitController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _itemKeyController.dispose();
+    _valueController.dispose();
+    _referenceController.dispose();
+    _unitController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveNewItem() async {
+    final itemKey = _itemKeyController.text.trim();
+    final value = _valueController.text.trim();
+    
+    if (itemKey.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('검사명을 입력해주세요')),
+      );
+      return;
+    }
+
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('로그인이 필요합니다')),
+        );
+        return;
+      }
+
+      final today = DateTime.now();
+      final dateKey = '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+      // Get current lab data for today
+      final currentRes = await Supabase.instance.client
+          .from('labs')
+          .select('items')
+          .eq('user_id', uid)
+          .eq('pet_id', widget.petId)
+          .eq('date', dateKey)
+          .eq('panel', 'BloodTest')
+          .maybeSingle();
+
+      Map<String, dynamic> currentItems = {};
+      if (currentRes != null) {
+        currentItems = Map<String, dynamic>.from(currentRes['items'] ?? {});
+      }
+
+      // Add new item to the current items
+      currentItems[itemKey] = {
+        'value': value,
+        'unit': _unitController.text.trim(),
+        'reference': _referenceController.text.trim(),
+      };
+
+      // Save to Supabase
+      await Supabase.instance.client
+          .from('labs')
+          .upsert({
+            'user_id': uid,
+            'pet_id': widget.petId,
+            'date': dateKey,
+            'panel': 'BloodTest',
+            'items': currentItems,
+          });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('새로운 검사 항목 "$itemKey"이 추가되었습니다')),
+        );
+        widget.onItemAdded();
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('저장 중 오류가 발생했습니다: $e')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('새 검사 항목 추가'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _itemKeyController,
+              decoration: const InputDecoration(
+                labelText: '검사명 *',
+                border: OutlineInputBorder(),
+                hintText: '예: 새로운 검사 항목',
+                helperText: '검사 항목의 이름을 입력하세요',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _valueController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: '검사 수치',
+                border: OutlineInputBorder(),
+                hintText: '수치를 입력하세요',
+                helperText: '선택사항: 검사 결과값',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _referenceController,
+              decoration: const InputDecoration(
+                labelText: '기준치',
+                border: OutlineInputBorder(),
+                hintText: '예: 5.5~8.5',
+                helperText: '선택사항: 정상 범위',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _unitController,
+              decoration: const InputDecoration(
+                labelText: '단위',
+                border: OutlineInputBorder(),
+                hintText: '예: x10⁶/µL',
+                helperText: '선택사항: 측정 단위',
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('취소'),
+        ),
+        ElevatedButton(
+          onPressed: _saveNewItem,
+          child: const Text('추가'),
         ),
       ],
     );
