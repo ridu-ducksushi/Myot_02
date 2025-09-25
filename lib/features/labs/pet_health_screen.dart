@@ -253,9 +253,13 @@ class _LabTableState extends State<_LabTable> {
             });
           },
         )),
-        DataCell(Text(k, style: const TextStyle(fontSize: 14))),
-        DataCell(
-          TextFormField(
+        DataCell(InkWell(
+          onTap: () => _showEditDialog(k),
+          child: Text(k, style: const TextStyle(fontSize: 14)),
+        )),
+        DataCell(InkWell(
+          onTap: () => _showEditDialog(k),
+          child: TextFormField(
             controller: _valueCtrls[k],
             keyboardType: TextInputType.number,
             style: const TextStyle(fontSize: 14),
@@ -264,11 +268,21 @@ class _LabTableState extends State<_LabTable> {
               hintText: '-',
               contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             ),
+            enabled: false, // Disable direct editing, use popup instead
           ),
-        ),
-        DataCell(Text(_previousValues[k] ?? '-', style: const TextStyle(fontSize: 14))),
-        DataCell(Text(ref ?? '-', style: const TextStyle(fontSize: 14))),
-        DataCell(Text(_units[k] ?? '-', style: const TextStyle(fontSize: 14))),
+        )),
+        DataCell(InkWell(
+          onTap: () => _showEditDialog(k),
+          child: Text(_previousValues[k] ?? '-', style: const TextStyle(fontSize: 14)),
+        )),
+        DataCell(InkWell(
+          onTap: () => _showEditDialog(k),
+          child: Text(ref ?? '-', style: const TextStyle(fontSize: 14)),
+        )),
+        DataCell(InkWell(
+          onTap: () => _showEditDialog(k),
+          child: Text(_units[k] ?? '-', style: const TextStyle(fontSize: 14)),
+        )),
       ]);
     }).toList();
 
@@ -432,6 +446,42 @@ class _LabTableState extends State<_LabTable> {
     }
   }
 
+  void _showEditDialog(String itemKey) {
+    final currentValue = _valueCtrls[itemKey]?.text ?? '';
+    final unit = _units[itemKey] ?? '';
+    final isCat = widget.species.toLowerCase() == 'cat';
+    final ref = isCat ? _refCat[itemKey] : _refDog[itemKey];
+
+    showDialog(
+      context: context,
+      builder: (context) => _EditLabValueDialog(
+        itemKey: itemKey,
+        currentValue: currentValue,
+        reference: ref ?? '',
+        unit: unit,
+        onSave: (newItemKey, newValue) {
+          // If item key changed, remove old controller and add new one
+          if (newItemKey != itemKey) {
+            _valueCtrls.remove(itemKey);
+            _units.remove(itemKey);
+            _refDog.remove(itemKey);
+            _refCat.remove(itemKey);
+            
+            _valueCtrls[newItemKey] = TextEditingController(text: newValue);
+            _units[newItemKey] = unit;
+            if (ref != null) {
+              _refDog[newItemKey] = ref;
+              _refCat[newItemKey] = ref;
+            }
+          } else {
+            _valueCtrls[itemKey]?.text = newValue;
+          }
+          _saveToSupabase();
+        },
+      ),
+    );
+  }
+
   Future<void> _saveToSupabase() async {
     if (_isSaving) return;
     
@@ -495,5 +545,117 @@ class _LabTableState extends State<_LabTable> {
         _saveToSupabase();
       }
     });
+  }
+}
+
+class _EditLabValueDialog extends StatefulWidget {
+  final String itemKey;
+  final String currentValue;
+  final String reference;
+  final String unit;
+  final Function(String, String) onSave; // (newItemKey, newValue)
+
+  const _EditLabValueDialog({
+    required this.itemKey,
+    required this.currentValue,
+    required this.reference,
+    required this.unit,
+    required this.onSave,
+  });
+
+  @override
+  State<_EditLabValueDialog> createState() => _EditLabValueDialogState();
+}
+
+class _EditLabValueDialogState extends State<_EditLabValueDialog> {
+  late TextEditingController _itemKeyController;
+  late TextEditingController _valueController;
+  late TextEditingController _referenceController;
+  late TextEditingController _unitController;
+
+  @override
+  void initState() {
+    super.initState();
+    _itemKeyController = TextEditingController(text: widget.itemKey);
+    _valueController = TextEditingController(text: widget.currentValue);
+    _referenceController = TextEditingController(text: widget.reference);
+    _unitController = TextEditingController(text: widget.unit);
+  }
+
+  @override
+  void dispose() {
+    _itemKeyController.dispose();
+    _valueController.dispose();
+    _referenceController.dispose();
+    _unitController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('검사 수치 수정'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _itemKeyController,
+              decoration: const InputDecoration(
+                labelText: '검사명',
+                border: OutlineInputBorder(),
+                hintText: '예: RBC, WBC, Hb 등',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _valueController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: '현재 수치',
+                border: OutlineInputBorder(),
+                hintText: '수치를 입력하세요',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _referenceController,
+              decoration: const InputDecoration(
+                labelText: '기준치',
+                border: OutlineInputBorder(),
+                hintText: '예: 5.5~8.5',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _unitController,
+              decoration: const InputDecoration(
+                labelText: '단위',
+                border: OutlineInputBorder(),
+                hintText: '예: x10⁶/µL',
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('취소'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final newItemKey = _itemKeyController.text.trim();
+            final newValue = _valueController.text.trim();
+            if (newItemKey.isNotEmpty) {
+              widget.onSave(newItemKey, newValue);
+              Navigator.of(context).pop();
+            }
+          },
+          child: const Text('저장'),
+        ),
+      ],
+    );
   }
 }
