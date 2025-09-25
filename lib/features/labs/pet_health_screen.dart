@@ -146,6 +146,8 @@ class _LabTableState extends State<_LabTable> {
   // Previous (직전) values cache
   final Map<String, String> _previousValues = {};
   String? _previousDateStr;
+  // Pinned rows
+  final Set<String> _pinnedKeys = <String>{};
   
   static DateTime _today() {
     final now = DateTime.now();
@@ -230,20 +232,43 @@ class _LabTableState extends State<_LabTable> {
         ),
       ),
     );
-    final rows = _orderedKeys().map((k) {
+    final baseKeys = _orderedKeys();
+    final sortedKeys = [
+      ...baseKeys.where((k) => _pinnedKeys.contains(k)),
+      ...baseKeys.where((k) => !_pinnedKeys.contains(k)),
+    ];
+
+    final rows = sortedKeys.map((k) {
       final ref = isCat ? _refCat[k] : _refDog[k];
       return DataRow(cells: [
-        DataCell(Text(k)),
+        DataCell(Checkbox(
+          value: _pinnedKeys.contains(k),
+          onChanged: (v) {
+            setState(() {
+              if (v == true) {
+                _pinnedKeys.add(k);
+              } else {
+                _pinnedKeys.remove(k);
+              }
+            });
+          },
+        )),
+        DataCell(Text(k, style: const TextStyle(fontSize: 14))),
         DataCell(
           TextFormField(
             controller: _valueCtrls[k],
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(border: InputBorder.none, hintText: '-'),
+            style: const TextStyle(fontSize: 14),
+            decoration: const InputDecoration(
+              border: InputBorder.none, 
+              hintText: '-',
+              contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            ),
           ),
         ),
-        DataCell(Text(_previousValues[k] ?? '-')),
-        DataCell(Text(ref ?? '-')),
-        DataCell(Text(_units[k] ?? '-')),
+        DataCell(Text(_previousValues[k] ?? '-', style: const TextStyle(fontSize: 14))),
+        DataCell(Text(ref ?? '-', style: const TextStyle(fontSize: 14))),
+        DataCell(Text(_units[k] ?? '-', style: const TextStyle(fontSize: 14))),
       ]);
     }).toList();
 
@@ -259,12 +284,17 @@ class _LabTableState extends State<_LabTable> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: DataTable(
+                      columnSpacing: 8,
+                      horizontalMargin: 12,
+                      headingRowHeight: 48,
+                      dataRowHeight: 48,
                       columns: const [
-                        DataColumn(label: Text('검사명')),
-                        DataColumn(label: Text('현재')),
-                        DataColumn(label: Text('직전')),
-                        DataColumn(label: Text('기준치')),
-                        DataColumn(label: Text('단위')),
+                        DataColumn(label: Text('선택', style: TextStyle(fontSize: 14))),
+                        DataColumn(label: Text('검사명', style: TextStyle(fontSize: 14))),
+                        DataColumn(label: Text('현재', style: TextStyle(fontSize: 14))),
+                        DataColumn(label: Text('직전', style: TextStyle(fontSize: 14))),
+                        DataColumn(label: Text('기준치', style: TextStyle(fontSize: 14))),
+                        DataColumn(label: Text('단위', style: TextStyle(fontSize: 14))),
                       ],
                       rows: rows,
                     ),
