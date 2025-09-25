@@ -143,6 +143,9 @@ class _LabTableState extends State<_LabTable> {
   Timer? _saveTimer;
   bool _isLoading = false;
   bool _isSaving = false;
+  // Previous (직전) values cache
+  final Map<String, String> _previousValues = {};
+  String? _previousDateStr;
   
   static DateTime _today() {
     final now = DateTime.now();
@@ -177,8 +180,10 @@ class _LabTableState extends State<_LabTable> {
         ;
     final header = Padding(
       padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
           Text('검사 날짜: $dateLabel', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(width: 8),
           OutlinedButton.icon(
@@ -197,20 +202,32 @@ class _LabTableState extends State<_LabTable> {
               }
             },
           ),
-          const Spacer(),
-          if (_isSaving) 
+          if (_previousDateStr != null) ...[
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.history, size: 16),
+                  const SizedBox(width: 6),
+                  Text('직전: ${_previousDateStr!}', style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(width: 12),
+          if (_isSaving)
             const SizedBox(
               width: 20,
               height: 20,
               child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          else
-            ElevatedButton.icon(
-              onPressed: _saveToSupabase,
-              icon: const Icon(Icons.save),
-              label: const Text('저장'),
             ),
         ],
+        ),
       ),
     );
     final rows = _orderedKeys().map((k) {
@@ -224,6 +241,7 @@ class _LabTableState extends State<_LabTable> {
             decoration: const InputDecoration(border: InputBorder.none, hintText: '-'),
           ),
         ),
+        DataCell(Text(_previousValues[k] ?? '-')),
         DataCell(Text(ref ?? '-')),
         DataCell(Text(_units[k] ?? '-')),
       ]);
@@ -242,8 +260,9 @@ class _LabTableState extends State<_LabTable> {
                     scrollDirection: Axis.horizontal,
                     child: DataTable(
                       columns: const [
-                        DataColumn(label: Text('검사 항목명')),
-                        DataColumn(label: Text('검사 결과값')),
+                        DataColumn(label: Text('검사명')),
+                        DataColumn(label: Text('현재')),
+                        DataColumn(label: Text('직전')),
                         DataColumn(label: Text('기준치')),
                         DataColumn(label: Text('단위')),
                       ],
@@ -304,31 +323,73 @@ class _LabTableState extends State<_LabTable> {
         return;
       }
       
-      final res = await Supabase.instance.client
+      // Fetch up to two entries: selected date (현재) and previous (직전)
+      final resList = await Supabase.instance.client
           .from('labs')
-          .select()
+          .select('date, items')
           .eq('user_id', uid)
           .eq('pet_id', widget.petId)
-          .eq('date', _dateKey())
-          .maybeSingle();
-          
-      print('📊 Query result: $res');
-      
-      if (res != null && res['items'] is Map) {
-        final Map items = res['items'] as Map;
-        print('✅ Found existing data with ${items.length} items');
+          .lte('date', _dateKey())
+          .order('date', ascending: false)
+          .limit(2);
+
+      print('📊 Query result (<= selected date): $resList');
+
+      // Reset previous values cache
+      _previousValues.clear();
+      _previousDateStr = null;
+
+      Map<String, dynamic>? currentRow;
+      Map<String, dynamic>? previousRow;
+
+      if (resList is List && resList.isNotEmpty) {
+        // Determine current vs previous by matching date
+        for (final row in resList) {
+          final r = row as Map<String, dynamic>;
+          if (r['date'] == _dateKey()) {
+            currentRow = r;
+          }
+        }
+        if (resList.length >= 2) {
+          // previous is the first row that is not the selected date
+          for (final row in resList) {
+            final r = row as Map<String, dynamic>;
+            if (r['date'] != _dateKey()) {
+              previousRow = r;
+              break;
+            }
+          }
+        } else if (currentRow == null) {
+          // No exact match for selected date; treat first as previous reference
+          previousRow = resList.first as Map<String, dynamic>;
+        }
+      }
+
+      // Apply current values to controllers
+      if (currentRow != null && currentRow['items'] is Map) {
+        final Map items = currentRow['items'] as Map;
+        print('✅ Current found with ${items.length} items');
         for (final k in _orderedKeys()) {
           final v = items[k];
           final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
           _valueCtrls[k]?.text = value;
-          if (value.isNotEmpty) {
-            print('  $k: $value');
-          }
         }
       } else {
-        print('🆕 No existing data found, clearing all fields');
+        // Clear current inputs if none
         for (final k in _orderedKeys()) {
           _valueCtrls[k]?.text = '';
+        }
+      }
+
+      // Store previous values for display
+      if (previousRow != null && previousRow['items'] is Map) {
+        final Map items = previousRow['items'] as Map;
+        _previousDateStr = previousRow['date'] as String?;
+        print('ℹ️ Previous (${_previousDateStr ?? '-'}) with ${items.length} items');
+        for (final k in _orderedKeys()) {
+          final v = items[k];
+          final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+          _previousValues[k] = value;
         }
       }
     } catch (e) {
