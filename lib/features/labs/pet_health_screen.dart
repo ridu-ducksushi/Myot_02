@@ -180,8 +180,13 @@ class _LabTableState extends State<_LabTable> {
   void initState() {
     super.initState();
     _initRefs();
-    // 모든 검사 항목에 대해 컨트롤러 생성
-    for (final key in _orderedKeys()) {
+    // 기본 검사 항목들에 대해서만 컨트롤러 생성
+    final baseKeys = [
+      'RBC', 'WBC', 'Hb', 'HCT', 'PLT',
+      'ALT', 'AST', 'ALP', '총빌리루빈', 'BUN', 'Creatinine', 'SDMA', 'Glucose', '총단백', '알부민', '글로불린', '콜레스테롤', '중성지방',
+      'Na', 'K', 'Cl', 'Ca', 'P',
+    ];
+    for (final key in baseKeys) {
       _valueCtrls[key] = TextEditingController();
       _valueCtrls[key]!.addListener(_onChanged);
     }
@@ -373,8 +378,12 @@ class _LabTableState extends State<_LabTable> {
       'Na', 'K', 'Cl', 'Ca', 'P',
     ];
     
-    // Add any custom keys that exist in controllers but not in base keys
-    final customKeys = _valueCtrls.keys.where((k) => !baseKeys.contains(k)).toList();
+    // Only include custom keys that have actual data for this pet
+    // This prevents showing custom items from other pets
+    final customKeys = _valueCtrls.keys.where((k) => 
+      !baseKeys.contains(k) && 
+      (_valueCtrls[k]?.text.isNotEmpty == true || _units.containsKey(k))
+    ).toList();
     customKeys.sort(); // Sort custom keys alphabetically
     
     return [...baseKeys, ...customKeys];
@@ -415,6 +424,23 @@ class _LabTableState extends State<_LabTable> {
         print('❌ User not authenticated');
         setState(() => _isLoading = false);
         return;
+      }
+      
+      // Clear custom controllers from previous pets to avoid cross-contamination
+      final baseKeys = [
+        'RBC', 'WBC', 'Hb', 'HCT', 'PLT',
+        'ALT', 'AST', 'ALP', '총빌리루빈', 'BUN', 'Creatinine', 'SDMA', 'Glucose', '총단백', '알부민', '글로불린', '콜레스테롤', '중성지방',
+        'Na', 'K', 'Cl', 'Ca', 'P',
+      ];
+      
+      // Remove custom controllers that are not in base keys
+      final customKeysToRemove = _valueCtrls.keys.where((k) => !baseKeys.contains(k)).toList();
+      for (final key in customKeysToRemove) {
+        _valueCtrls[key]?.dispose();
+        _valueCtrls.remove(key);
+        _units.remove(key);
+        _refDog.remove(key);
+        _refCat.remove(key);
       }
       
       // Fetch up to two entries: selected date (현재) and previous (직전)
@@ -568,6 +594,8 @@ class _LabTableState extends State<_LabTable> {
   Future<void> _saveToSupabase() async {
     if (_isSaving) return;
     
+    if (!mounted) return; // Add mounted check
+    
     setState(() => _isSaving = true);
     
     try {
@@ -576,18 +604,26 @@ class _LabTableState extends State<_LabTable> {
       
       if (uid == null) {
         print('❌ User not authenticated');
-        setState(() => _isSaving = false);
+        if (mounted) setState(() => _isSaving = false);
         return;
       }
       
       final Map<String, dynamic> items = {};
       int nonEmptyCount = 0;
-      for (final k in _orderedKeys()) {
+      
+      // Only save items that actually have data or are custom items for this pet
+      for (final k in _valueCtrls.keys) {
         final val = _valueCtrls[k]?.text ?? '';
-        items[k] = {'value': val};
-        if (val.isNotEmpty) {
-          nonEmptyCount++;
-          print('  $k: $val');
+        if (val.isNotEmpty || _units.containsKey(k)) {
+          items[k] = {
+            'value': val,
+            'unit': _units[k] ?? '',
+            'reference': _refDog[k] ?? _refCat[k] ?? '',
+          };
+          if (val.isNotEmpty) {
+            nonEmptyCount++;
+            print('  $k: $val');
+          }
         }
       }
       
