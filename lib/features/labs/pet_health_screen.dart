@@ -211,54 +211,71 @@ class _LabTableState extends State<_LabTable> {
         ;
     final header = Padding(
       padding: const EdgeInsets.all(12),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-          Text('검사 날짜: $dateLabel', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(width: 8),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.calendar_today, size: 18),
-            label: const Text('변경'),
-            onPressed: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: _selectedDate,
-                firstDate: DateTime(2000),
-                lastDate: DateTime.now(),
-              );
-              if (picked != null) {
-                setState(() => _selectedDate = DateTime(picked.year, picked.month, picked.day));
-                await _loadFromSupabase();
-              }
-            },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('검사 날짜: ', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(width: 4),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) {
+                      setState(() => _selectedDate = DateTime(picked.year, picked.month, picked.day));
+                      await _loadFromSupabase();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Theme.of(context).colorScheme.outline),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(dateLabel, style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        )),
+                        const SizedBox(width: 4),
+                        Icon(Icons.calendar_today, size: 16, color: Theme.of(context).colorScheme.primary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                if (_isSaving)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),
           ),
           if (_previousDateStr != null) ...[
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.history, size: 16),
-                  const SizedBox(width: 6),
-                  Text('직전: ${_previousDateStr!}', style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.history, size: 16, color: Colors.grey),
+                const SizedBox(width: 4),
+                Text('직전: ${_previousDateStr!}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[600],
+                )),
+              ],
             ),
           ],
-          const SizedBox(width: 12),
-          if (_isSaving)
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
         ],
-        ),
       ),
     );
     final baseKeys = _orderedKeys();
@@ -315,18 +332,17 @@ class _LabTableState extends State<_LabTable> {
       ]);
     }).toList();
 
-    return Column(
-      children: [
-        header,
-        Expanded(
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(),
-                )
-              : SingleChildScrollView(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
+    return _isLoading
+        ? const Center(
+            child: CircularProgressIndicator(),
+          )
+        : SingleChildScrollView(
+            child: Column(
+              children: [
+                header,
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
                       columnSpacing: 8,
                       horizontalMargin: 12,
                       headingRowHeight: 48,
@@ -342,10 +358,9 @@ class _LabTableState extends State<_LabTable> {
                       rows: rows,
                     ),
                   ),
-                ),
-        ),
-      ],
-    );
+              ],
+            ),
+          );
   }
 
   List<String> _orderedKeys() {
