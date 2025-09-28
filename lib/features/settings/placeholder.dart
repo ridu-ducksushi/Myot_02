@@ -102,31 +102,34 @@ class SettingsPlaceholder extends ConsumerWidget {
       ),
       body: ListView(
         children: [
-          // 현재 선택된 펫 섹션
-          if (currentPet != null) ...[
-            SectionHeader(title: '현재 선택된 펫'),
-            _buildCurrentPetCard(context, currentPet),
-            const SizedBox(height: 16),
-          ],
+          // 펫 정보 섹션 (통합)
+          SectionHeader(title: '펫 정보'),
           
-          // 등록된 모든 펫 섹션
-          SectionHeader(title: '등록된 펫'),
-          ...petsState.pets.map((pet) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _buildPetCard(context, ref, pet),
-          )),
-          
-          const SizedBox(height: 16),
-          
-          // 펫 추가 섹션
-          SectionHeader(title: '펫 관리'),
-          AppCard(
-            child: ListTile(
-              leading: const Icon(Icons.add),
-              title: Text('새 펫 추가'),
-              subtitle: Text('새로운 반려동물을 등록하세요'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showAddPetDialog(context),
+          // 가로 스크롤 가능한 펫 카드들
+          SizedBox(
+            height: 240, // 카드 높이
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: petsState.pets.length + 1, // 펫들 + 새 펫 추가 카드
+              itemBuilder: (context, index) {
+                if (index < petsState.pets.length) {
+                  // 기존 펫 카드
+                  final pet = petsState.pets[index];
+                  return Container(
+                    width: 200, // 카드 너비
+                    margin: const EdgeInsets.only(right: 2), // 카드 간격
+                    child: _buildHorizontalPetCard(context, ref, pet),
+                  );
+                } else {
+                  // 새 펫 추가 카드
+                  return Container(
+                    width: 200,
+                    margin: const EdgeInsets.only(right: 2),
+                    child: _buildAddPetCard(context),
+                  );
+                }
+              },
             ),
           ),
           
@@ -147,13 +150,17 @@ class SettingsPlaceholder extends ConsumerWidget {
     );
   }
 
-  Widget _buildCurrentPetCard(BuildContext context, pet) {
+
+  Widget _buildHorizontalPetCard(BuildContext context, WidgetRef ref, pet) {
     final speciesColor = AppColors.getSpeciesColor(pet.species);
     
     return AppCard(
+      onTap: () => context.go('/pets/${pet.id}'),
+      onLongPress: () => _showDeletePetDialog(context, ref, pet),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // 펫 아바타
             Container(
@@ -176,42 +183,25 @@ class SettingsPlaceholder extends ConsumerWidget {
                     )
                   : Icon(Icons.pets, color: speciesColor, size: 30),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(height: 12),
             
-            // 펫 정보
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    pet.name,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      PetSpeciesChip(species: pet.species),
-                      if (pet.breed != null) ...[
-                        const SizedBox(width: 8),
-                        Chip(
-                          label: Text(pet.breed!),
-                          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
+            // 펫 이름
+            Text(
+              pet.name,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
+            const SizedBox(height: 8),
             
-            // 펫 상세 보기 버튼
-            IconButton(
-              onPressed: () => context.go('/pets/${pet.id}'),
-              icon: const Icon(Icons.visibility),
-              tooltip: '펫 상세 보기',
+            // 펫 종류
+            Transform.scale(
+              scale: 0.8,
+              child: PetSpeciesChip(species: pet.species),
             ),
           ],
         ),
@@ -219,73 +209,45 @@ class SettingsPlaceholder extends ConsumerWidget {
     );
   }
 
-  Widget _buildPetCard(BuildContext context, WidgetRef ref, pet) {
-    final speciesColor = AppColors.getSpeciesColor(pet.species);
-    
+  Widget _buildAddPetCard(BuildContext context) {
     return AppCard(
-      onTap: () => context.go('/pets/${pet.id}'),
-      onLongPress: () => _showDeletePetDialog(context, ref, pet),
+      onTap: () => _showAddPetDialog(context),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 펫 아바타
+            // 추가 아이콘
             Container(
-              width: 50,
-              height: 50,
+              width: 60,
+              height: 60,
               decoration: BoxDecoration(
-                color: speciesColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: speciesColor.withOpacity(0.3), width: 2),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  width: 2,
+                ),
               ),
-              child: pet.avatarUrl != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(25),
-                      child: Image.file(
-                        File(pet.avatarUrl!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.pets, color: speciesColor, size: 25),
-                      ),
-                    )
-                  : Icon(Icons.pets, color: speciesColor, size: 25),
-            ),
-            const SizedBox(width: 12),
-            
-            // 펫 정보
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    pet.name,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      PetSpeciesChip(species: pet.species),
-                      if (pet.breed != null) ...[
-                        const SizedBox(width: 6),
-                        Chip(
-                          label: Text(pet.breed!),
-                          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          labelStyle: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
+              child: Icon(
+                Icons.add,
+                color: Theme.of(context).colorScheme.primary,
+                size: 30,
               ),
             ),
+            const SizedBox(height: 12),
             
-            // 펫 상세 보기 아이콘
-            Icon(
-              Icons.chevron_right,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            // 추가 텍스트
+            Text(
+              '새 펫 추가',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
