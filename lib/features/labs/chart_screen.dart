@@ -106,14 +106,18 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
           if (items != null && items.containsKey(_selectedTestItem)) {
             final item = items[_selectedTestItem!];
             if (item is Map && item['value'] != null) {
-              final value = double.tryParse(item['value'].toString());
-              if (value != null) {
-                chartData.add({
-                  'date': row['date'],
-                  'value': value,
-                  'unit': item['unit']?.toString() ?? '',
-                  'reference': item['reference']?.toString() ?? '',
-                });
+              final valueStr = item['value'].toString().trim();
+              // 빈 값이나 "-"인 경우는 차트에 포함하지 않음
+              if (valueStr.isNotEmpty && valueStr != '-') {
+                final value = double.tryParse(valueStr);
+                if (value != null) {
+                  chartData.add({
+                    'date': row['date'],
+                    'value': value,
+                    'unit': item['unit']?.toString() ?? '',
+                    'reference': item['reference']?.toString() ?? '',
+                  });
+                }
               }
             }
           }
@@ -317,6 +321,13 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     final unit = _chartData.isNotEmpty ? _chartData.first['unit'] : '';
     final reference = _chartData.isNotEmpty ? _chartData.first['reference'] : '';
     
+    // Y축 범위 자동 계산
+    final values = _chartData.map((data) => data['value'] as double).toList();
+    final minValue = values.reduce((a, b) => a < b ? a : b);
+    final maxValue = values.reduce((a, b) => a > b ? a : b);
+    final range = maxValue - minValue;
+    final padding = range * 0.1; // 10% 패딩 추가
+    
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -342,6 +353,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
           Expanded(
             child: LineChart(
               LineChartData(
+                minY: minValue - padding,
+                maxY: maxValue + padding,
                 gridData: FlGridData(show: true),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
@@ -377,13 +390,12 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                 lineBarsData: [
                   LineChartBarData(
                     spots: spots,
-                    isCurved: true,
+                    isCurved: false,
                     color: Theme.of(context).colorScheme.primary,
-                    barWidth: 3,
+                    barWidth: 2,
                     dotData: FlDotData(show: true),
                     belowBarData: BarAreaData(
-                      show: true,
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      show: false,
                     ),
                   ),
                 ],
