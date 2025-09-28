@@ -171,6 +171,11 @@ class _LabTableState extends State<_LabTable> {
   // Pinned rows
   final Set<String> _pinnedKeys = <String>{};
   
+  // Basic info data
+  String _weight = '';
+  String _hospitalName = '';
+  String _cost = '';
+  
   static DateTime _today() {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
@@ -283,6 +288,39 @@ class _LabTableState extends State<_LabTable> {
         ],
       ),
     );
+
+    // 기본정보 차트 추가
+    final basicInfoSection = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '기본정보',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                _buildBasicInfoRow('체중', 'kg', _weight),
+                _buildDivider(),
+                _buildBasicInfoRow('병원명', '', _hospitalName),
+                _buildDivider(),
+                _buildBasicInfoRow('비용', '', _cost),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
     final baseKeys = _orderedKeys();
     final sortedKeys = [
       ...baseKeys.where((k) => _pinnedKeys.contains(k)),
@@ -345,6 +383,7 @@ class _LabTableState extends State<_LabTable> {
             child: Column(
               children: [
                 header,
+                basicInfoSection,
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
@@ -521,6 +560,14 @@ class _LabTableState extends State<_LabTable> {
           _valueCtrls[k]?.text = value;
         }
         
+        // Load basic info data
+        _weight = (items['체중'] is Map && items['체중']['value'] is String) 
+            ? items['체중']['value'] as String : '';
+        _hospitalName = (items['병원명'] is Map && items['병원명']['value'] is String) 
+            ? items['병원명']['value'] as String : '';
+        _cost = (items['비용'] is Map && items['비용']['value'] is String) 
+            ? items['비용']['value'] as String : '';
+        
         // Clear controllers for items not in current data
         for (final k in _orderedKeys()) {
           if (!items.containsKey(k)) {
@@ -664,6 +711,166 @@ class _LabTableState extends State<_LabTable> {
         _saveToSupabase();
       }
     });
+  }
+
+  Widget _buildBasicInfoRow(String label, String unit, String value) {
+    return InkWell(
+      onTap: () => _showBasicInfoEditDialog(label, value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Text(
+                value.isEmpty ? '-' : value,
+                style: const TextStyle(fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Text(
+                unit,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      height: 1,
+      thickness: 0.5,
+      color: Colors.grey[300],
+    );
+  }
+
+  void _showBasicInfoEditDialog(String label, String currentValue) {
+    final controller = TextEditingController(text: currentValue);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('$label 수정'),
+        content: TextField(
+          controller: controller,
+          keyboardType: label == '체중' || label == '비용' 
+              ? TextInputType.number 
+              : TextInputType.text,
+          decoration: InputDecoration(
+            labelText: label,
+            border: const OutlineInputBorder(),
+            hintText: label == '체중' ? '예: 5.2' 
+                    : label == '병원명' ? '예: 서울동물병원' 
+                    : '예: 150000',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newValue = controller.text.trim();
+              setState(() {
+                switch (label) {
+                  case '체중':
+                    _weight = newValue;
+                    break;
+                  case '병원명':
+                    _hospitalName = newValue;
+                    break;
+                  case '비용':
+                    _cost = newValue;
+                    break;
+                }
+              });
+              _saveBasicInfoToSupabase();
+              Navigator.of(context).pop();
+            },
+            child: const Text('저장'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveBasicInfoToSupabase() async {
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return;
+
+      // Get current lab data for today
+      final currentRes = await Supabase.instance.client
+          .from('labs')
+          .select('items')
+          .eq('user_id', uid)
+          .eq('pet_id', widget.petId)
+          .eq('date', _dateKey())
+          .eq('panel', 'BloodTest')
+          .maybeSingle();
+
+      Map<String, dynamic> currentItems = {};
+      if (currentRes != null) {
+        currentItems = Map<String, dynamic>.from(currentRes['items'] ?? {});
+      }
+
+      // Add basic info to items
+      currentItems['체중'] = {
+        'value': _weight,
+        'unit': 'kg',
+        'reference': '',
+      };
+      currentItems['병원명'] = {
+        'value': _hospitalName,
+        'unit': '',
+        'reference': '',
+      };
+      currentItems['비용'] = {
+        'value': _cost,
+        'unit': '',
+        'reference': '',
+      };
+
+      // Save to Supabase
+      await Supabase.instance.client
+          .from('labs')
+          .upsert({
+            'user_id': uid,
+            'pet_id': widget.petId,
+            'date': _dateKey(),
+            'panel': 'BloodTest',
+            'items': currentItems,
+          });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('기본정보가 저장되었습니다'), duration: Duration(seconds: 1)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('저장 실패: $e')),
+        );
+      }
+    }
   }
 }
 
