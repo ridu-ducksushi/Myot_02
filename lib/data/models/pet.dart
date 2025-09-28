@@ -17,6 +17,7 @@ class Pet with _$Pet {
     String? bloodType,
     double? weightKg,
     String? avatarUrl,
+    String? defaultIcon,
     String? note,
     required DateTime createdAt,
     required DateTime updatedAt,

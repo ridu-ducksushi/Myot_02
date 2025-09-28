@@ -26,6 +26,7 @@ class PetsRepository {
       'blood_type': pet.bloodType,
       'weight_kg': pet.weightKg,
       'avatar_url': pet.avatarUrl,
+      'default_icon': pet.defaultIcon,
       'note': pet.note,
       // created_at/updated_at are defaulted by DB triggers if set; omit to avoid format mismatches
     }..removeWhere((k, v) => v == null);
@@ -44,6 +45,7 @@ class PetsRepository {
       bloodType: row['blood_type'] as String?,
       weightKg: (row['weight_kg'] as num?)?.toDouble(),
       avatarUrl: row['avatar_url'] as String?,
+      defaultIcon: row['default_icon'] as String?,
       note: row['note'] as String?,
       createdAt: DateTime.tryParse((row['created_at'] as String?) ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse((row['updated_at'] as String?) ?? '') ?? DateTime.now(),

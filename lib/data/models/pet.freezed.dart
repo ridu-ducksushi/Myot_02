@@ -32,6 +32,7 @@ mixin _$Pet {
   String? get bloodType => throw _privateConstructorUsedError;
   double? get weightKg => throw _privateConstructorUsedError;
   String? get avatarUrl => throw _privateConstructorUsedError;
+  String? get defaultIcon => throw _privateConstructorUsedError;
   String? get note => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
@@ -62,6 +63,7 @@ abstract class $PetCopyWith<$Res> {
     String? bloodType,
     double? weightKg,
     String? avatarUrl,
+    String? defaultIcon,
     String? note,
     DateTime createdAt,
     DateTime updatedAt,
@@ -93,6 +95,7 @@ class _$PetCopyWithImpl<$Res, $Val extends Pet> implements $PetCopyWith<$Res> {
     Object? bloodType = freezed,
     Object? weightKg = freezed,
     Object? avatarUrl = freezed,
+    Object? defaultIcon = freezed,
     Object? note = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -143,6 +146,10 @@ class _$PetCopyWithImpl<$Res, $Val extends Pet> implements $PetCopyWith<$Res> {
                 ? _value.avatarUrl
                 : avatarUrl // ignore: cast_nullable_to_non_nullable
                       as String?,
+            defaultIcon: freezed == defaultIcon
+                ? _value.defaultIcon
+                : defaultIcon // ignore: cast_nullable_to_non_nullable
+                      as String?,
             note: freezed == note
                 ? _value.note
                 : note // ignore: cast_nullable_to_non_nullable
@@ -179,6 +186,7 @@ abstract class _$$PetImplCopyWith<$Res> implements $PetCopyWith<$Res> {
     String? bloodType,
     double? weightKg,
     String? avatarUrl,
+    String? defaultIcon,
     String? note,
     DateTime createdAt,
     DateTime updatedAt,
@@ -207,6 +215,7 @@ class __$$PetImplCopyWithImpl<$Res> extends _$PetCopyWithImpl<$Res, _$PetImpl>
     Object? bloodType = freezed,
     Object? weightKg = freezed,
     Object? avatarUrl = freezed,
+    Object? defaultIcon = freezed,
     Object? note = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -257,6 +266,10 @@ class __$$PetImplCopyWithImpl<$Res> extends _$PetCopyWithImpl<$Res, _$PetImpl>
             ? _value.avatarUrl
             : avatarUrl // ignore: cast_nullable_to_non_nullable
                   as String?,
+        defaultIcon: freezed == defaultIcon
+            ? _value.defaultIcon
+            : defaultIcon // ignore: cast_nullable_to_non_nullable
+                  as String?,
         note: freezed == note
             ? _value.note
             : note // ignore: cast_nullable_to_non_nullable
@@ -289,6 +302,7 @@ class _$PetImpl implements _Pet {
     this.bloodType,
     this.weightKg,
     this.avatarUrl,
+    this.defaultIcon,
     this.note,
     required this.createdAt,
     required this.updatedAt,
@@ -320,6 +334,8 @@ class _$PetImpl implements _Pet {
   @override
   final String? avatarUrl;
   @override
+  final String? defaultIcon;
+  @override
   final String? note;
   @override
   final DateTime createdAt;
@@ -328,7 +344,7 @@ class _$PetImpl implements _Pet {
 
   @override
   String toString() {
-    return 'Pet(id: $id, ownerId: $ownerId, name: $name, species: $species, breed: $breed, sex: $sex, neutered: $neutered, birthDate: $birthDate, bloodType: $bloodType, weightKg: $weightKg, avatarUrl: $avatarUrl, note: $note, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Pet(id: $id, ownerId: $ownerId, name: $name, species: $species, breed: $breed, sex: $sex, neutered: $neutered, birthDate: $birthDate, bloodType: $bloodType, weightKg: $weightKg, avatarUrl: $avatarUrl, defaultIcon: $defaultIcon, note: $note, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -352,6 +368,8 @@ class _$PetImpl implements _Pet {
                 other.weightKg == weightKg) &&
             (identical(other.avatarUrl, avatarUrl) ||
                 other.avatarUrl == avatarUrl) &&
+            (identical(other.defaultIcon, defaultIcon) ||
+                other.defaultIcon == defaultIcon) &&
             (identical(other.note, note) || other.note == note) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
@@ -374,6 +392,7 @@ class _$PetImpl implements _Pet {
     bloodType,
     weightKg,
     avatarUrl,
+    defaultIcon,
     note,
     createdAt,
     updatedAt,
@@ -406,6 +425,7 @@ abstract class _Pet implements Pet {
     final String? bloodType,
     final double? weightKg,
     final String? avatarUrl,
+    final String? defaultIcon,
     final String? note,
     required final DateTime createdAt,
     required final DateTime updatedAt,
@@ -435,6 +455,8 @@ abstract class _Pet implements Pet {
   double? get weightKg;
   @override
   String? get avatarUrl;
+  @override
+  String? get defaultIcon;
   @override
   String? get note;
   @override

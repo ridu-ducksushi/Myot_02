@@ -320,10 +320,10 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                         File(pet.avatarUrl!),
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.pets, color: speciesColor, size: 30),
+                            _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
                       ),
                     )
-                  : Icon(Icons.pets, color: speciesColor, size: 30),
+                  : _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
             ),
             const SizedBox(height: 12),
             
@@ -403,6 +403,77 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       isScrollControlled: true,
       builder: (context) => const _AddPetSheet(),
     );
+  }
+
+  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color fallbackColor) {
+    if (defaultIcon != null) {
+      final iconData = _getDefaultIconData(defaultIcon);
+      final color = _getDefaultIconColor(defaultIcon);
+      
+      return Icon(
+        iconData,
+        size: 30,
+        color: color,
+      );
+    }
+    
+    return Icon(Icons.pets, color: fallbackColor, size: 30);
+  }
+
+  // 기본 아이콘 데이터 매핑
+  IconData _getDefaultIconData(String iconName) {
+    switch (iconName) {
+      case 'dog1':
+        return Icons.pets;
+      case 'dog2':
+        return Icons.pets_outlined;
+      case 'cat1':
+        return Icons.cruelty_free;
+      case 'cat2':
+        return Icons.cruelty_free_outlined;
+      case 'rabbit':
+        return Icons.cruelty_free;
+      case 'bird':
+        return Icons.flight;
+      case 'fish':
+        return Icons.water_drop;
+      case 'hamster':
+        return Icons.circle;
+      case 'turtle':
+        return Icons.circle_outlined;
+      case 'heart':
+        return Icons.favorite;
+      default:
+        return Icons.pets;
+    }
+  }
+
+  // 기본 아이콘 색상 매핑
+  Color _getDefaultIconColor(String iconName) {
+    switch (iconName) {
+      case 'dog1':
+        return const Color(0xFF8B4513); // 갈색
+      case 'dog2':
+        return const Color(0xFF9370DB); // 보라색
+      case 'cat1':
+        return const Color(0xFF808080); // 회색
+      case 'cat2':
+        return const Color(0xFF2F4F4F); // 어두운 회색
+      case 'rabbit':
+        return const Color(0xFFFFB6C1); // 연분홍
+      case 'bird':
+        return const Color(0xFF87CEEB); // 하늘색
+      case 'fish':
+        return const Color(0xFF4169E1); // 로얄블루
+      case 'hamster':
+        return const Color(0xFFDEB887); // 버프색
+      case 'turtle':
+        return const Color(0xFF9ACD32); // 옐로우그린
+      case 'heart':
+        return const Color(0xFFFF69B4); // 핫핑크
+      default:
+        return const Color(0xFF666666);
+    }
   }
 }
 

@@ -27,6 +27,7 @@ class PetDetailScreen extends ConsumerStatefulWidget {
 
 class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
   File? _selectedImage;
+  String? _selectedDefaultIcon;
 
   @override
   void initState() {
@@ -106,12 +107,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               // Profile Image Picker
               ProfileImagePicker(
                 imagePath: _selectedImage?.path ?? pet.avatarUrl,
+                selectedDefaultIcon: _selectedDefaultIcon ?? pet.defaultIcon,
                 onImageSelected: (image) async {
                   if (image != null) {
                     // 이미지 저장 및 펫 업데이트
                     final avatarUrl = await ImageService.saveImageToAppDirectory(image);
                     final updatedPet = pet.copyWith(
                       avatarUrl: avatarUrl,
+                      defaultIcon: null, // 이미지 선택 시 기본 아이콘 제거
                       updatedAt: DateTime.now(),
                     );
                     
@@ -119,6 +122,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                       await ref.read(petsProvider.notifier).updatePet(updatedPet);
                       setState(() {
                         _selectedImage = image;
+                        _selectedDefaultIcon = null;
                       });
                       
                       if (mounted) {
@@ -169,6 +173,40 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                           ),
                         );
                       }
+                    }
+                  }
+                },
+                onDefaultIconSelected: (iconName) async {
+                  // 기본 아이콘 선택 시 펫 업데이트
+                  final updatedPet = pet.copyWith(
+                    defaultIcon: iconName,
+                    avatarUrl: null, // 기본 아이콘 선택 시 이미지 제거
+                    updatedAt: DateTime.now(),
+                  );
+                  
+                  try {
+                    await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                    setState(() {
+                      _selectedDefaultIcon = iconName;
+                      _selectedImage = null;
+                    });
+                    
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('기본 아이콘이 설정되었습니다'),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('기본 아이콘 설정에 실패했습니다'),
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
                     }
                   }
                 },

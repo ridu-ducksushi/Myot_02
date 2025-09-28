@@ -227,10 +227,10 @@ class _PetCard extends ConsumerWidget {
                         File(pet.avatarUrl!),
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.pets, color: speciesColor, size: 30),
+                            _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
                       ),
                     )
-                  : Icon(Icons.pets, color: speciesColor, size: 30),
+                  : _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
             ),
             const SizedBox(width: 16),
             
@@ -476,6 +476,77 @@ class _PetCard extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color fallbackColor) {
+    if (defaultIcon != null) {
+      final iconData = _getDefaultIconData(defaultIcon);
+      final color = _getDefaultIconColor(defaultIcon);
+      
+      return Icon(
+        iconData,
+        size: 30,
+        color: color,
+      );
+    }
+    
+    return Icon(Icons.pets, color: fallbackColor, size: 30);
+  }
+
+  // 기본 아이콘 데이터 매핑
+  IconData _getDefaultIconData(String iconName) {
+    switch (iconName) {
+      case 'dog1':
+        return Icons.pets;
+      case 'dog2':
+        return Icons.pets_outlined;
+      case 'cat1':
+        return Icons.cruelty_free;
+      case 'cat2':
+        return Icons.cruelty_free_outlined;
+      case 'rabbit':
+        return Icons.cruelty_free;
+      case 'bird':
+        return Icons.flight;
+      case 'fish':
+        return Icons.water_drop;
+      case 'hamster':
+        return Icons.circle;
+      case 'turtle':
+        return Icons.circle_outlined;
+      case 'heart':
+        return Icons.favorite;
+      default:
+        return Icons.pets;
+    }
+  }
+
+  // 기본 아이콘 색상 매핑
+  Color _getDefaultIconColor(String iconName) {
+    switch (iconName) {
+      case 'dog1':
+        return const Color(0xFF8B4513); // 갈색
+      case 'dog2':
+        return const Color(0xFFCD853F); // 페루색
+      case 'cat1':
+        return const Color(0xFF696969); // 회색
+      case 'cat2':
+        return const Color(0xFFA9A9A9); // 어두운 회색
+      case 'rabbit':
+        return const Color(0xFFFFB6C1); // 연분홍
+      case 'bird':
+        return const Color(0xFF87CEEB); // 하늘색
+      case 'fish':
+        return const Color(0xFF4169E1); // 로얄블루
+      case 'hamster':
+        return const Color(0xFFDEB887); // 버프색
+      case 'turtle':
+        return const Color(0xFF9ACD32); // 옐로우그린
+      case 'heart':
+        return const Color(0xFFFF69B4); // 핫핑크
+      default:
+        return const Color(0xFF666666);
+    }
+  }
 }
 
 class _AddPetSheet extends ConsumerStatefulWidget {
@@ -497,6 +568,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   bool? _isNeutered;
   DateTime? _birthDate;
   File? _selectedImage;
+  String? _selectedDefaultIcon;
   
   final List<String> _species = [
     'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Reptile', 'Other'
@@ -553,9 +625,17 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                   Center(
                     child: ProfileImagePicker(
                       imagePath: _selectedImage?.path,
+                      selectedDefaultIcon: _selectedDefaultIcon,
                       onImageSelected: (image) {
                         setState(() {
                           _selectedImage = image;
+                          _selectedDefaultIcon = null; // 이미지 선택 시 기본 아이콘 제거
+                        });
+                      },
+                      onDefaultIconSelected: (iconName) {
+                        setState(() {
+                          _selectedDefaultIcon = iconName;
+                          _selectedImage = null; // 기본 아이콘 선택 시 이미지 제거
                         });
                       },
                       size: 120,
@@ -743,6 +823,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
       birthDate: _birthDate,
       weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),
       avatarUrl: avatarUrl,
+      defaultIcon: _selectedDefaultIcon,
       note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -777,6 +858,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   bool? _isNeutered;
   DateTime? _birthDate;
   File? _selectedImage;
+  String? _selectedDefaultIcon;
   
   final List<String> _species = [
     'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Reptile', 'Other'
@@ -801,6 +883,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     _selectedSex = pet.sex;
     _isNeutered = pet.neutered;
     _birthDate = pet.birthDate;
+    _selectedDefaultIcon = pet.defaultIcon;
     
     // Load existing image if available
     if (pet.avatarUrl != null && pet.avatarUrl!.isNotEmpty) {
@@ -861,9 +944,17 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                   Center(
                     child: ProfileImagePicker(
                       imagePath: _selectedImage?.path,
+                      selectedDefaultIcon: _selectedDefaultIcon,
                       onImageSelected: (image) {
                         setState(() {
                           _selectedImage = image;
+                          _selectedDefaultIcon = null; // 이미지 선택 시 기본 아이콘 제거
+                        });
+                      },
+                      onDefaultIconSelected: (iconName) {
+                        setState(() {
+                          _selectedDefaultIcon = iconName;
+                          _selectedImage = null; // 기본 아이콘 선택 시 이미지 제거
                         });
                       },
                       size: 120,
@@ -1052,6 +1143,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
       birthDate: _birthDate,
       weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),
       avatarUrl: avatarUrl,
+      defaultIcon: _selectedDefaultIcon,
       note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       updatedAt: DateTime.now(),
     );
