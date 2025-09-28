@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/data/local/database.dart';
 import 'package:petcare/features/pets/pets_screen.dart';
@@ -11,8 +12,24 @@ import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:petcare/data/models/pet.dart';
 
-class SettingsPlaceholder extends ConsumerWidget {
+class SettingsPlaceholder extends ConsumerStatefulWidget {
   const SettingsPlaceholder({super.key});
+
+  @override
+  ConsumerState<SettingsPlaceholder> createState() => _SettingsPlaceholderState();
+}
+
+class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
+  @override
+  void initState() {
+    super.initState();
+    // Supabase 인증 상태 변화를 감지
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
 
   Future<void> _signOut(BuildContext context) async {
     try {
@@ -79,7 +96,7 @@ class SettingsPlaceholder extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final petsState = ref.watch(petsProvider);
     final currentLocation = GoRouterState.of(context).matchedLocation;
     
@@ -102,6 +119,11 @@ class SettingsPlaceholder extends ConsumerWidget {
       ),
       body: ListView(
         children: [
+          // 사용자 프로필 섹션
+          _buildUserProfileSection(context),
+          
+          const SizedBox(height: 16),
+          
           // 펫 정보 섹션 (통합)
           SectionHeader(title: '펫 정보'),
           
@@ -150,6 +172,126 @@ class SettingsPlaceholder extends ConsumerWidget {
     );
   }
 
+  void _showEditProfileDialog(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const _EditProfileSheet(),
+    );
+  }
+
+  Widget _buildUserProfileSection(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final email = user?.email ?? 'Unknown';
+    final displayName = user?.userMetadata?['display_name'] as String? ?? 
+                      user?.userMetadata?['full_name'] as String? ?? 
+                      email.split('@').first;
+    final avatarUrl = user?.userMetadata?['avatar_url'] as String?;
+    
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: AppCard(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              // 프로필 아바타
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    width: 2,
+                  ),
+                ),
+                child: avatarUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: Image.network(
+                          avatarUrl,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                                strokeWidth: 2,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(
+                                Icons.person,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 30,
+                              ),
+                        ),
+                      )
+                    : Icon(
+                        Icons.person,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 30,
+                      ),
+              ),
+              const SizedBox(width: 16),
+              
+              // 사용자 정보
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      email,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '내 프로필',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // 편집 아이콘
+              IconButton(
+                onPressed: () => _showEditProfileDialog(context),
+                icon: Icon(
+                  Icons.edit,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildHorizontalPetCard(BuildContext context, WidgetRef ref, pet) {
     final speciesColor = AppColors.getSpeciesColor(pet.species);
@@ -260,6 +402,283 @@ class SettingsPlaceholder extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       builder: (context) => const _AddPetSheet(),
+    );
+  }
+}
+
+class _EditProfileSheet extends ConsumerStatefulWidget {
+  const _EditProfileSheet();
+
+  @override
+  ConsumerState<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
+
+class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _displayNameController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
+  
+  File? _selectedImage;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentProfile();
+  }
+
+  void _loadCurrentProfile() {
+    final user = Supabase.instance.client.auth.currentUser;
+    final displayName = user?.userMetadata?['display_name'] as String? ?? 
+                      user?.userMetadata?['full_name'] as String? ?? 
+                      '';
+    final avatarUrl = user?.userMetadata?['avatar_url'] as String?;
+    
+    _displayNameController.text = displayName;
+    
+    // 기존 아바타 URL이 있으면 로드
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      // 네트워크 이미지를 File로 변환하는 것은 복잡하므로
+      // 일단 _selectedImage는 null로 두고 UI에서 네트워크 이미지 표시
+      print('📸 기존 아바타 URL 발견: $avatarUrl');
+    }
+  }
+
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('이미지 선택 실패: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _updateProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        throw Exception('사용자 정보를 찾을 수 없습니다.');
+      }
+
+      final displayName = _displayNameController.text.trim();
+      String? avatarUrl;
+      
+      print('🔧 프로필 업데이트 시도: displayName=$displayName');
+
+      // 프로필 이미지 업로드 (선택된 경우)
+      if (_selectedImage != null) {
+        try {
+          final fileName = '${user.id}/avatar.jpg';
+          print('📸 이미지 업로드 시작: $fileName');
+          
+          final response = await Supabase.instance.client.storage
+              .from('avatars')
+              .upload(fileName, _selectedImage!, fileOptions: const FileOptions(
+                cacheControl: '3600',
+                upsert: true, // 기존 파일 덮어쓰기
+              ));
+          
+          if (response.isNotEmpty) {
+            avatarUrl = Supabase.instance.client.storage
+                .from('avatars')
+                .getPublicUrl(fileName);
+            print('✅ 이미지 업로드 성공: $avatarUrl');
+          }
+        } catch (e) {
+          print('❌ 이미지 업로드 실패: $e');
+          // 이미지 업로드 실패해도 닉네임 업데이트는 계속 진행
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('이미지 업로드 실패: $e')),
+            );
+          }
+        }
+      }
+
+      // 사용자 메타데이터 업데이트
+      final metadata = <String, dynamic>{
+        'display_name': displayName,
+      };
+      
+      if (avatarUrl != null) {
+        metadata['avatar_url'] = avatarUrl;
+      }
+
+      final response = await Supabase.instance.client.auth.updateUser(
+        UserAttributes(data: metadata),
+      );
+
+      print('✅ 프로필 업데이트 응답: ${response.user?.userMetadata}');
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('프로필이 업데이트되었습니다.')),
+        );
+      }
+    } catch (e) {
+      print('❌ 프로필 업데이트 오류: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('프로필 업데이트 실패: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.8,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.outline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Title
+                  Text(
+                    '프로필 편집',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Profile Image
+                  Center(
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(50),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                            width: 2,
+                          ),
+                        ),
+                        child: _selectedImage != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(48),
+                                child: Image.file(
+                                  _selectedImage!,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Icon(
+                                Icons.person,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 40,
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '프로필 사진을 터치하여 변경',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Display Name
+                  AppTextField(
+                    controller: _displayNameController,
+                    labelText: '닉네임',
+                    prefixIcon: const Icon(Icons.person),
+                    validator: (value) {
+                      if (value?.trim().isEmpty ?? true) {
+                        return '닉네임을 입력해주세요.';
+                      }
+                      return null;
+                    },
+                  ),
+                  
+                  const Spacer(),
+                  
+                  // Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                          child: const Text('취소'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: _isLoading ? null : _updateProfile,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text('저장'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
