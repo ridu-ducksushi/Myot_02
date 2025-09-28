@@ -144,22 +144,24 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                       }
                     }
                   } else {
-                    // 이미지 삭제
+                    // 이미지 삭제 및 기본 아이콘으로 설정
                     final updatedPet = pet.copyWith(
                       avatarUrl: null,
+                      defaultIcon: 'dog1', // 기본 아이콘 설정
                       updatedAt: DateTime.now(),
                     );
-                    
+
                     try {
                       await ref.read(petsProvider.notifier).updatePet(updatedPet);
                       setState(() {
                         _selectedImage = null;
+                        _selectedDefaultIcon = 'dog1'; // 상태 업데이트
                       });
-                      
+
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('pets.image_deleted'.tr(args: [pet.name])),
+                            content: Text('프로필 이미지가 기본 아이콘으로 변경되었습니다.'),
                             backgroundColor: Theme.of(context).colorScheme.primary,
                           ),
                         );
@@ -168,7 +170,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('pets.image_delete_error'.tr(args: [pet.name])),
+                            content: Text('이미지 삭제에 실패했습니다.'),
                             backgroundColor: Theme.of(context).colorScheme.error,
                           ),
                         );

@@ -313,17 +313,19 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(color: speciesColor.withOpacity(0.3), width: 2),
               ),
-              child: pet.avatarUrl != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(30),
-                      child: Image.file(
-                        File(pet.avatarUrl!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
-                      ),
-                    )
-                  : _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
+              child: pet.defaultIcon != null
+                  ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor)
+                  : pet.avatarUrl != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(30),
+                          child: Image.file(
+                            File(pet.avatarUrl!),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
+                          ),
+                        )
+                      : _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
             ),
             const SizedBox(height: 12),
             

@@ -80,6 +80,11 @@ class ProfileImagePicker extends StatelessWidget {
   }
 
   Widget _buildImageContent(BuildContext context) {
+    // 기본 아이콘이 선택된 경우 기본 아이콘 표시
+    if (selectedDefaultIcon != null) {
+      return _buildDefaultAvatar(context);
+    }
+    
     if (imagePath != null && imagePath!.isNotEmpty) {
       try {
         return Image.file(
