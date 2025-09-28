@@ -263,6 +263,27 @@ class _LabTableState extends State<_LabTable> {
                   ),
                 ),
                 const SizedBox(width: 12),
+                // 차트 아이콘 추가
+                InkWell(
+                  onTap: () => _showChartDialog(),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.bar_chart,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 if (_isSaving)
                   const SizedBox(
                     width: 20,
@@ -871,6 +892,11 @@ class _LabTableState extends State<_LabTable> {
         );
       }
     }
+  }
+
+  void _showChartDialog() {
+    // 바로 차트 화면으로 이동
+    context.go('/pets/${widget.petId}/chart');
   }
 }
 

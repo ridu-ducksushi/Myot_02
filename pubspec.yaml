@@ -68,6 +68,9 @@ dependencies:
   # UI
   cupertino_icons: ^1.0.8
   flutter_speed_dial: ^7.0.0
+  
+  # Charts
+  fl_chart: ^0.69.0
 
 dev_dependencies:
   flutter_test:
