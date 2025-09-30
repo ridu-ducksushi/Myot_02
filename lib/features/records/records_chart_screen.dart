@@ -31,6 +31,8 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
   List<Map<String, dynamic>> _chartData = [];
   // Raw per-day data fetched from records; aggregation derives from this
   List<Map<String, dynamic>> _rawData = [];
+  // Pie chart data for subcategory breakdown
+  List<PieChartSectionData> _pieChartData = [];
   bool _isLoading = false;
   // View granularity: day | week | month
   String _viewMode = 'day';
@@ -94,6 +96,8 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
           _applyAggregation();
           _isLoading = false;
         });
+        // Generate pie chart data after setState
+        _generatePieChartData();
       }
     } catch (e) {
       print('❌ Load chart data error: $e');
@@ -169,6 +173,118 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
     // Sort by date ascending based on key
     aggregated.sort((a, b) => (a['date'] as String).compareTo(b['date'] as String));
     _chartData = aggregated;
+  }
+
+  // Generate pie chart data for subcategory breakdown
+  void _generatePieChartData() {
+    if (_selectedRecordType == null) {
+      setState(() {
+        _pieChartData = [];
+      });
+      return;
+    }
+
+    final List<Record> allRecords = ref.read(recordsForPetProvider(widget.petId));
+    final List<Record> filteredRecords = allRecords
+        .where((r) => _isRecordTypeMatch(r.type, _selectedRecordType!))
+        .where((r) => r.at.isAfter(_startDate.subtract(const Duration(days: 1))))
+        .where((r) => r.at.isBefore(_endDate.add(const Duration(days: 1))))
+        .toList();
+
+    // Group by subcategory
+    final Map<String, int> subcategoryCounts = {};
+    for (final record in filteredRecords) {
+      final subcategory = _getSubcategoryDisplayName(record.type);
+      subcategoryCounts[subcategory] = (subcategoryCounts[subcategory] ?? 0) + 1;
+    }
+
+    if (subcategoryCounts.isEmpty) {
+      setState(() {
+        _pieChartData = [];
+      });
+      return;
+    }
+
+    // Generate pie chart sections - 연한 색상으로 변경
+    final List<Color> colors = [
+      Colors.blue.shade200,
+      Colors.green.shade200,
+      Colors.orange.shade200,
+      Colors.purple.shade200,
+      Colors.teal.shade200,
+      Colors.pink.shade200,
+      Colors.indigo.shade200,
+      Colors.red.shade200,
+    ];
+
+    final List<PieChartSectionData> pieChartData = [];
+    int colorIndex = 0;
+    final totalCount = subcategoryCounts.values.fold(0, (sum, count) => sum + count);
+
+    subcategoryCounts.forEach((subcategory, count) {
+      pieChartData.add(
+        PieChartSectionData(
+          color: colors[colorIndex % colors.length],
+          value: count.toDouble(),
+          title: '${((count / totalCount) * 100).toStringAsFixed(1)}%\n$subcategory',
+          radius: 80,
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+      );
+      colorIndex++;
+    });
+
+    setState(() {
+      _pieChartData = pieChartData;
+    });
+  }
+
+  // Get display name for subcategory
+  String _getSubcategoryDisplayName(String recordType) {
+    switch (recordType) {
+      // Food subcategories
+      case 'food_meal':
+        return '식사';
+      case 'food_snack':
+        return '간식';
+      case 'food_water':
+        return '물';
+      case 'food_treat':
+        return '간식';
+      case 'food_supplement':
+        return '영양제';
+      
+      // Health subcategories
+      case 'med':
+        return '약물';
+      case 'vaccine':
+        return '예방접종';
+      case 'visit':
+        return '병원방문';
+      case 'weight':
+        return '체중측정';
+      
+      // Poop subcategories
+      case 'litter':
+        return '화장실';
+      case 'poop_feces':
+        return '배변';
+      case 'poop_urine':
+        return '소변';
+      
+      // Activity subcategories
+      case 'activity':
+        return '활동';
+      case 'other':
+        return '기타';
+      
+      default:
+        return recordType;
+    }
   }
 
   @override
@@ -416,11 +532,73 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
     final range = maxValue - minValue;
     final padding = range * 0.1; // 10% 패딩 추가
     
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Pie Chart Section (moved to top)
+          if (_pieChartData.isNotEmpty) ...[
+            Text(
+              '$_selectedRecordType 소분류별 비율',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Column(
+              children: [
+                SizedBox(
+                  height: 250,
+                  child: Center(
+                    child: PieChart(
+                      PieChartData(
+                        sections: _pieChartData,
+                        centerSpaceRadius: 40,
+                        sectionsSpace: 2,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  children: _pieChartData.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final section = entry.value;
+                    final color = section.color;
+                    final title = section.title.split('\n').last;
+                    final percentage = section.title.split('\n').first;
+                    
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '$title ($percentage)',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+          ],
+          // Line Chart Section (moved to bottom)
           Text(
             '$_selectedRecordType 레코드 수',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -436,7 +614,8 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Expanded(
+          SizedBox(
+            height: 400, // 고정 높이 설정
             child: LineChart(
               LineChartData(
                 minY: minValue - padding,
@@ -529,6 +708,7 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
