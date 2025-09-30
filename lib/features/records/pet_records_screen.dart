@@ -328,7 +328,11 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              Expanded(child: recordsView),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: recordsView,
+                ),
+              ),
             ],
           ),
         ),
@@ -742,8 +746,9 @@ class _Time24Table extends StatelessWidget {
           final recordsForHour = records.where((r) => r.at.hour == i).toList();
           final String label = _labelForRow(i);
           final BorderSide bottomLine = i == 23 ? BorderSide.none : BorderSide(color: outline);
-          return Expanded(
-            child: Row(
+           return SizedBox(
+             height: 42, // 행 높이를 42로 변경
+             child: Row(
               children: [
                 // Left time label cell
                 Container(
@@ -798,7 +803,7 @@ class _Time24Table extends StatelessWidget {
         onTap: () => onRecordTap(record),
         borderRadius: BorderRadius.circular(6),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: typeColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(6),
@@ -812,15 +817,15 @@ class _Time24Table extends StatelessWidget {
             children: [
               Icon(
                 _getRecordIcon(record.type),
-                size: 16,
+                size: 18,
                 color: typeColor,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Flexible(
                 child: Text(
                   '${record.title}: ${record.content ?? ""}',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 16,
                     color: typeColor,
                     fontWeight: FontWeight.w500,
                   ),
