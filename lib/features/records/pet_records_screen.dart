@@ -211,7 +211,10 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       );
     }
 
-    Widget recordsView = _Time24Table(records: records);
+    Widget recordsView = _Time24Table(
+      records: records,
+      onRecordTap: (record) => _showRecordEditDialog(context, record, pet),
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -499,12 +502,228 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       },
     );
   }
+
+  void _showRecordEditDialog(BuildContext context, Record record, Pet pet) {
+    final TextEditingController contentController = TextEditingController(text: record.content ?? '');
+    DateTime selectedDate = record.at;
+    TimeOfDay selectedTime = TimeOfDay.fromDateTime(record.at);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('기록 편집'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 항목명 (읽기 전용)
+                    Text(
+                      '항목명',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                        border: Border.all(color: Theme.of(context).colorScheme.outline),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        record.title,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // 날짜
+                    Text(
+                      '날짜',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now().add(const Duration(days: 1)),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            selectedDate = DateTime(picked.year, picked.month, picked.day, selectedTime.hour, selectedTime.minute);
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Theme.of(context).colorScheme.outline),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today, size: 16, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 8),
+                            Text(DateFormat('yyyy-MM-dd').format(selectedDate)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // 시간
+                    Text(
+                      '시간',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () async {
+                        final TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTime,
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            selectedTime = picked;
+                            selectedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, picked.hour, picked.minute);
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Theme.of(context).colorScheme.outline),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.access_time, size: 16, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 8),
+                            Text(selectedTime.format(context)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // 메모
+                    Text(
+                      '메모',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: contentController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: '메모를 입력하세요',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                // 삭제 버튼
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _showDeleteConfirmDialog(context, record);
+                  },
+                  icon: Icon(Icons.delete, color: Colors.red),
+                  label: Text('삭제', style: TextStyle(color: Colors.red)),
+                ),
+                const Spacer(),
+                // 취소 버튼
+                TextButton(
+                  child: Text('취소'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                // 저장 버튼
+                Consumer(
+                  builder: (context, ref, child) {
+                    return TextButton(
+                      child: Text('저장'),
+                      onPressed: () {
+                        final updatedRecord = record.copyWith(
+                          content: contentController.text,
+                          at: selectedDate,
+                          updatedAt: DateTime.now(),
+                        );
+                        ref.read(recordsProvider.notifier).updateRecord(updatedRecord);
+                        Navigator.of(context).pop();
+                      },
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmDialog(BuildContext context, Record record) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('기록 삭제'),
+          content: Text('이 기록을 삭제하시겠습니까?\n"${record.title}"'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('취소'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            Consumer(
+              builder: (context, ref, child) {
+                return TextButton(
+                  child: Text('삭제', style: TextStyle(color: Colors.red)),
+                  onPressed: () {
+                    ref.read(recordsProvider.notifier).deleteRecord(record.id);
+                    Navigator.of(context).pop();
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _Time24Table extends StatelessWidget {
-  const _Time24Table({required this.records});
+  const _Time24Table({required this.records, required this.onRecordTap});
 
   final List<Record> records;
+  final Function(Record) onRecordTap;
 
   @override
   Widget build(BuildContext context) {
@@ -557,10 +776,7 @@ class _Time24Table extends StatelessWidget {
                         ? null
                         : ListView(
                             children: recordsForHour.map((record) {
-                              return Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Text('${record.title}: ${record.content}'),
-                              );
+                              return _buildRecordButton(context, record);
                             }).toList(),
                           ),
                   ),
@@ -571,6 +787,71 @@ class _Time24Table extends StatelessWidget {
         }),
       ),
     );
+  }
+
+  Widget _buildRecordButton(BuildContext context, Record record) {
+    final typeColor = AppColors.getRecordTypeColor(record.type);
+    
+    return Padding(
+      padding: const EdgeInsets.all(2.0),
+      child: InkWell(
+        onTap: () => onRecordTap(record),
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: typeColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: typeColor.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _getRecordIcon(record.type),
+                size: 16,
+                color: typeColor,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  '${record.title}: ${record.content ?? ""}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: typeColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getRecordIcon(String type) {
+    switch (type.toLowerCase()) {
+      case 'food_meal': return Icons.restaurant;
+      case 'food_snack': return Icons.cookie;
+      case 'food_water': return Icons.water_drop;
+      case 'health_med': case 'food_med': return Icons.medical_services;
+      case 'health_supplement': case 'food_supplement': return Icons.medication;
+      case 'activity_play': return Icons.sports_tennis;
+      case 'activity_explore': return Icons.explore_outlined;
+      case 'activity_outing': return Icons.directions_walk;
+      case 'activity_rest': return Icons.hotel_outlined;
+      case 'activity_other': return Icons.more_horiz;
+      case 'poop_urine': return Icons.opacity;
+      case 'poop_feces': return Icons.pets;
+      case 'poop_other': return Icons.more_horiz;
+      case 'health': return Icons.favorite;
+      default: return Icons.note;
+    }
   }
 
   String _labelForRow(int index) {
