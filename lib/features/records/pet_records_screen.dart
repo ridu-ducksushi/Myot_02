@@ -220,49 +220,107 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           child: Column(
             children: [
               const SizedBox(height: 12),
-              // 날짜 선택 헤더 (Health 탭과 동일한 스타일)
+              // 날짜 선택 헤더 with 네비게이션 버튼
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('기록 날짜: ', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(width: 4),
-                  InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime.now(),
-                      );
-                      if (picked != null) {
-                        setState(() => _selectedDate = DateTime(picked.year, picked.month, picked.day));
-                      }
+                  // 이전 날짜 버튼
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedDate = _selectedDate.subtract(const Duration(days: 1));
+                      });
                     },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Theme.of(context).colorScheme.outline),
-                        borderRadius: BorderRadius.circular(4),
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    tooltip: '이전 날짜',
+                  ),
+                  
+                  // 날짜 표시 및 선택 + 차트 아이콘
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedDate,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            setState(() => _selectedDate = DateTime(picked.year, picked.month, picked.day));
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Theme.of(context).colorScheme.outline),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                DateFormat('yyyy-MM-dd').format(_selectedDate),
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.calendar_today,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            DateFormat('yyyy-MM-dd').format(_selectedDate),
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
+                      const SizedBox(width: 12),
+                      // 차트 아이콘 (Health 화면과 동일한 스타일)
+                      InkWell(
+                        onTap: () {
+                          context.go('/pets/${widget.petId}/records-chart?name=${Uri.encodeComponent(pet.name)}');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                              width: 1,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.calendar_today,
-                            size: 16,
+                          child: Icon(
+                            Icons.bar_chart,
+                            size: 20,
                             color: Theme.of(context).colorScheme.primary,
                           ),
-                        ],
+                        ),
                       ),
+                    ],
+                  ),
+                  
+                  // 다음 날짜 버튼
+                  IconButton(
+                    onPressed: () {
+                      final tomorrow = _selectedDate.add(const Duration(days: 1));
+                      if (tomorrow.isBefore(DateTime.now().add(const Duration(days: 1)))) {
+                        setState(() {
+                          _selectedDate = tomorrow;
+                        });
+                      }
+                    },
+                    icon: Icon(
+                      Icons.chevron_right,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
+                    tooltip: '다음 날짜',
                   ),
                 ],
               ),
@@ -276,15 +334,6 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          FloatingActionButton(
-            heroTag: "record-chart",
-            tooltip: 'records.type.chart'.tr(),
-            onPressed: () {
-              context.go('/pets/${pet!.id}/records-chart?name=${Uri.encodeComponent(pet!.name)}');
-            },
-            child: const Icon(Icons.bar_chart),
-          ),
-          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.end,
