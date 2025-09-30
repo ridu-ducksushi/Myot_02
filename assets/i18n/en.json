@@ -73,7 +73,8 @@
       "food": "Food",
       "play": "Play",
       "poop": "Poop",
-      "health": "Health"
+      "health": "Health",
+      "chart": "Chart"
     }
   },
   "reminders": {

@@ -166,3 +166,5 @@ final petsCountProvider = Provider<int>((ref) {
   final petsState = ref.watch(petsProvider);
   return petsState.pets.length;
 });
+
+final lastUserIdProvider = StateProvider<String?>((ref) => null);

@@ -65,7 +65,8 @@
       "food": "사료",
       "play": "놀이",
       "poop": "배변",
-      "health": "건강"
+      "health": "건강",
+      "chart": "차트"
     },
     "title": "제목",
     "title_required": "제목을 입력해주세요",

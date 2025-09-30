@@ -10,6 +10,7 @@ import 'package:petcare/features/records/pet_records_screen.dart';
 import 'package:petcare/features/labs/placeholder.dart';
 import 'package:petcare/features/labs/pet_health_screen.dart';
 import 'package:petcare/features/labs/chart_screen.dart';
+import 'package:petcare/features/records/records_chart_screen.dart';
 import 'package:petcare/ui/home.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
@@ -53,6 +54,13 @@ final router = GoRouter(
         GoRoute(
           path: 'chart',
           builder: (context, state) => ChartScreen(
+            petId: state.pathParameters['petId']!,
+            petName: state.uri.queryParameters['name'] ?? '펫',
+          ),
+        ),
+        GoRoute(
+          path: 'records-chart',
+          builder: (context, state) => RecordsChartScreen(
             petId: state.pathParameters['petId']!,
             petName: state.uri.queryParameters['name'] ?? '펫',
           ),

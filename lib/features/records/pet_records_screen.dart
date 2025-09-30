@@ -10,7 +10,7 @@ import 'package:petcare/data/models/record.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 
-enum RecordViewType { daily, weekly, monthly, yearly }
+import 'package:petcare/features/records/records_chart_screen.dart';
 
 class PetRecordsScreen extends ConsumerStatefulWidget {
   const PetRecordsScreen({
@@ -25,7 +25,6 @@ class PetRecordsScreen extends ConsumerStatefulWidget {
 }
 
 class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
-  RecordViewType _selectedView = RecordViewType.daily;
   bool _isFoodMenuVisible = false;
   bool _isActivityMenuVisible = false;
   bool _isPoopMenuVisible = false;
@@ -190,22 +189,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   @override
   Widget build(BuildContext context) {
     final pet = ref.watch(petByIdProvider(widget.petId));
-
-    final List<Record> records;
-    switch (_selectedView) {
-      case RecordViewType.daily:
-        records = ref.watch(todaysRecordsProvider);
-        break;
-      case RecordViewType.weekly:
-        records = ref.watch(weeklyRecordsProvider);
-        break;
-      case RecordViewType.monthly:
-        records = ref.watch(monthlyRecordsProvider);
-        break;
-      case RecordViewType.yearly:
-        records = ref.watch(yearlyRecordsProvider);
-        break;
-    }
+    final List<Record> records = ref.watch(todaysRecordsProvider);
 
     if (pet == null) {
       return Scaffold(
@@ -219,17 +203,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       );
     }
 
-    Widget recordsView;
-    if (_selectedView == RecordViewType.daily) {
-      recordsView = _Time24Table(records: records);
-    } else {
-      recordsView = ListView.builder(
-        itemCount: records.length,
-        itemBuilder: (context, index) {
-          return _RecordCard(record: records[index], pet: pet);
-        },
-      );
-    }
+    Widget recordsView = _Time24Table(records: records);
 
     return Scaffold(
       body: SafeArea(
@@ -237,20 +211,6 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           padding: const EdgeInsets.all(12),
           child: Column(
             children: [
-              SegmentedButton<RecordViewType>(
-                segments: <ButtonSegment<RecordViewType>>[
-                  ButtonSegment(value: RecordViewType.daily, label: Text('views.daily'.tr())),
-                  ButtonSegment(value: RecordViewType.weekly, label: Text('views.weekly'.tr())),
-                  ButtonSegment(value: RecordViewType.monthly, label: Text('views.monthly'.tr())),
-                  ButtonSegment(value: RecordViewType.yearly, label: Text('views.yearly'.tr())),
-                ],
-                selected: <RecordViewType>{_selectedView},
-                onSelectionChanged: (Set<RecordViewType> newSelection) {
-                  setState(() {
-                    _selectedView = newSelection.first;
-                  });
-                },
-              ),
               const SizedBox(height: 12),
               Text(
                 DateFormat.yMMMMd(context.locale.toString()).format(DateTime.now()),
@@ -266,6 +226,15 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          FloatingActionButton(
+            heroTag: "record-chart",
+            tooltip: 'records.type.chart'.tr(),
+            onPressed: () {
+              context.go('/pets/${pet!.id}/records-chart?name=${Uri.encodeComponent(pet!.name)}');
+            },
+            child: const Icon(Icons.bar_chart),
+          ),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.end,

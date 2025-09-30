@@ -68,7 +68,14 @@
     "datetime": "日時",
     "recent": "最近の記録",
     "no_recent": "最近の記録がありません",
-    "add": "記録を追加"
+    "add": "記録を追加",
+    "type": {
+      "food": "ごはん",
+      "play": "遊び",
+      "poop": "うんち",
+      "health": "健康",
+      "chart": "チャート"
+    }
   },
   "reminders": {
     "title": "リマインダー",
