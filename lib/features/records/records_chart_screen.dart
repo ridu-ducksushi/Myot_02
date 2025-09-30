@@ -106,13 +106,14 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
   // Aggregate _rawData into _chartData based on _viewMode
   void _applyAggregation() {
     if (_viewMode == 'day') {
-      // Keep as-is; ensure label exists
+      // Keep as-is but sort by date
       _chartData = _rawData
           .map((e) => {
                 ...e,
                 'label': e['date'],
               })
-          .toList();
+          .toList()
+        ..sort((a, b) => (a['date'] as String).compareTo(b['date'] as String));
       return;
     }
 

@@ -28,6 +28,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   bool _isFoodMenuVisible = false;
   bool _isActivityMenuVisible = false;
   bool _isPoopMenuVisible = false;
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
@@ -189,7 +190,14 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   @override
   Widget build(BuildContext context) {
     final pet = ref.watch(petByIdProvider(widget.petId));
-    final List<Record> records = ref.watch(todaysRecordsProvider);
+    // 선택된 날짜에 해당하는 레코드만 필터링
+    final List<Record> allRecords = ref.watch(recordsForPetProvider(widget.petId));
+    final List<Record> records = allRecords.where((record) {
+      final recordDate = record.at;
+      return recordDate.year == _selectedDate.year &&
+             recordDate.month == _selectedDate.month &&
+             recordDate.day == _selectedDate.day;
+    }).toList();
 
     if (pet == null) {
       return Scaffold(
@@ -212,9 +220,51 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           child: Column(
             children: [
               const SizedBox(height: 12),
-              Text(
-                DateFormat.yMMMMd(context.locale.toString()).format(DateTime.now()),
-                style: Theme.of(context).textTheme.titleMedium,
+              // 날짜 선택 헤더 (Health 탭과 동일한 스타일)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('기록 날짜: ', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setState(() => _selectedDate = DateTime(picked.year, picked.month, picked.day));
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Theme.of(context).colorScheme.outline),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            DateFormat('yyyy-MM-dd').format(_selectedDate),
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.calendar_today,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Expanded(child: recordsView),
@@ -376,7 +426,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                       child: Text('common.save'.tr()),
                       onPressed: () {
                         final now = DateTime.now();
-                        final recordAt = DateTime(now.year, now.month, now.day, selectedTime.hour, selectedTime.minute);
+                        final recordAt = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, selectedTime.hour, selectedTime.minute);
                         final newRecord = Record(
                           id: DateTime.now().millisecondsSinceEpoch.toString(),
                           petId: pet.id,
