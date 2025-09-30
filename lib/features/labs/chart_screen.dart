@@ -25,8 +25,13 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
   String? _selectedTestItem;
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
   DateTime _endDate = DateTime.now();
+  // Aggregated data used for the chart rendering
   List<Map<String, dynamic>> _chartData = [];
+  // Raw per-day data fetched from Supabase; aggregation derives from this
+  List<Map<String, dynamic>> _rawData = [];
   bool _isLoading = false;
+  // View granularity: day | week | month
+  String _viewMode = 'day';
 
   @override
   void initState() {
@@ -116,6 +121,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                     'value': value,
                     'unit': item['unit']?.toString() ?? '',
                     'reference': item['reference']?.toString() ?? '',
+                    // label is filled later depending on view mode
                   });
                 }
               }
@@ -126,7 +132,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
       
       if (mounted) {
         setState(() {
-          _chartData = chartData;
+          _rawData = chartData;
+          _applyAggregation();
           _isLoading = false;
         });
       }
@@ -136,6 +143,75 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  // Aggregate _rawData into _chartData based on _viewMode
+  void _applyAggregation() {
+    if (_viewMode == 'day') {
+      // Keep as-is; ensure label exists
+      _chartData = _rawData
+          .map((e) => {
+                ...e,
+                'label': e['date'],
+              })
+          .toList();
+      return;
+    }
+
+    // Helper to parse date
+    DateTime parseDate(String d) => DateTime.parse(d);
+
+    // Grouping map
+    final Map<String, List<Map<String, dynamic>>> grouped = {};
+
+    for (final row in _rawData) {
+      final dateStr = row['date'] as String;
+      final dt = parseDate(dateStr);
+      String key;
+      String label;
+
+      if (_viewMode == 'week') {
+        // Start of week (Mon)
+        final int weekday = dt.weekday; // Mon=1..Sun=7
+        final startOfWeek = DateTime(dt.year, dt.month, dt.day)
+            .subtract(Duration(days: weekday - 1));
+        key = DateFormat('yyyy-MM-dd').format(startOfWeek);
+        final endOfWeek = startOfWeek.add(const Duration(days: 6));
+        label = '${DateFormat('MM/dd').format(startOfWeek)}~${DateFormat('MM/dd').format(endOfWeek)}';
+      } else {
+        // month
+        final monthStart = DateTime(dt.year, dt.month, 1);
+        key = DateFormat('yyyy-MM').format(monthStart);
+        label = DateFormat('yyyy-MM').format(monthStart);
+      }
+
+      final list = grouped.putIfAbsent(key, () => []);
+      list.add({
+        ...row,
+        'group_key': key,
+        'label': label,
+      });
+    }
+
+    // Aggregate using average for numeric values
+    final List<Map<String, dynamic>> aggregated = [];
+    for (final entry in grouped.entries) {
+      final rows = entry.value;
+      if (rows.isEmpty) continue;
+      final double avg = rows.map((r) => (r['value'] as double)).fold(0.0, (a, b) => a + b) / rows.length;
+      final first = rows.first;
+      aggregated.add({
+        'date': entry.key, // key acts as representative date
+        'label': first['label'] ?? entry.key,
+        'value': avg,
+        'unit': first['unit'] ?? '',
+        'reference': first['reference'] ?? '',
+      });
+    }
+
+    // Sort by date ascending based on key
+    aggregated.sort((a, b) => (a['date'] as String).compareTo(b['date'] as String));
+    _chartData = aggregated;
   }
 
   @override
@@ -191,6 +267,49 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                // 뷰 모드 (일/주/월)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('일간'),
+                        selected: _viewMode == 'day',
+                        onSelected: (v) {
+                          if (!v) return;
+                          setState(() {
+                            _viewMode = 'day';
+                            _applyAggregation();
+                          });
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('주간'),
+                        selected: _viewMode == 'week',
+                        onSelected: (v) {
+                          if (!v) return;
+                          setState(() {
+                            _viewMode = 'week';
+                            _applyAggregation();
+                          });
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('월간'),
+                        selected: _viewMode == 'month',
+                        onSelected: (v) {
+                          if (!v) return;
+                          setState(() {
+                            _viewMode = 'month';
+                            _applyAggregation();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
                 // 날짜 범위 선택
@@ -375,11 +494,22 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                       reservedSize: 30,
                       getTitlesWidget: (value, meta) {
                         if (value.toInt() < _chartData.length) {
-                          final date = DateTime.parse(_chartData[value.toInt()]['date']);
-                          return Text(
-                            DateFormat('MM/dd').format(date),
-                            style: const TextStyle(fontSize: 10),
-                          );
+                          final label = _chartData[value.toInt()]['label'] as String?;
+                          if (label != null) {
+                            // For day mode, label is yyyy-MM-dd
+                            if (_viewMode == 'day') {
+                              final date = DateTime.parse(label);
+                              return Text(
+                                DateFormat('MM/dd').format(date),
+                                style: const TextStyle(fontSize: 10),
+                              );
+                            }
+                            // For week/month, label is already human-readable
+                            return Text(
+                              label,
+                              style: const TextStyle(fontSize: 10),
+                            );
+                          }
                         }
                         return const Text('');
                       },
@@ -407,9 +537,16 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                         final dataIndex = spot.x.toInt();
                         if (dataIndex < _chartData.length) {
                           final data = _chartData[dataIndex];
-                          final date = DateTime.parse(data['date']);
+                          final label = data['label'] as String? ?? data['date'] as String;
+                          String labelText;
+                          if (_viewMode == 'day') {
+                            final date = DateTime.parse(label);
+                            labelText = DateFormat('yyyy-MM-dd').format(date);
+                          } else {
+                            labelText = label; // already formatted for week/month
+                          }
                           return LineTooltipItem(
-                            '${DateFormat('yyyy-MM-dd').format(date)}\n${data['value']}${data['unit']}',
+                            '$labelText\n${(data['value'] as double).toStringAsFixed(2)}${data['unit']}',
                             TextStyle(
                               color: Theme.of(context).colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
