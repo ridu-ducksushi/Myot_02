@@ -33,6 +33,7 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
   List<Map<String, dynamic>> _rawData = [];
   // Pie chart data for subcategory breakdown
   List<PieChartSectionData> _pieChartData = [];
+  Map<String, int> _allSubcategoryData = {}; // 모든 소분류 데이터 (0 포함)
   bool _isLoading = false;
   // View granularity: day | week | month
   String _viewMode = 'day';
@@ -176,6 +177,21 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
   }
 
   // Generate pie chart data for subcategory breakdown
+  List<String> _getAllSubcategoriesForType(String category) {
+    switch (category) {
+      case 'food':
+        return ['Meal', 'Snack', 'Water', 'Medicine', 'Supplement'];
+      case 'health':
+        return ['Medicine', 'Vaccine', 'Visit', 'Weight'];
+      case 'poop':
+        return ['Litter', 'Feces', 'Urine'];
+      case 'activity':
+        return ['Activity', 'Other'];
+      default:
+        return [];
+    }
+  }
+
   void _generatePieChartData() {
     if (_selectedRecordType == null) {
       setState(() {
@@ -191,14 +207,24 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
         .where((r) => r.at.isBefore(_endDate.add(const Duration(days: 1))))
         .toList();
 
-    // Group by subcategory
+    // Get all subcategories for this type
+    final List<String> allSubcategories = _getAllSubcategoriesForType(_selectedRecordType!);
+    
+    // Initialize all subcategories with 0 count
     final Map<String, int> subcategoryCounts = {};
-    for (final record in filteredRecords) {
-      final subcategory = _getSubcategoryDisplayName(record.type);
-      subcategoryCounts[subcategory] = (subcategoryCounts[subcategory] ?? 0) + 1;
+    for (final subcategory in allSubcategories) {
+      subcategoryCounts[subcategory] = 0;
     }
 
-    if (subcategoryCounts.isEmpty) {
+    // Count actual records
+    for (final record in filteredRecords) {
+      final subcategory = _getSubcategoryDisplayName(record.type);
+      if (subcategoryCounts.containsKey(subcategory)) {
+        subcategoryCounts[subcategory] = subcategoryCounts[subcategory]! + 1;
+      }
+    }
+
+    if (allSubcategories.isEmpty) {
       setState(() {
         _pieChartData = [];
       });
@@ -221,25 +247,29 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
     int colorIndex = 0;
     final totalCount = subcategoryCounts.values.fold(0, (sum, count) => sum + count);
 
+    // Only add sections with actual data to pie chart
     subcategoryCounts.forEach((subcategory, count) {
-      pieChartData.add(
-        PieChartSectionData(
-          color: colors[colorIndex % colors.length],
-          value: count.toDouble(),
-          title: '${((count / totalCount) * 100).toStringAsFixed(1)}%\n$subcategory',
-          radius: 80,
-          titleStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
+      if (count > 0) {
+        pieChartData.add(
+          PieChartSectionData(
+            color: colors[colorIndex % colors.length],
+            value: count.toDouble(),
+            title: '${((count / totalCount) * 100).toStringAsFixed(1)}%\n$subcategory',
+            radius: 80,
+            titleStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
           ),
-        ),
-      );
-      colorIndex++;
+        );
+        colorIndex++;
+      }
     });
 
     setState(() {
       _pieChartData = pieChartData;
+      _allSubcategoryData = subcategoryCounts; // 모든 소분류 데이터 저장 (0 포함)
     });
   }
 
@@ -248,39 +278,41 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
     switch (recordType) {
       // Food subcategories
       case 'food_meal':
-        return '식사';
+        return 'Meal';
       case 'food_snack':
-        return '간식';
+        return 'Snack';
       case 'food_water':
-        return '물';
+        return 'Water';
       case 'food_treat':
-        return '간식';
+        return 'Snack';
+      case 'food_med':
+        return 'Medicine';
       case 'food_supplement':
-        return '영양제';
+        return 'Supplement';
       
       // Health subcategories
       case 'med':
-        return '약물';
+        return 'Medicine';
       case 'vaccine':
-        return '예방접종';
+        return 'Vaccine';
       case 'visit':
-        return '병원방문';
+        return 'Visit';
       case 'weight':
-        return '체중측정';
+        return 'Weight';
       
       // Poop subcategories
       case 'litter':
-        return '화장실';
+        return 'Litter';
       case 'poop_feces':
-        return '배변';
+        return 'Feces';
       case 'poop_urine':
-        return '소변';
+        return 'Urine';
       
       // Activity subcategories
       case 'activity':
-        return '활동';
+        return 'Activity';
       case 'other':
-        return '기타';
+        return 'Other';
       
       default:
         return recordType;
@@ -462,20 +494,20 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
   }
 
   List<String> _getRecordTypeOptions() {
-    // 4가지 대분류만 반환
-    return ['food', 'health', 'poop', 'activity'];
+    // Records 화면 플로팅 버튼 순서와 일치: food, activity, poop, health
+    return ['food', 'activity', 'poop', 'health'];
   }
 
   String _getRecordTypeDisplayName(String type) {
     switch (type) {
       case 'food':
-        return '식사';
+        return 'Food';
       case 'health':
-        return '건강';
+        return 'Health';
       case 'poop':
-        return '용변';
+        return 'Poop';
       case 'activity':
-        return '활동';
+        return 'Activity';
       default:
         return type;
     }
@@ -564,12 +596,26 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
                 const SizedBox(height: 16),
                 Wrap(
                   alignment: WrapAlignment.center,
-                  children: _pieChartData.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final section = entry.value;
-                    final color = section.color;
-                    final title = section.title.split('\n').last;
-                    final percentage = section.title.split('\n').first;
+                  children: _allSubcategoryData.entries.map((entry) {
+                    final subcategory = entry.key;
+                    final count = entry.value;
+                    final totalCount = _allSubcategoryData.values.fold(0, (sum, c) => sum + c);
+                    final percentage = totalCount > 0 ? '${((count / totalCount) * 100).toStringAsFixed(1)}%' : '0.0%';
+                    
+                    // 색상 결정 (실제 데이터가 있는 항목과 동일한 색상 사용)
+                    Color color = Colors.grey.shade300; // 기본 회색
+                    if (count > 0) {
+                      // 실제 데이터가 있는 항목의 색상 찾기
+                      final pieChartEntry = _pieChartData.firstWhere(
+                        (section) => section.title.split('\n').last == subcategory,
+                        orElse: () => PieChartSectionData(
+                          color: Colors.grey.shade300,
+                          value: 0,
+                          title: '',
+                        ),
+                      );
+                      color = pieChartEntry.color;
+                    }
                     
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -586,8 +632,11 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '$title ($percentage)',
-                            style: const TextStyle(fontSize: 12),
+                            '$subcategory ($percentage)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: count > 0 ? Colors.black : Colors.grey,
+                            ),
                           ),
                         ],
                       ),
