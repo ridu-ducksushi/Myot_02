@@ -779,9 +779,9 @@ class _Time24Table extends StatelessWidget {
                     ),
                     child: recordsForHour.isEmpty
                         ? null
-                        : ListView(
+                        : Row(
                             children: recordsForHour.map((record) {
-                              return _buildRecordButton(context, record);
+                              return _buildRecordButton(context, record, recordsForHour.length);
                             }).toList(),
                           ),
                   ),
@@ -794,45 +794,52 @@ class _Time24Table extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordButton(BuildContext context, Record record) {
+  Widget _buildRecordButton(BuildContext context, Record record, int totalRecords) {
     final typeColor = AppColors.getRecordTypeColor(record.type);
     
-    return Padding(
-      padding: const EdgeInsets.all(2.0),
-      child: InkWell(
-        onTap: () => onRecordTap(record),
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: typeColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: typeColor.withOpacity(0.3),
-              width: 1,
+    // 총 기록 개수에 따라 버튼 크기 조정 (1개면 전체 너비, 2개면 각각 50%, 3개면 각각 33% 등)
+    final double flexValue = 1.0 / totalRecords;
+    
+    return Expanded(
+      flex: (flexValue * 100).round(), // flex는 정수여야 하므로 100을 곱해서 반올림
+      child: Padding(
+        padding: const EdgeInsets.all(2.0),
+        child: InkWell(
+          onTap: () => onRecordTap(record),
+          borderRadius: BorderRadius.circular(6),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), // 패딩을 줄여서 작은 공간에 맞춤
+            decoration: BoxDecoration(
+              color: typeColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: typeColor.withOpacity(0.3),
+                width: 1,
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                _getRecordIcon(record.type),
-                size: 18,
-                color: typeColor,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  '${record.title}: ${record.content ?? ""}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: typeColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _getRecordIcon(record.type),
+                  size: 14, // 아이콘 크기를 줄임
+                  color: typeColor,
                 ),
-              ),
-            ],
+                const SizedBox(width: 4), // 간격을 줄임
+                Flexible(
+                  child: Text(
+                    '${record.title}: ${record.content ?? ""}',
+                    style: TextStyle(
+                      fontSize: 12, // 텍스트 크기를 줄임
+                      color: typeColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
