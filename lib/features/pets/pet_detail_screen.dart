@@ -86,11 +86,6 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _addRecord(context, pet),
-        icon: const Icon(Icons.add),
-        label: Text('records.add'.tr()),
-      ),
     );
   }
 
@@ -435,13 +430,6 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
       context: context,
       isScrollControlled: true,
       builder: (context) => _EditPetSheet(pet: pet),
-    );
-  }
-
-  void _addRecord(BuildContext context, Pet pet) {
-    // TODO: Navigate to add record with pre-selected pet
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Add record for ${pet.name} - Coming Soon')),
     );
   }
 
