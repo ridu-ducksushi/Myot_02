@@ -428,6 +428,14 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     );
   }
 
+  void _closeAllSubMenus() {
+    setState(() {
+      _isFoodMenuVisible = false;
+      _isActivityMenuVisible = false;
+      _isPoopMenuVisible = false;
+    });
+  }
+
   void _addRecord(BuildContext context, Pet pet, String type) {
     showDialog(
       context: context,
@@ -474,6 +482,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                   child: Text('common.cancel'.tr()),
                   onPressed: () {
                     Navigator.of(context).pop();
+                    _closeAllSubMenus();
                   },
                 ),
                 Consumer(
@@ -495,6 +504,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         );
                         ref.read(recordsProvider.notifier).addRecord(newRecord);
                         Navigator.of(context).pop();
+                        _closeAllSubMenus();
                       },
                     );
                   },
@@ -664,6 +674,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                   child: Text('취소'),
                   onPressed: () {
                     Navigator.of(context).pop();
+                    _closeAllSubMenus();
                   },
                 ),
                 // 저장 버튼
@@ -679,6 +690,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         );
                         ref.read(recordsProvider.notifier).updateRecord(updatedRecord);
                         Navigator.of(context).pop();
+                        _closeAllSubMenus();
                       },
                     );
                   },
@@ -703,6 +715,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
               child: Text('취소'),
               onPressed: () {
                 Navigator.of(context).pop();
+                _closeAllSubMenus();
               },
             ),
             Consumer(
@@ -712,6 +725,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                   onPressed: () {
                     ref.read(recordsProvider.notifier).deleteRecord(record.id);
                     Navigator.of(context).pop();
+                    _closeAllSubMenus();
                   },
                 );
               },
