@@ -4,13 +4,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:petcare/data/services/image_service.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 
-class ProfileImagePicker extends StatelessWidget {
+class ProfileImagePicker extends StatefulWidget {
   final String? imagePath;
   final Function(File?) onImageSelected;
   final Function(String)? onDefaultIconSelected;
   final double size;
   final bool showEditIcon;
   final String? selectedDefaultIcon;
+  final String? species; // 동물 종류 (dog, cat 등)
 
   const ProfileImagePicker({
     super.key,
@@ -20,15 +21,67 @@ class ProfileImagePicker extends StatelessWidget {
     this.size = 120,
     this.showEditIcon = true,
     this.selectedDefaultIcon,
+    this.species,
   });
+
+  @override
+  State<ProfileImagePicker> createState() => _ProfileImagePickerState();
+}
+
+class _ProfileImagePickerState extends State<ProfileImagePicker> {
+  List<String> _defaultIconUrls = [];
+  bool _isLoadingIcons = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.species != null) {
+      _loadDefaultIcons();
+    }
+  }
+
+  @override
+  void didUpdateWidget(ProfileImagePicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.species != widget.species && widget.species != null) {
+      _loadDefaultIcons();
+    }
+  }
+
+  Future<void> _loadDefaultIcons() async {
+    if (widget.species == null) {
+      print('⚠️ species가 null입니다.');
+      return;
+    }
+    
+    print('🔄 기본 아이콘 로드 시작: species=${widget.species}');
+    
+    setState(() {
+      _isLoadingIcons = true;
+    });
+
+    try {
+      final urls = await ImageService.getDefaultIconUrls(widget.species!);
+      print('✅ 로드된 아이콘 URL 개수: ${urls.length}');
+      setState(() {
+        _defaultIconUrls = urls;
+        _isLoadingIcons = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingIcons = false;
+      });
+      print('❌ 기본 아이콘 로드 실패: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => _showImageSourceDialog(context),
       child: Container(
-        width: size,
-        height: size,
+        width: widget.size,
+        height: widget.size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
@@ -40,8 +93,8 @@ class ProfileImagePicker extends StatelessWidget {
           children: [
             // 프로필 이미지
             Container(
-              width: size,
-              height: size,
+              width: widget.size,
+              height: widget.size,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Theme.of(context).colorScheme.surfaceVariant,
@@ -51,13 +104,13 @@ class ProfileImagePicker extends StatelessWidget {
               ),
             ),
             // 편집 아이콘
-            if (showEditIcon)
+            if (widget.showEditIcon)
               Positioned(
                 bottom: 0,
                 right: 0,
                 child: Container(
-                  width: size * 0.3,
-                  height: size * 0.3,
+                  width: widget.size * 0.3,
+                  height: widget.size * 0.3,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Theme.of(context).colorScheme.primary,
@@ -68,7 +121,7 @@ class ProfileImagePicker extends StatelessWidget {
                   ),
                   child: Icon(
                     Icons.camera_alt,
-                    size: size * 0.15,
+                    size: widget.size * 0.15,
                     color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
@@ -81,17 +134,31 @@ class ProfileImagePicker extends StatelessWidget {
 
   Widget _buildImageContent(BuildContext context) {
     // 기본 아이콘이 선택된 경우 기본 아이콘 표시
-    if (selectedDefaultIcon != null) {
-      return _buildDefaultAvatar(context);
+    if (widget.selectedDefaultIcon != null && widget.species != null) {
+      // Supabase Storage에서 이미지 URL 가져오기
+      final imageUrl = ImageService.getDefaultIconUrl(widget.species!, widget.selectedDefaultIcon!);
+      if (imageUrl.isNotEmpty) {
+        return Image.network(
+          imageUrl,
+          width: widget.size,
+          height: widget.size,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print('❌ 네트워크 이미지 로드 실패: $imageUrl, 에러: $error');
+            // 네트워크 이미지 로드 실패 시 기본 아이콘으로 폴백
+            return _buildDefaultIcon(context);
+          },
+        );
+      }
     }
     
-    if (imagePath != null && imagePath!.isNotEmpty) {
+    if (widget.imagePath != null && widget.imagePath!.isNotEmpty) {
       try {
         return Image.file(
-          File(imagePath!),
+          File(widget.imagePath!),
           fit: BoxFit.cover,
-          width: size,
-          height: size,
+          width: widget.size,
+          height: widget.size,
           errorBuilder: (context, error, stackTrace) {
             return _buildDefaultAvatar(context);
           },
@@ -105,8 +172,8 @@ class ProfileImagePicker extends StatelessWidget {
 
   Widget _buildDefaultAvatar(BuildContext context) {
     return Container(
-      width: size,
-      height: size,
+      width: widget.size,
+      height: widget.size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Theme.of(context).colorScheme.surfaceVariant,
@@ -116,20 +183,20 @@ class ProfileImagePicker extends StatelessWidget {
   }
 
   Widget _buildDefaultIcon(BuildContext context) {
-    if (selectedDefaultIcon != null) {
-      final iconData = _getDefaultIconData(selectedDefaultIcon!);
-      final color = _getDefaultIconColor(selectedDefaultIcon!);
+    if (widget.selectedDefaultIcon != null) {
+      final iconData = _getDefaultIconData(widget.selectedDefaultIcon!);
+      final color = _getDefaultIconColor(widget.selectedDefaultIcon!);
       
       return Icon(
         iconData,
-        size: size * 0.4,
+        size: widget.size * 0.4,
         color: color,
       );
     }
     
     return Icon(
       Icons.pets,
-      size: size * 0.4,
+      size: widget.size * 0.4,
       color: Theme.of(context).colorScheme.onSurfaceVariant,
     );
   }
@@ -186,14 +253,14 @@ class ProfileImagePicker extends StatelessWidget {
                     _showDefaultIconsDialog(context);
                   },
                 ),
-                if (imagePath != null && imagePath!.isNotEmpty)
+                if (widget.imagePath != null && widget.imagePath!.isNotEmpty)
                   _buildSourceOption(
                     context,
                     icon: Icons.delete,
                     label: '삭제',
                     onTap: () async {
                       Navigator.pop(context);
-                      onImageSelected(null);
+                      widget.onImageSelected(null);
                     },
                   ),
               ],
@@ -256,7 +323,7 @@ class ProfileImagePicker extends StatelessWidget {
           // 앱 내부 저장소에 저장
           final savedPath = await ImageService.saveImageToAppDirectory(compressedImage);
           if (savedPath != null) {
-            onImageSelected(compressedImage);
+            widget.onImageSelected(compressedImage);
           } else {
             _showErrorSnackBar(context, '이미지 저장에 실패했습니다.');
           }
@@ -350,6 +417,9 @@ class ProfileImagePicker extends StatelessWidget {
 
   // 기본 아이콘 선택 다이얼로그
   void _showDefaultIconsDialog(BuildContext context) {
+    print('🎯 기본 아이콘 다이얼로그 열기 시작');
+    print('📊 Species: ${widget.species}, Loading: $_isLoadingIcons, Icons: ${_defaultIconUrls.length}');
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -374,24 +444,31 @@ class ProfileImagePicker extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            Text('Species: ${widget.species}, Loading: $_isLoadingIcons, Icons: ${_defaultIconUrls.length}'),
+            const SizedBox(height: 16),
             Expanded(
-              child: GridView.builder(
+              child: _isLoadingIcons
+                  ? const Center(child: CircularProgressIndicator())
+                  : _defaultIconUrls.isEmpty
+                      ? const Center(child: Text('아이콘을 찾을 수 없습니다.'))
+                      : GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 5,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                   childAspectRatio: 1,
                 ),
-                itemCount: _defaultIcons.length,
+                itemCount: _isLoadingIcons ? 0 : _defaultIconUrls.length,
                 itemBuilder: (context, index) {
-                  final iconName = _defaultIcons[index];
-                  final isSelected = selectedDefaultIcon == iconName;
+                  final iconUrl = _defaultIconUrls[index];
+                  final iconName = iconUrl.split('/').last.split('.').first; // 파일명에서 확장자 제거
+                  final isSelected = widget.selectedDefaultIcon == iconName;
                   
                   return GestureDetector(
                     onTap: () {
                       Navigator.pop(context);
-                      if (onDefaultIconSelected != null) {
-                        onDefaultIconSelected!(iconName);
+                      if (widget.onDefaultIconSelected != null) {
+                        widget.onDefaultIconSelected!(iconName);
                       }
                     },
                     child: Container(
@@ -407,15 +484,26 @@ class ProfileImagePicker extends StatelessWidget {
                           width: 2,
                         ),
                       ),
-                      child: Icon(
-                        _getDefaultIconData(iconName),
-                        color: _getDefaultIconColor(iconName),
-                        size: 32,
+                      child: ClipOval(
+                        child: Image.network(
+                          iconUrl,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // 네트워크 이미지 로드 실패 시 기본 아이콘으로 폴백
+                            return Icon(
+                              Icons.pets,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              size: 32,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   );
                 },
-              ),
+                  ),
             ),
             const SizedBox(height: 16),
           ],

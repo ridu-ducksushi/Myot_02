@@ -216,7 +216,7 @@ class _PetCard extends ConsumerWidget {
                 border: Border.all(color: speciesColor.withOpacity(0.3)),
               ),
               child: pet.defaultIcon != null
-                  ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor)
+                  ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species)
                   : pet.avatarUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(30),
@@ -224,10 +224,10 @@ class _PetCard extends ConsumerWidget {
                             File(pet.avatarUrl!),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
-                                _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
+                                _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species),
                           ),
                         )
-                      : _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
+                      : _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species),
             ),
             const SizedBox(width: 16),
             
@@ -474,8 +474,33 @@ class _PetCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color fallbackColor) {
+  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color fallbackColor, {String? species}) {
     if (defaultIcon != null) {
+      // Supabase Storage에서 이미지 URL 가져오기
+      final imageUrl = ImageService.getDefaultIconUrl(species ?? 'cat', defaultIcon);
+      if (imageUrl.isNotEmpty) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: Image.network(
+            imageUrl,
+            width: 60,
+            height: 60,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              // 네트워크 이미지 로드 실패 시 기존 아이콘으로 폴백
+              final iconData = _getDefaultIconData(defaultIcon);
+              final color = _getDefaultIconColor(defaultIcon);
+              return Icon(
+                iconData,
+                size: 30,
+                color: color,
+              );
+            },
+          ),
+        );
+      }
+      
+      // 폴백: 기존 아이콘 방식
       final iconData = _getDefaultIconData(defaultIcon);
       final color = _getDefaultIconColor(defaultIcon);
       
@@ -623,6 +648,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                     child: ProfileImagePicker(
                       imagePath: _selectedImage?.path,
                       selectedDefaultIcon: _selectedDefaultIcon,
+                      species: _selectedSpecies, // 동물 종류 전달
                       onImageSelected: (image) {
                         setState(() {
                           _selectedImage = image;
@@ -932,31 +958,32 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                   
                   // Title
                   Text(
-                    'pets.edit_title'.tr(),
-                    style: Theme.of(context).textTheme.headlineSmall,
+                  'pets.edit_title'.tr(),
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 24),
+                
+                // Profile Image Picker
+                Center(
+                  child: ProfileImagePicker(
+                    imagePath: _selectedImage?.path,
+                    selectedDefaultIcon: _selectedDefaultIcon,
+                    species: _selectedSpecies, // 동물 종류 전달
+                    onImageSelected: (image) {
+                      setState(() {
+                        _selectedImage = image;
+                        _selectedDefaultIcon = null; // 이미지 선택 시 기본 아이콘 제거
+                      });
+                    },
+                    onDefaultIconSelected: (iconName) {
+                      setState(() {
+                        _selectedDefaultIcon = iconName;
+                        _selectedImage = null; // 기본 아이콘 선택 시 이미지 제거
+                      });
+                    },
+                    size: 120,
                   ),
-                  const SizedBox(height: 24),
-                  
-                  // Profile Image Picker
-                  Center(
-                    child: ProfileImagePicker(
-                      imagePath: _selectedImage?.path,
-                      selectedDefaultIcon: _selectedDefaultIcon,
-                      onImageSelected: (image) {
-                        setState(() {
-                          _selectedImage = image;
-                          _selectedDefaultIcon = null; // 이미지 선택 시 기본 아이콘 제거
-                        });
-                      },
-                      onDefaultIconSelected: (iconName) {
-                        setState(() {
-                          _selectedDefaultIcon = iconName;
-                          _selectedImage = null; // 기본 아이콘 선택 시 이미지 제거
-                        });
-                      },
-                      size: 120,
-                    ),
-                  ),
+                ),
                   const SizedBox(height: 24),
                   
                   // Form fields

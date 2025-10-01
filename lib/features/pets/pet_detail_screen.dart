@@ -104,6 +104,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               ProfileImagePicker(
                 imagePath: _selectedImage?.path ?? pet.avatarUrl,
                 selectedDefaultIcon: _selectedDefaultIcon ?? pet.defaultIcon,
+                species: pet.species, // 동물 종류 전달
                 onImageSelected: (image) async {
                   if (image != null) {
                     // 이미지 저장 및 펫 업데이트

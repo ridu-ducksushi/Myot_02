@@ -7,6 +7,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/data/local/database.dart';
+import 'package:petcare/data/services/image_service.dart';
 import 'package:petcare/features/pets/pets_screen.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
@@ -314,7 +315,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                 border: Border.all(color: speciesColor.withOpacity(0.3), width: 2),
               ),
               child: pet.defaultIcon != null
-                  ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor)
+                  ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species)
                   : pet.avatarUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(30),
@@ -322,10 +323,10 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                             File(pet.avatarUrl!),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
-                                _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
+                                _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species),
                           ),
                         )
-                      : _buildDefaultIcon(context, pet.defaultIcon, speciesColor),
+                      : _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species),
             ),
             const SizedBox(height: 12),
             
@@ -407,8 +408,33 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     );
   }
 
-  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color fallbackColor) {
+  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color fallbackColor, {String? species}) {
     if (defaultIcon != null) {
+      // Supabase Storage에서 이미지 URL 가져오기
+      final imageUrl = ImageService.getDefaultIconUrl(species ?? 'cat', defaultIcon);
+      if (imageUrl.isNotEmpty) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: Image.network(
+            imageUrl,
+            width: 60,
+            height: 60,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              // 네트워크 이미지 로드 실패 시 기존 아이콘으로 폴백
+              final iconData = _getDefaultIconData(defaultIcon);
+              final color = _getDefaultIconColor(defaultIcon);
+              return Icon(
+                iconData,
+                size: 30,
+                color: color,
+              );
+            },
+          ),
+        );
+      }
+      
+      // 폴백: 기존 아이콘 방식
       final iconData = _getDefaultIconData(defaultIcon);
       final color = _getDefaultIconColor(defaultIcon);
       
