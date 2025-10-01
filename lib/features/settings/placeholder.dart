@@ -415,13 +415,13 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       if (imageUrl.isNotEmpty) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(30),
-          child: Image.network(
+          child: Image.asset(
             imageUrl,
             width: 60,
             height: 60,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              // 네트워크 이미지 로드 실패 시 기존 아이콘으로 폴백
+              // Assets 이미지 로드 실패 시 기존 아이콘으로 폴백
               final iconData = _getDefaultIconData(defaultIcon);
               final color = _getDefaultIconColor(defaultIcon);
               return Icon(

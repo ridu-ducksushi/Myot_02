@@ -138,14 +138,14 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
       // Supabase Storage에서 이미지 URL 가져오기
       final imageUrl = ImageService.getDefaultIconUrl(widget.species!, widget.selectedDefaultIcon!);
       if (imageUrl.isNotEmpty) {
-        return Image.network(
+        return Image.asset(
           imageUrl,
           width: widget.size,
           height: widget.size,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            print('❌ 네트워크 이미지 로드 실패: $imageUrl, 에러: $error');
-            // 네트워크 이미지 로드 실패 시 기본 아이콘으로 폴백
+            print('❌ Assets 이미지 로드 실패: $imageUrl, 에러: $error');
+            // Assets 이미지 로드 실패 시 기본 아이콘으로 폴백
             return _buildDefaultIcon(context);
           },
         );
@@ -485,13 +485,13 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                         ),
                       ),
                       child: ClipOval(
-                        child: Image.network(
+                        child: Image.asset(
                           iconUrl,
                           width: 60,
                           height: 60,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
-                            // 네트워크 이미지 로드 실패 시 기본 아이콘으로 폴백
+                            // Assets 이미지 로드 실패 시 기본 아이콘으로 폴백
                             return Icon(
                               Icons.pets,
                               color: Theme.of(context).colorScheme.onSurfaceVariant,
