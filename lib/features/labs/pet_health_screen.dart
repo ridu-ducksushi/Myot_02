@@ -10,6 +10,7 @@ import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
+import 'weight_chart_screen.dart';
 
 class PetHealthScreen extends ConsumerStatefulWidget {
   const PetHealthScreen({
@@ -56,7 +57,7 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
           onPressed: () => context.go('/pets/${widget.petId}'),
         ),
       ),
-      body: _LabTable(species: pet.species, petId: pet.id, key: ValueKey(pet.id)),
+      body: _LabTable(species: pet.species, petId: pet.id, petName: pet.name, key: ValueKey(pet.id)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddItemDialog(pet.species, pet.id),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -65,6 +66,30 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
         child: const Icon(Icons.add, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  void _showWeightChartDialog(String petId, String petName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WeightChartScreen(
+          petId: petId,
+          petName: petName,
+        ),
+      ),
+    );
+  }
+
+  void _showLabWeightChartDialog(String petId, String petName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WeightChartScreen(
+          petId: petId,
+          petName: petName,
+        ),
+      ),
     );
   }
 
@@ -148,9 +173,10 @@ class _ReminderSection extends StatelessWidget {
 }
 
 class _LabTable extends StatefulWidget {
-  const _LabTable({required this.species, required this.petId, Key? key}) : super(key: key);
+  const _LabTable({required this.species, required this.petId, required this.petName, Key? key}) : super(key: key);
   final String species; // 'Dog' or 'Cat'
   final String petId;
+  final String petName;
 
   @override
   State<_LabTable> createState() => _LabTableState();
@@ -767,7 +793,36 @@ class _LabTableState extends State<_LabTable> {
                 textAlign: TextAlign.center,
               ),
             ),
+            // 체중 항목에 체중계 아이콘 추가
+            if (label == '체중')
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: InkWell(
+                  onTap: () => _showWeightChartDialog(widget.petId, widget.petName),
+                  borderRadius: BorderRadius.circular(4),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.monitor_weight,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showWeightChartDialog(String petId, String petName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WeightChartScreen(
+          petId: petId,
+          petName: petName,
         ),
       ),
     );

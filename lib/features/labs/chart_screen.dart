@@ -75,8 +75,13 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
       if (mounted) {
         setState(() {
           if (testItems.isNotEmpty) {
-            _selectedTestItem = testItems.first;
-            _loadChartData();
+            // 체중, 병원명, 비용을 제외한 항목들 중에서 선택
+            final validItems = testItems.where((item) => 
+              !['체중', '병원명', '비용'].contains(item)).toList();
+            if (validItems.isNotEmpty) {
+              _selectedTestItem = validItems.first;
+              _loadChartData();
+            }
           }
         });
       }
@@ -403,8 +408,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     return [
       'RBC', 'WBC', 'Hb', 'HCT', 'PLT',
       'ALT', 'AST', 'ALP', 'BUN', 'Creatinine', 'Glucose',
-      'Na', 'K', 'Cl', 'Ca', 'P',
-      '체중', '병원명', '비용'
+      'Na', 'K', 'Cl', 'Ca', 'P'
     ];
   }
 

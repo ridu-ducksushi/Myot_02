@@ -11,6 +11,7 @@ import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/data/services/image_service.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/widgets/profile_image_picker.dart';
+import 'package:petcare/features/labs/weight_chart_screen.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 
 class PetDetailScreen extends ConsumerStatefulWidget {
@@ -259,6 +260,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                         icon: Icons.monitor_weight,
                         label: 'pets.weight'.tr(),
                         value: '${pet.weightKg}kg',
+                        onTap: () => _showWeightChart(context, pet),
                       ),
                     ),
                   if (pet.sex != null)
@@ -442,6 +444,18 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
       SnackBar(content: Text('Add record for ${pet.name} - Coming Soon')),
     );
   }
+
+  void _showWeightChart(BuildContext context, Pet pet) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WeightChartScreen(
+          petId: pet.id,
+          petName: pet.name,
+        ),
+      ),
+    );
+  }
 }
 
 class _InfoCard extends StatelessWidget {
@@ -449,11 +463,13 @@ class _InfoCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -464,28 +480,32 @@ class _InfoCard extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 20,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
