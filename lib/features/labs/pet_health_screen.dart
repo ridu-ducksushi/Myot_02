@@ -398,7 +398,13 @@ class _LabTableState extends State<_LabTable> {
           child: TextFormField(
             controller: _valueCtrls[k],
             keyboardType: TextInputType.number,
-            style: const TextStyle(fontSize: 14),
+            style: TextStyle(
+              fontSize: 14,
+              color: _getValueColor(_valueCtrls[k]?.text, ref),
+              fontWeight: _valueCtrls[k]?.text != null && _valueCtrls[k]!.text.isNotEmpty
+                  ? FontWeight.bold
+                  : FontWeight.normal,
+            ),
             decoration: const InputDecoration(
               border: InputBorder.none, 
               hintText: '-',
@@ -626,6 +632,46 @@ class _LabTableState extends State<_LabTable> {
     return '${_selectedDate.year.toString().padLeft(4, '0')}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
   }
 
+  // 현재 값이 기준치 범위 내에 있는지 확인하고 색상 반환
+  Color _getValueColor(String? valueStr, String? reference) {
+    if (valueStr == null || valueStr.isEmpty || reference == null || reference.isEmpty || reference == '-') {
+      return Colors.black; // 기본 색상
+    }
+
+    final value = double.tryParse(valueStr);
+    if (value == null) return Colors.black;
+
+    // 기준치 파싱 (예: "9~53", "~14", "≤14" 등)
+    if (reference.startsWith('~') || reference.startsWith('≤')) {
+      // 최대값만 있는 경우 (예: "~14", "≤14")
+      final maxStr = reference.replaceAll(RegExp(r'[~≤]'), '').trim();
+      final maxValue = double.tryParse(maxStr);
+      if (maxValue != null && value > maxValue) {
+        return Colors.red; // 기준치 초과
+      }
+      return Colors.black; // 정상
+    }
+
+    // "min~max" 형식 파싱
+    if (reference.contains('~')) {
+      final parts = reference.split('~');
+      if (parts.length == 2) {
+        final minValue = double.tryParse(parts[0].replaceAll(',', '').trim());
+        final maxValue = double.tryParse(parts[1].replaceAll(',', '').trim());
+        
+        if (minValue != null && maxValue != null) {
+          if (value < minValue) {
+            return Colors.blue; // 기준치 미달
+          } else if (value > maxValue) {
+            return Colors.red; // 기준치 초과
+          }
+        }
+      }
+    }
+
+    return Colors.black; // 정상 또는 파싱 불가
+  }
+
   Future<void> _loadFromSupabase() async {
     if (_isLoading) return;
     
@@ -642,10 +688,14 @@ class _LabTableState extends State<_LabTable> {
       }
       
       // Clear custom controllers from previous pets to avoid cross-contamination
+      // Use the same baseKeys as _orderedKeys() to ensure consistency
       final baseKeys = [
-        'RBC', 'WBC', 'Hb', 'HCT', 'PLT',
-        'ALT', 'AST', 'ALP', '총빌리루빈', 'BUN', 'Creatinine', 'SDMA', 'Glucose', '총단백', '알부민', '글로불린', '콜레스테롤', '중성지방',
-        'Na', 'K', 'Cl', 'Ca', 'P',
+        'ALB', 'ALP', 'ALT GPT', 'AST GOT', 'BUN', 'Ca', 'CK', 'Cl', 'CREA', 'GGT', 
+        'GLU', 'K', 'LIPA', 'Na', 'NH3', 'PHOS', 'TBIL', 'T-CHOL', 'TG', 'TPRO', 
+        'Na/K', 'ALB/GLB', 'BUN/CRE', 'GLOB', 'vAMY-P', 'SDMA', 'HCT', 'HGB', 'MCH', 
+        'MCHC', 'MCV', 'MPV', 'PLT', 'RBC', 'RDW-CV', 'WBC', 'WBC-GRAN(#)', 
+        'WBC-GRAN(%)', 'WBC-LYM(#)', 'WBC-LYM(%)', 'WBC-MONO(#)', 'WBC-MONO(%)', 
+        'WBC-EOS(#)', 'WBC-EOS(%)'
       ];
       
       // Remove custom controllers that are not in base keys
@@ -792,22 +842,31 @@ class _LabTableState extends State<_LabTable> {
         reference: ref ?? '',
         unit: unit,
         onSave: (newItemKey, newValue) {
-          // If item key changed, remove old controller and add new one
-          if (newItemKey != itemKey) {
-            _valueCtrls.remove(itemKey);
-            _units.remove(itemKey);
-            _refDog.remove(itemKey);
-            _refCat.remove(itemKey);
-            
-            _valueCtrls[newItemKey] = TextEditingController(text: newValue);
-            _units[newItemKey] = unit;
-            if (ref != null) {
-              _refDog[newItemKey] = ref;
-              _refCat[newItemKey] = ref;
+          setState(() {
+            // If item key changed, remove old controller and add new one
+            if (newItemKey != itemKey) {
+              _valueCtrls.remove(itemKey);
+              _units.remove(itemKey);
+              _refDog.remove(itemKey);
+              _refCat.remove(itemKey);
+              
+              _valueCtrls[newItemKey] = TextEditingController(text: newValue);
+              _valueCtrls[newItemKey]!.addListener(_onChanged);
+              _units[newItemKey] = unit;
+              if (ref != null) {
+                _refDog[newItemKey] = ref;
+                _refCat[newItemKey] = ref;
+              }
+            } else {
+              // Ensure controller exists before setting value
+              if (_valueCtrls[itemKey] == null) {
+                _valueCtrls[itemKey] = TextEditingController(text: newValue);
+                _valueCtrls[itemKey]!.addListener(_onChanged);
+              } else {
+                _valueCtrls[itemKey]!.text = newValue;
+              }
             }
-          } else {
-            _valueCtrls[itemKey]?.text = newValue;
-          }
+          });
           _saveToSupabase();
         },
       ),
