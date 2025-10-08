@@ -291,12 +291,16 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
         return 'Supplement';
       
       // Health subcategories
+      case 'health_med':
       case 'med':
         return 'Medicine';
+      case 'health_vaccine':
       case 'vaccine':
         return 'Vaccine';
+      case 'health_visit':
       case 'visit':
         return 'Visit';
+      case 'health_weight':
       case 'weight':
         return 'Weight';
       
@@ -518,11 +522,18 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
       case 'food':
         return recordType.startsWith('food_') || recordType == 'food';
       case 'health':
-        return recordType == 'med' || recordType == 'vaccine' || recordType == 'visit' || recordType == 'weight';
+        return recordType.startsWith('health_') || 
+               recordType == 'health' ||
+               recordType == 'med' || 
+               recordType == 'vaccine' || 
+               recordType == 'visit' || 
+               recordType == 'weight';
       case 'poop':
         return recordType == 'litter' || recordType == 'poop_feces' || recordType.startsWith('poop');
       case 'activity':
-        return recordType == 'other' || recordType == 'activity';
+        return recordType.startsWith('activity_') || 
+               recordType == 'activity' || 
+               recordType == 'other';
       default:
         return false;
     }

@@ -28,6 +28,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   bool _isFoodMenuVisible = false;
   bool _isActivityMenuVisible = false;
   bool _isPoopMenuVisible = false;
+  bool _isHealthMenuVisible = false;
   DateTime _selectedDate = DateTime.now();
 
   @override
@@ -148,6 +149,45 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             icon: Icons.more_horiz,
             label: 'etc',
             onTap: () => _addRecord(context, pet, 'activity_other'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHealthSubMenu(Pet pet) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildSubMenuItem(
+            icon: Icons.medical_services,
+            label: 'Medicine',
+            onTap: () => _addRecord(context, pet, 'health_med'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.vaccines,
+            label: 'Vaccine',
+            onTap: () => _addRecord(context, pet, 'health_vaccine'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.local_hospital,
+            label: 'Visit',
+            onTap: () => _addRecord(context, pet, 'health_visit'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.monitor_weight,
+            label: 'Weight',
+            onTap: () => _addRecord(context, pet, 'health_weight'),
           ),
         ],
       ),
@@ -410,18 +450,28 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: "record-health",
-            tooltip: 'records.type.health'.tr(),
-            onPressed: () {
-              setState(() {
-                _isFoodMenuVisible = false;
-                _isActivityMenuVisible = false;
-                _isPoopMenuVisible = false;
-              });
-              _addRecord(context, pet, 'health');
-            },
-            child: const Icon(Icons.favorite),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (_isHealthMenuVisible)
+                _buildHealthSubMenu(pet),
+              if (_isHealthMenuVisible)
+                const SizedBox(width: 12),
+              FloatingActionButton(
+                heroTag: "record-health",
+                tooltip: 'records.type.health'.tr(),
+                onPressed: () {
+                  setState(() {
+                    _isHealthMenuVisible = !_isHealthMenuVisible;
+                    _isFoodMenuVisible = false;
+                    _isActivityMenuVisible = false;
+                    _isPoopMenuVisible = false;
+                  });
+                },
+                child: const Icon(Icons.favorite),
+              ),
+            ],
           ),
         ],
       ),
@@ -433,6 +483,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       _isFoodMenuVisible = false;
       _isActivityMenuVisible = false;
       _isPoopMenuVisible = false;
+      _isHealthMenuVisible = false;
     });
   }
 
