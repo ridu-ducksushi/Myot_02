@@ -16,6 +16,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _passwordController = TextEditingController();
   final _passwordConfirmController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscurePasswordConfirm = true;
   final _formKey = GlobalKey<FormState>();
 
   Future<void> _signup() async {
@@ -34,7 +36,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('회원가입 성공! 확인 이메일을 확인해주세요.')),
+          const SnackBar(content: Text('회원가입 성공!')),
         );
         context.go('/login'); // 로그인 페이지로 이동
       }
@@ -65,6 +67,53 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     _passwordController.dispose();
     _passwordConfirmController.dispose();
     super.dispose();
+  }
+
+  Widget _buildPasswordStrengthIndicator() {
+    final password = _passwordController.text;
+    if (password.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final hasMinLength = password.length >= 8;
+    final hasLowerCase = RegExp(r'[a-z]').hasMatch(password);
+    final hasUpperCase = RegExp(r'[A-Z]').hasMatch(password);
+    final hasDigits = RegExp(r'[0-9]').hasMatch(password);
+    final hasSpecialChars = RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildPasswordRequirement('8자 이상', hasMinLength),
+        _buildPasswordRequirement('소문자 포함', hasLowerCase),
+        _buildPasswordRequirement('대문자 포함', hasUpperCase),
+        _buildPasswordRequirement('숫자 포함', hasDigits),
+        _buildPasswordRequirement('특수문자 포함 (!@#\$%^&* 등)', hasSpecialChars),
+      ],
+    );
+  }
+
+  Widget _buildPasswordRequirement(String text, bool isMet) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(
+            isMet ? Icons.check_circle : Icons.cancel,
+            size: 16,
+            color: isMet ? Colors.green : Colors.grey,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              color: isMet ? Colors.green : Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -109,28 +158,66 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '비밀번호',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
-                  obscureText: true,
+                  obscureText: _obscurePassword,
+                  onChanged: (value) => setState(() {}),
                   validator: (value) {
-                    if (value == null || value.isEmpty || value.length < 6) {
-                      return '6자 이상의 비밀번호를 입력해주세요.';
+                    if (value == null || value.isEmpty) {
+                      return '비밀번호를 입력해주세요.';
+                    }
+                    if (value.length < 8) {
+                      return '비밀번호는 8자 이상이어야 합니다.';
+                    }
+                    if (!RegExp(r'[a-z]').hasMatch(value)) {
+                      return '소문자를 포함해야 합니다.';
+                    }
+                    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                      return '대문자를 포함해야 합니다.';
+                    }
+                    if (!RegExp(r'[0-9]').hasMatch(value)) {
+                      return '숫자를 포함해야 합니다.';
+                    }
+                    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+                      return '특수문자(!@#\$%^&* 등)를 포함해야 합니다.';
                     }
                     return null;
                   },
                 ),
+                const SizedBox(height: 8),
+                _buildPasswordStrengthIndicator(),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordConfirmController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '비밀번호 확인',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock_outline),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePasswordConfirm ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePasswordConfirm = !_obscurePasswordConfirm;
+                        });
+                      },
+                    ),
                   ),
-                  obscureText: true,
+                  obscureText: _obscurePasswordConfirm,
                   validator: (value) {
                     if (value != _passwordController.text) {
                       return '비밀번호가 일치하지 않습니다.';
