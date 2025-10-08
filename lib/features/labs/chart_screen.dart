@@ -397,18 +397,14 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
   }
 
   List<String> _getTestItemOptions() {
-    final Set<String> items = {};
-    
-    // Supabase에서 모든 검사 항목들을 가져오기
-    for (final data in _chartData) {
-      // 현재 차트 데이터에서 항목 수집
-    }
-    
-    // 기본 검사 항목들 (실제 데이터가 있을 수 있는 항목들)
+    // pet_health_screen.dart의 baseKeys와 동일한 항목들 (ABC 순)
     return [
-      'RBC', 'WBC', 'Hb', 'HCT', 'PLT',
-      'ALT', 'AST', 'ALP', 'BUN', 'Creatinine', 'Glucose',
-      'Na', 'K', 'Cl', 'Ca', 'P'
+      'ALB', 'ALB/GLB', 'ALP', 'ALT GPT', 'AST GOT', 'BUN', 'BUN/CRE', 'Ca', 'CK', 
+      'Cl', 'CREA', 'GGT', 'GLU', 'GLOB', 'K', 'LIPA', 'Na', 'Na/K', 'NH3', 
+      'PHOS', 'T-CHOL', 'TBIL', 'TG', 'TPRO', 'vAMY-P', 'SDMA', 'HCT', 'HGB', 'MCH', 
+      'MCHC', 'MCV', 'MPV', 'PLT', 'RBC', 'RDW-CV', 'WBC', 'WBC-GRAN(#)', 
+      'WBC-GRAN(%)', 'WBC-LYM(#)', 'WBC-LYM(%)', 'WBC-MONO(#)', 'WBC-MONO(%)', 
+      'WBC-EOS(#)', 'WBC-EOS(%)'
     ];
   }
 

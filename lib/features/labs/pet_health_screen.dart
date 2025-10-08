@@ -439,7 +439,7 @@ class _LabTableState extends State<_LabTable> {
                       headingRowHeight: 48,
                       dataRowHeight: 48,
                       columns: const [
-                        DataColumn(label: Text('선택', style: TextStyle(fontSize: 14))),
+                        DataColumn(label: Text('중요', style: TextStyle(fontSize: 14))),
                         DataColumn(label: Text('검사명', style: TextStyle(fontSize: 14))),
                         DataColumn(label: Text('현재', style: TextStyle(fontSize: 14))),
                         DataColumn(label: Text('직전', style: TextStyle(fontSize: 14))),
