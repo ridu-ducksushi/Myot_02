@@ -79,9 +79,6 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
             // Recent Records
             _buildRecentRecords(context, petRecords),
             
-            // Upcoming Reminders
-            _buildUpcomingReminders(context, petReminders),
-            
             const SizedBox(height: 100), // Bottom padding for navigation bar
           ],
         ),
@@ -301,11 +298,6 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
              recordDate.year == today.year;
     }).length;
 
-    final upcomingReminders = reminders.where((r) {
-      final reminder = r as dynamic;
-      return !reminder.done && reminder.scheduledAt.isAfter(DateTime.now());
-    }).length;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -316,15 +308,6 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               label: 'records.today'.tr(),
               value: todayRecords.toString(),
               color: AppColors.info,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _StatCard(
-              icon: Icons.notifications_active,
-              label: 'reminders.upcoming'.tr(),
-              value: upcomingReminders.toString(),
-              color: AppColors.warning,
             ),
           ),
           const SizedBox(width: 12),
@@ -373,40 +356,6 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     );
   }
 
-  Widget _buildUpcomingReminders(BuildContext context, List<dynamic> reminders) {
-    final upcomingReminders = reminders.where((r) {
-      final reminder = r as dynamic;
-      return !reminder.done && reminder.scheduledAt.isAfter(DateTime.now());
-    }).take(3).toList();
-
-    return Column(
-      children: [
-        SectionHeader(
-          title: 'reminders.upcoming'.tr(),
-          action: TextButton(
-            onPressed: () => context.push('/pets/${widget.petId}/health'),
-            child: Text('common.see_all'.tr()),
-          ),
-        ),
-        if (upcomingReminders.isEmpty)
-          AppCard(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Center(
-                child: Text(
-                  'reminders.no_upcoming'.tr(),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          )
-        else
-          ...upcomingReminders.map((reminder) => _ReminderListItem(reminder: reminder)),
-      ],
-    );
-  }
 
   String? _calculateAge(DateTime? birthDate) {
     if (birthDate == null) return null;
@@ -597,51 +546,6 @@ class _RecordListItem extends StatelessWidget {
   }
 }
 
-class _ReminderListItem extends StatelessWidget {
-  const _ReminderListItem({required this.reminder});
-
-  final dynamic reminder;
-
-  @override
-  Widget build(BuildContext context) {
-    final isOverdue = reminder.scheduledAt.isBefore(DateTime.now());
-    final color = isOverdue ? AppColors.error : AppColors.warning;
-
-    return AppCard(
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            isOverdue ? Icons.warning : Icons.schedule,
-            color: color,
-            size: 20,
-          ),
-        ),
-        title: Text(reminder.title),
-        subtitle: Text(DateFormat('MMM dd, HH:mm').format(reminder.scheduledAt)),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            isOverdue ? 'reminders.overdue'.tr() : 'reminders.upcoming'.tr(),
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _EditPetSheet extends ConsumerStatefulWidget {
   const _EditPetSheet({required this.pet});
