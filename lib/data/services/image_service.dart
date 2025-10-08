@@ -141,6 +141,11 @@ class ImageService {
           'Dog_6.png', 'Dog_7.png', 'Dog_8.png', 'Dog_9.png', 'Dog_10.png',
           'Dog_11.png', 'Dog_12.png', 'Dog_13.png', 'Dog_14.png', 'Dog_15.png', 'Dog_16.png'
         ];
+      } else if (species.toLowerCase() == 'other') {
+        assetFiles = [
+          'Other_1.png', 'Other_2.png', 'Other_3.png', 'Other_4.png',
+          'Other_5.png', 'Other_6.png', 'Other_7.png', 'Other_8.png'
+        ];
       }
       
       print('🔧 Assets 파일 목록: $assetFiles');

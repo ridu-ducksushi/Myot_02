@@ -593,7 +593,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   String? _selectedDefaultIcon;
   
   final List<String> _species = [
-    'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Reptile', 'Other'
+    'Dog', 'Cat', 'Other'
   ];
   
   final List<String> _sexOptions = ['Male', 'Female'];
@@ -830,10 +830,8 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   Future<void> _savePet() async {
     if (!_formKey.currentState!.validate()) return;
     
-    String? avatarUrl;
-    if (_selectedImage != null) {
-      avatarUrl = await ImageService.saveImageToAppDirectory(_selectedImage!);
-    }
+    // _selectedImage는 이미 ProfileImagePicker에서 저장된 파일이므로 경로만 사용
+    final String? avatarUrl = _selectedImage?.path;
     
     final pet = Pet(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -884,7 +882,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   String? _selectedDefaultIcon;
   
   final List<String> _species = [
-    'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Reptile', 'Other'
+    'Dog', 'Cat', 'Other'
   ];
   
   final List<String> _sexOptions = ['Male', 'Female'];
@@ -1150,13 +1148,8 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   Future<void> _updatePet() async {
     if (!_formKey.currentState!.validate()) return;
     
-    String? avatarUrl;
-    if (_selectedImage != null) {
-      avatarUrl = await ImageService.saveImageToAppDirectory(_selectedImage!);
-    } else if (widget.pet.avatarUrl != null) {
-      // 기존 이미지를 유지
-      avatarUrl = widget.pet.avatarUrl;
-    }
+    // _selectedImage는 이미 ProfileImagePicker에서 저장된 파일이므로 경로만 사용
+    final String? avatarUrl = _selectedImage?.path ?? widget.pet.avatarUrl;
     
     final updatedPet = widget.pet.copyWith(
       name: _nameController.text.trim(),

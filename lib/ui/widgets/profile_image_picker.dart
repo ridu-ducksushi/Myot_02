@@ -156,6 +156,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
       try {
         return Image.file(
           File(widget.imagePath!),
+          key: ValueKey(widget.imagePath), // 캐시 무효화를 위한 고유 key
           fit: BoxFit.cover,
           width: widget.size,
           height: widget.size,
@@ -323,7 +324,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
           // 앱 내부 저장소에 저장
           final savedPath = await ImageService.saveImageToAppDirectory(compressedImage);
           if (savedPath != null) {
-            widget.onImageSelected(compressedImage);
+            widget.onImageSelected(File(savedPath));
           } else {
             _showErrorSnackBar(context, '이미지 저장에 실패했습니다.');
           }

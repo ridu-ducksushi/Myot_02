@@ -27,8 +27,6 @@ class PetDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
-  File? _selectedImage;
-  String? _selectedDefaultIcon;
 
   @override
   void initState() {
@@ -99,25 +97,20 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
             children: [
               // Profile Image Picker
               ProfileImagePicker(
-                imagePath: _selectedImage?.path ?? pet.avatarUrl,
-                selectedDefaultIcon: _selectedDefaultIcon ?? pet.defaultIcon,
+                imagePath: pet.avatarUrl,
+                selectedDefaultIcon: pet.defaultIcon,
                 species: pet.species, // 동물 종류 전달
                 onImageSelected: (image) async {
                   if (image != null) {
-                    // 이미지 저장 및 펫 업데이트
-                    final avatarUrl = await ImageService.saveImageToAppDirectory(image);
+                    // ProfileImagePicker에서 이미 저장된 파일을 받음
                     final updatedPet = pet.copyWith(
-                      avatarUrl: avatarUrl,
+                      avatarUrl: image.path, // 이미 저장된 경로를 사용
                       defaultIcon: null, // 이미지 선택 시 기본 아이콘 제거
                       updatedAt: DateTime.now(),
                     );
                     
                     try {
                       await ref.read(petsProvider.notifier).updatePet(updatedPet);
-                      setState(() {
-                        _selectedImage = image;
-                        _selectedDefaultIcon = null;
-                      });
                       
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -147,10 +140,6 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
 
                     try {
                       await ref.read(petsProvider.notifier).updatePet(updatedPet);
-                      setState(() {
-                        _selectedImage = null;
-                        _selectedDefaultIcon = 'dog1'; // 상태 업데이트
-                      });
 
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -182,10 +171,6 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   
                   try {
                     await ref.read(petsProvider.notifier).updatePet(updatedPet);
-                    setState(() {
-                      _selectedDefaultIcon = iconName;
-                      _selectedImage = null;
-                    });
                     
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -569,7 +554,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   DateTime? _birthDate;
   
   final List<String> _species = [
-    'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Reptile', 'Other'
+    'Dog', 'Cat', 'Other'
   ];
   
   final List<String> _sexOptions = ['Male', 'Female'];

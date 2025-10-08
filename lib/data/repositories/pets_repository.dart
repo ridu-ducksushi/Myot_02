@@ -14,7 +14,7 @@ class PetsRepository {
   final LocalDatabase localDb;
 
   Map<String, dynamic> _toSupabaseRow(Pet pet, String ownerId) {
-    return {
+    final Map<String, dynamic> row = {
       // Do NOT send id: let Supabase generate UUID
       'owner_id': ownerId,
       'name': pet.name,
@@ -29,7 +29,13 @@ class PetsRepository {
       'default_icon': pet.defaultIcon,
       'note': pet.note,
       // created_at/updated_at are defaulted by DB triggers if set; omit to avoid format mismatches
-    }..removeWhere((k, v) => v == null);
+    };
+    
+    // avatarUrl과 defaultIcon은 명시적으로 null을 허용 (이미지 삭제/변경 시 필요)
+    // 나머지 필드만 null 제거
+    row.removeWhere((k, v) => v == null && k != 'avatar_url' && k != 'default_icon');
+    
+    return row;
   }
 
   Pet _fromSupabaseRow(Map<String, dynamic> row) {
