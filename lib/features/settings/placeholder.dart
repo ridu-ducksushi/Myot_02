@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/data/local/database.dart';
 import 'package:petcare/data/services/image_service.dart';
@@ -173,14 +172,6 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     );
   }
 
-  void _showEditProfileDialog(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => const _EditProfileSheet(),
-    );
-  }
-
   Widget _buildUserProfileSection(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
     final email = user?.email ?? 'Unknown';
@@ -276,15 +267,6 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                       ),
                     ),
                   ],
-                ),
-              ),
-              
-              // 편집 아이콘
-              IconButton(
-                onPressed: () => _showEditProfileDialog(context),
-                icon: Icon(
-                  Icons.edit,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -515,9 +497,7 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   final _formKey = GlobalKey<FormState>();
   final _displayNameController = TextEditingController();
-  final ImagePicker _imagePicker = ImagePicker();
   
-  File? _selectedImage;
   bool _isLoading = false;
 
   @override
@@ -531,45 +511,14 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     final displayName = user?.userMetadata?['display_name'] as String? ?? 
                       user?.userMetadata?['full_name'] as String? ?? 
                       '';
-    final avatarUrl = user?.userMetadata?['avatar_url'] as String?;
     
     _displayNameController.text = displayName;
-    
-    // 기존 아바타 URL이 있으면 로드
-    if (avatarUrl != null && avatarUrl.isNotEmpty) {
-      // 네트워크 이미지를 File로 변환하는 것은 복잡하므로
-      // 일단 _selectedImage는 null로 두고 UI에서 네트워크 이미지 표시
-      print('📸 기존 아바타 URL 발견: $avatarUrl');
-    }
   }
 
   @override
   void dispose() {
     _displayNameController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 80,
-      );
-      
-      if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('이미지 선택 실패: $e')),
-        );
-      }
-    }
   }
 
   Future<void> _updateProfile() async {
@@ -586,48 +535,13 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       }
 
       final displayName = _displayNameController.text.trim();
-      String? avatarUrl;
       
       print('🔧 프로필 업데이트 시도: displayName=$displayName');
 
-      // 프로필 이미지 업로드 (선택된 경우)
-      if (_selectedImage != null) {
-        try {
-          final fileName = '${user.id}/avatar.jpg';
-          print('📸 이미지 업로드 시작: $fileName');
-          
-          final response = await Supabase.instance.client.storage
-              .from('avatars')
-              .upload(fileName, _selectedImage!, fileOptions: const FileOptions(
-                cacheControl: '3600',
-                upsert: true, // 기존 파일 덮어쓰기
-              ));
-          
-          if (response.isNotEmpty) {
-            avatarUrl = Supabase.instance.client.storage
-                .from('avatars')
-                .getPublicUrl(fileName);
-            print('✅ 이미지 업로드 성공: $avatarUrl');
-          }
-        } catch (e) {
-          print('❌ 이미지 업로드 실패: $e');
-          // 이미지 업로드 실패해도 닉네임 업데이트는 계속 진행
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('이미지 업로드 실패: $e')),
-            );
-          }
-        }
-      }
-
-      // 사용자 메타데이터 업데이트
+      // 사용자 메타데이터 업데이트 (닉네임만)
       final metadata = <String, dynamic>{
         'display_name': displayName,
       };
-      
-      if (avatarUrl != null) {
-        metadata['avatar_url'] = avatarUrl;
-      }
 
       final response = await Supabase.instance.client.auth.updateUser(
         UserAttributes(data: metadata),
@@ -690,46 +604,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                   Text(
                     '프로필 편집',
                     style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Profile Image
-                  Center(
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(50),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                            width: 2,
-                          ),
-                        ),
-                        child: _selectedImage != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(48),
-                                child: Image.file(
-                                  _selectedImage!,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : Icon(
-                                Icons.person,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 40,
-                              ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '프로필 사진을 터치하여 변경',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
                   ),
                   const SizedBox(height: 24),
                   
