@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
@@ -122,39 +124,27 @@ class ImageService {
     return null;
   }
 
-  /// Assets에서 기본 아이콘 이미지 목록 가져오기
+  /// Assets에서 기본 아이콘 이미지 목록 가져오기 (동적으로 로드)
   static Future<List<String>> getDefaultIconUrls(String species) async {
     try {
-      print('🔍 Assets 폴더 경로 확인: ${species.toLowerCase()}s');
+      final speciesFolder = species.toLowerCase() == 'other' 
+          ? 'others' 
+          : '${species.toLowerCase()}s';
       
-      // Assets 폴더의 파일 목록
-      List<String> assetFiles = [];
-      if (species.toLowerCase() == 'cat') {
-        assetFiles = [
-          'Cat_1.png', 'Cat_2.png', 'Cat_3.png', 'Cat_4.png', 'Cat_5.png',
-          'Cat_6.png', 'Cat_7.png', 'Cat_8.png', 'Cat_9.png', 'Cat_10.png',
-          'Cat_11.png', 'Cat_12.png', 'Cat_13.png', 'Cat_14.png'
-        ];
-      } else if (species.toLowerCase() == 'dog') {
-        assetFiles = [
-          'Dog_1.png', 'Dog_2.png', 'Dog_3.png', 'Dog_4.png', 'Dog_5.png',
-          'Dog_6.png', 'Dog_7.png', 'Dog_8.png', 'Dog_9.png', 'Dog_10.png',
-          'Dog_11.png', 'Dog_12.png', 'Dog_13.png', 'Dog_14.png', 'Dog_15.png', 'Dog_16.png'
-        ];
-      } else if (species.toLowerCase() == 'other') {
-        assetFiles = [
-          'Other_1.png', 'Other_2.png', 'Other_3.png', 'Other_4.png',
-          'Other_5.png', 'Other_6.png', 'Other_7.png', 'Other_8.png'
-        ];
-      }
+      print('🔍 Assets 폴더 경로 확인: $speciesFolder');
       
-      print('🔧 Assets 파일 목록: $assetFiles');
+      // AssetManifest를 사용하여 동적으로 assets 파일 목록 가져오기
+      final manifestContent = await rootBundle.loadString('AssetManifest.json');
+      final Map<String, dynamic> manifestMap = json.decode(manifestContent);
       
-      // Assets 경로로 변환
-      final assetPaths = assetFiles
-          .map((fileName) => 'assets/images/profile_icons/${species.toLowerCase()}s/$fileName')
-          .toList();
-          
+      // 해당 species 폴더의 모든 이미지 파일 필터링
+      final assetPaths = manifestMap.keys
+          .where((String key) => key.startsWith('assets/images/profile_icons/$speciesFolder/'))
+          .where((String key) => key.endsWith('.png') || key.endsWith('.jpg') || key.endsWith('.jpeg'))
+          .toList()
+        ..sort(); // 파일명으로 정렬
+      
+      print('🔧 Assets 파일 목록: ${assetPaths.length}개');
       print('🔗 생성된 Assets 경로들: $assetPaths');
       
       return assetPaths;
