@@ -456,10 +456,13 @@ class _LabTableState extends State<_LabTable> {
 
   List<String> _orderedKeys() {
     final baseKeys = [
-      // ABC 순으로 정렬된 기본 검사 항목 (한글 → 영어 변경)
-      'ALB', 'ALP', 'ALT', 'AST', 'BUN', 'Ca', 'Chol', 'Cl', 'Creat', 'Glob', 
-      'Glucose', 'Hb', 'HCT', 'K', 'Na', 'P', 'PLT', 'RBC', 'SDMA', 
-      'TBil', 'TG', 'TP', 'WBC',
+      // 사용자 정의 순서 (ABC 순으로 정렬된 기본 검사 항목)
+      'ALB', 'ALP', 'ALT GPT', 'AST GOT', 'BUN', 'Ca', 'CK', 'Cl', 'CREA', 'GGT', 
+      'GLU', 'K', 'LIPA', 'Na', 'NH3', 'PHOS', 'TBIL', 'T-CHOL', 'TG', 'TPRO', 
+      'Na/K', 'ALB/GLB', 'BUN/CRE', 'GLOB', 'vAMY-P', 'SDMA', 'HCT', 'HGB', 'MCH', 
+      'MCHC', 'MCV', 'MPV', 'PLT', 'RBC', 'RDW-CV', 'WBC', 'WBC-GRAN(#)', 
+      'WBC-GRAN(%)', 'WBC-LYM(#)', 'WBC-LYM(%)', 'WBC-MONO(#)', 'WBC-MONO(%)', 
+      'WBC-EOS(#)', 'WBC-EOS(%)'
     ];
     
     // Only include custom keys that have actual data for this pet
@@ -478,81 +481,144 @@ class _LabTableState extends State<_LabTable> {
     _units.addAll({
       'ALB': 'g/dL',        // 알부민 → ALB
       'ALP': 'U/L',
-      'ALT': 'U/L',
-      'AST': 'U/L',
+      'ALT GPT': 'U/L',
+      'AST GOT': 'U/L',
       'BUN': 'mg/dL',
       'Ca': 'mg/dL',
-      'Chol': 'mg/dL',      // 콜레스테롤 → Chol
+      'CK': 'U/L',      // 크레아틴 키나아제
       'Cl': 'mmol/L',
-      'Creat': 'mg/dL',     // Creatinine → Creat
-      'Glob': 'g/dL',       // 글로불린 → Glob
-      'Glucose': 'mg/dL',
-      'Hb': 'g/dL',
-      'HCT': '%',
+      'CREA': 'mg/dL',     // Creatinine → Creat
+      'GGT': 'U/L',       // 글로불린 → Glob
+      'GLU': 'mg/dL',
       'K': 'mmol/L',
+      'LIPA': 'U/L',
       'Na': 'mmol/L',
-      'P': 'mg/dL',
-      'PLT': '/µL',
-      'RBC': 'x10⁶/µL',
-      'SDMA': 'µg/dL',
-      'TBil': 'mg/dL',      // 총빌리루빈 → TBil
-      'TG': 'mg/dL',        // 중성지방 → TG
-      'TP': 'g/dL',         // 총단백 → TP
-      'WBC': '/µL',
+      'NH3': 'µmol/L',
+      'PHOS': 'mg/dL',
+      'TBIL': 'mg/dL',
+      'T-CHOL': 'mg/dL',
+      'TG': 'mg/dL',      // 총빌리루빈 → TBil
+      'TPRO': 'g/dL',        // 중성지방 → TG
+      'Na/K': '-',         // 총단백 → TP
+      'ALB/GLB': '-',
+      'BUN/CRE': '-',
+      'GLOB': 'g/dL',
+      'vAMY-P': '-',
+      'SDMA': '-',
+      'HCT': '%',
+      'HGB': 'g/dL',
+      'MCH': 'pg',
+      'MCHC': 'g/dL',
+      'MCV': 'fL',
+      'MPV': 'fL',
+      'PLT': '10⁹/L',
+      'RBC': '10x12/L',
+      'RDW-CV': '%',
+      'WBC': '10⁹/L',
+      'WBC-GRAN(#)': '10⁹/L',
+      'WBC-GRAN(%)': '%',
+      'WBC-LYM(#)': '10⁹/L',
+      'WBC-LYM(%)': '%',
+      'WBC-MONO(#)': '10⁹/L',
+      'WBC-MONO(%)': '%',
+      'WBC-EOS(#)': '10³/mm³',
+      'WBC-EOS(%)': '%',
     });
     
     // 강아지 기준치 (ABC 순)
     _refDog.addAll({
       'ALB': '2.6~4.0',     // 알부민
       'ALP': '20~150',
-      'ALT': '10~100',
-      'AST': '10~55',
+      'ALT GPT': '22~84',
+      'AST GOT': '10~55',
       'BUN': '7~27',
       'Ca': '8.9~11.4',
-      'Chol': '110~320',    // 콜레스테롤
+      'CK':  '110~320',    // 크레아틴 키나아제
       'Cl': '105~115',
-      'Creat': '0.5~1.5',   // Creatinine
-      'Glob': '2.5~4.5',    // 글로불린
-      'Glucose': '75~120',
-      'Hb': '12~18',
-      'HCT': '37~55',
-      'K': '3.6~5.5',
+      'CREA': '0.5~1.5',   // Creatinine
+      'GGT': '2.5~4.5',    // 글로불린
+      'GLU': '75~120',
+      'K': '12~18',
+      'LIPA': '37~55',
       'Na': '140~155',
-      'P': '2.5~6.0',
-      'PLT': '200,000~500,000',
-      'RBC': '5.5~8.5',
-      'SDMA': '≤14',
-      'TBil': '0.1~0.6',    // 총빌리루빈
-      'TG': '25~150',       // 중성지방
-      'TP': '5.5~7.5',      // 총단백
-      'WBC': '6,000~17,000',
+      'NH3': '2.5~6.0',
+      'PHOS': '200,000~500,000',
+      'TBIL': '5.5~8.5',
+      'T-CHOL': '≤14',
+      'TG': '0.1~0.6',    // 총빌리루빈
+      'TPRO': '25~150',       // 중성지방
+      'Na/K': '5.5~7.5',      // 총단백
+      'ALB/GLB': '6,000~17,000',
+      'BUN/CRE': '-',
+      'GLOB': '-',
+      'vAMY-P': '-',
+      'SDMA': '0~12',
+      'HCT': '0~12',
+      'HGB': '0~12',
+      'MCH': '0~12',
+      'MCHC': '0~12',
+      'MCV': '0~12',
+      'MPV': '0~12',
+      'PLT': '0~12',
+      'RBC': '0~12',
+      'RDW-CV': '0~12',
+      'WBC': '0~12',
+      'WBC-GRAN(#)': '0~12',
+      'WBC-GRAN(%)': '0~12',
+      'WBC-LYM(#)': '0~12',
+      'WBC-LYM(%)': '0~12',
+      'WBC-MONO(#)': '0~12',
+      'WBC-MONO(%)': '0~12',
+      'WBC-EOS(#)': '0~12',
+      'WBC-EOS(%)': '0~12',
     });
     
     // 고양이 기준치 (ABC 순)
     _refCat.addAll({
       'ALB': '2.3~3.5',     // 알부민
-      'ALP': '20~60',
-      'ALT': '20~120',
-      'AST': '10~40',
-      'BUN': '16~36',
-      'Ca': '8.0~11.8',
-      'Chol': '75~220',     // 콜레스테롤
+      'ALP': '9~53',
+      'ALT GPT': '20~120',
+      'AST GOT': '18~51',
+      'BUN': '17.6~32.8',
+      'Ca': '8.8~11.9',
+      'CK': '87~309',     // 크레아틴 키나아제
       'Cl': '107~120',
-      'Creat': '0.8~2.4',   // Creatinine
-      'Glob': '2.5~5.0',    // 글로불린
-      'Glucose': '70~150',
-      'Hb': '8~15',
-      'HCT': '24~45',
-      'K': '3.4~5.6',
-      'Na': '145~158',
-      'P': '2.5~6.5',
-      'PLT': '300,000~800,000',
-      'RBC': '6.0~11.0',
-      'SDMA': '≤14',
-      'TBil': '0.1~0.4',    // 총빌리루빈
-      'TG': '25~160',       // 중성지방
-      'TP': '6.0~8.0',      // 총단백
-      'WBC': '5,500~19,500',
+      'CREA': '0.8~1.8',   // Creatinine
+      'GGT': '1~10',    // 글로불린
+      'GLU': '71~148',
+      'K': '3.4~4.6',
+      'LIPA': '0~30',
+      'Na': '147~156',
+      'NH3': '23~78',
+      'PHOS': '2.6~6.0',
+      'TBIL': '0.1~0.4',
+      'T-CHOL': '89~176',
+      'TG': '17~104',    // 총빌리루빈
+      'TPRO': '5.7~7.8',       // 중성지방
+      'Na/K': '33.6~44.2',      // 총단백
+      'ALB/GLB': '0.4~1.1',
+      'BUN/CRE': '17.5~21.9',
+      'GLOB': '2.7~5.2',
+      'vAMY-P': '200~1900',
+      'SDMA': '~14',
+      'HCT': '27~47',
+      'HGB': '8~17',
+      'MCH': '13~17',
+      'MCHC': '31~36',
+      'MCV': '40~55',
+      'MPV': '6.5~15',
+      'PLT': '180~430',
+      'RBC': '5~10',
+      'RDW-CV': '17~22',
+      'WBC': '5~11',
+      'WBC-GRAN(#)': '3~12',
+      'WBC-GRAN(%)': '0~100',
+      'WBC-LYM(#)': '1~4',
+      'WBC-LYM(%)': '0~100',
+      'WBC-MONO(#)': '0~0.5',
+      'WBC-MONO(%)': '0~100',
+      'WBC-EOS(#)': '0~0.6',
+      'WBC-EOS(%)': '0~100',
     });
   }
 
