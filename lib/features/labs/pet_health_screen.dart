@@ -456,12 +456,10 @@ class _LabTableState extends State<_LabTable> {
 
   List<String> _orderedKeys() {
     final baseKeys = [
-      // CBC
-      'RBC', 'WBC', 'Hb', 'HCT', 'PLT',
-      // 혈청화학
-      'ALT', 'AST', 'ALP', '총빌리루빈', 'BUN', 'Creatinine', 'SDMA', 'Glucose', '총단백', '알부민', '글로불린', '콜레스테롤', '중성지방',
-      // 전해질
-      'Na', 'K', 'Cl', 'Ca', 'P',
+      // ABC 순으로 정렬된 기본 검사 항목 (한글 → 영어 변경)
+      'ALB', 'ALP', 'ALT', 'AST', 'BUN', 'Ca', 'Chol', 'Cl', 'Creat', 'Glob', 
+      'Glucose', 'Hb', 'HCT', 'K', 'Na', 'P', 'PLT', 'RBC', 'SDMA', 
+      'TBil', 'TG', 'TP', 'WBC',
     ];
     
     // Only include custom keys that have actual data for this pet
@@ -476,20 +474,85 @@ class _LabTableState extends State<_LabTable> {
   }
 
   void _initRefs() {
+    // ABC 순으로 정렬된 단위 (한글 → 영어 변경)
     _units.addAll({
-      'RBC': 'x10⁶/µL', 'WBC': '/µL', 'Hb': 'g/dL', 'HCT': '%', 'PLT': '/µL',
-      'ALT': 'U/L', 'AST': 'U/L', 'ALP': 'U/L', '총빌리루빈': 'mg/dL', 'BUN': 'mg/dL', 'Creatinine': 'mg/dL', 'SDMA': 'µg/dL', 'Glucose': 'mg/dL', '총단백': 'g/dL', '알부민': 'g/dL', '글로불린': 'g/dL', '콜레스테롤': 'mg/dL', '중성지방': 'mg/dL',
-      'Na': 'mmol/L', 'K': 'mmol/L', 'Cl': 'mmol/L', 'Ca': 'mg/dL', 'P': 'mg/dL',
+      'ALB': 'g/dL',        // 알부민 → ALB
+      'ALP': 'U/L',
+      'ALT': 'U/L',
+      'AST': 'U/L',
+      'BUN': 'mg/dL',
+      'Ca': 'mg/dL',
+      'Chol': 'mg/dL',      // 콜레스테롤 → Chol
+      'Cl': 'mmol/L',
+      'Creat': 'mg/dL',     // Creatinine → Creat
+      'Glob': 'g/dL',       // 글로불린 → Glob
+      'Glucose': 'mg/dL',
+      'Hb': 'g/dL',
+      'HCT': '%',
+      'K': 'mmol/L',
+      'Na': 'mmol/L',
+      'P': 'mg/dL',
+      'PLT': '/µL',
+      'RBC': 'x10⁶/µL',
+      'SDMA': 'µg/dL',
+      'TBil': 'mg/dL',      // 총빌리루빈 → TBil
+      'TG': 'mg/dL',        // 중성지방 → TG
+      'TP': 'g/dL',         // 총단백 → TP
+      'WBC': '/µL',
     });
+    
+    // 강아지 기준치 (ABC 순)
     _refDog.addAll({
-      'RBC': '5.5~8.5', 'WBC': '6,000~17,000', 'Hb': '12~18', 'HCT': '37~55', 'PLT': '200,000~500,000',
-      'ALT': '10~100', 'AST': '10~55', 'ALP': '20~150', '총빌리루빈': '0.1~0.6', 'BUN': '7~27', 'Creatinine': '0.5~1.5', 'SDMA': '≤14', 'Glucose': '75~120', '총단백': '5.5~7.5', '알부민': '2.6~4.0', '글로불린': '2.5~4.5', '콜레스테롤': '110~320', '중성지방': '25~150',
-      'Na': '140~155', 'K': '3.6~5.5', 'Cl': '105~115', 'Ca': '8.9~11.4', 'P': '2.5~6.0',
+      'ALB': '2.6~4.0',     // 알부민
+      'ALP': '20~150',
+      'ALT': '10~100',
+      'AST': '10~55',
+      'BUN': '7~27',
+      'Ca': '8.9~11.4',
+      'Chol': '110~320',    // 콜레스테롤
+      'Cl': '105~115',
+      'Creat': '0.5~1.5',   // Creatinine
+      'Glob': '2.5~4.5',    // 글로불린
+      'Glucose': '75~120',
+      'Hb': '12~18',
+      'HCT': '37~55',
+      'K': '3.6~5.5',
+      'Na': '140~155',
+      'P': '2.5~6.0',
+      'PLT': '200,000~500,000',
+      'RBC': '5.5~8.5',
+      'SDMA': '≤14',
+      'TBil': '0.1~0.6',    // 총빌리루빈
+      'TG': '25~150',       // 중성지방
+      'TP': '5.5~7.5',      // 총단백
+      'WBC': '6,000~17,000',
     });
+    
+    // 고양이 기준치 (ABC 순)
     _refCat.addAll({
-      'RBC': '5.0~10.0', 'WBC': '5,500~19,500', 'Hb': '8~15', 'HCT': '24~45', 'PLT': '300,000~800,000',
-      'ALT': '20~120', 'AST': '10~40', 'ALP': '20~60', '총빌리루빈': '0.1~0.4', 'BUN': '16~36', 'Creatinine': '0.8~2.4', 'SDMA': '≤14', 'Glucose': '70~150', '총단백': '6.0~8.0', '알부민': '2.3~3.5', '글로불린': '2.5~5.0', '콜레스테롤': '75~220', '중성지방': '25~160',
-      'Na': '145~158', 'K': '3.4~5.6', 'Cl': '107~120', 'Ca': '8.0~11.8', 'P': '2.5~6.5',
+      'ALB': '2.3~3.5',     // 알부민
+      'ALP': '20~60',
+      'ALT': '20~120',
+      'AST': '10~40',
+      'BUN': '16~36',
+      'Ca': '8.0~11.8',
+      'Chol': '75~220',     // 콜레스테롤
+      'Cl': '107~120',
+      'Creat': '0.8~2.4',   // Creatinine
+      'Glob': '2.5~5.0',    // 글로불린
+      'Glucose': '70~150',
+      'Hb': '8~15',
+      'HCT': '24~45',
+      'K': '3.4~5.6',
+      'Na': '145~158',
+      'P': '2.5~6.5',
+      'PLT': '300,000~800,000',
+      'RBC': '6.0~11.0',
+      'SDMA': '≤14',
+      'TBil': '0.1~0.4',    // 총빌리루빈
+      'TG': '25~160',       // 중성지방
+      'TP': '6.0~8.0',      // 총단백
+      'WBC': '5,500~19,500',
     });
   }
 
