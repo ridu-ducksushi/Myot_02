@@ -2,13 +2,9 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
-import 'package:petcare/core/providers/records_provider.dart';
-import 'package:petcare/core/providers/reminders_provider.dart';
 import 'package:petcare/data/models/pet.dart';
-import 'package:petcare/data/services/image_service.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/widgets/profile_image_picker.dart';
 import 'package:petcare/features/labs/weight_chart_screen.dart';
@@ -27,22 +23,9 @@ class PetDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
-
-  @override
-  void initState() {
-    super.initState();
-    // Load related data
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(recordsProvider.notifier).loadRecords(widget.petId);
-      ref.read(remindersProvider.notifier).loadReminders(widget.petId);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final pet = ref.watch(petByIdProvider(widget.petId));
-    final petRecords = ref.watch(recordsForPetProvider(widget.petId));
-    final petReminders = ref.watch(remindersForPetProvider(widget.petId));
 
     if (pet == null) {
       return Scaffold(
@@ -71,11 +54,8 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
             // Pet Header
             _buildPetHeader(context, pet),
             
-            // Quick Stats
-            _buildQuickStats(context, petRecords, petReminders),
-            
-            // Recent Records
-            _buildRecentRecords(context, petRecords),
+            // Pet Supplies
+            _buildPetSupplies(context, pet),
             
             const SizedBox(height: 100), // Bottom padding for navigation bar
           ],
@@ -274,73 +254,152 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     );
   }
 
-  Widget _buildQuickStats(BuildContext context, List<dynamic> records, List<dynamic> reminders) {
-    final todayRecords = records.where((r) {
-      final today = DateTime.now();
-      final recordDate = r.at as DateTime;
-      return recordDate.day == today.day &&
-             recordDate.month == today.month &&
-             recordDate.year == today.year;
-    }).length;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatCard(
-              icon: Icons.today,
-              label: 'records.today'.tr(),
-              value: todayRecords.toString(),
-              color: AppColors.info,
-            ),
+  Widget _buildPetSupplies(BuildContext context, Pet pet) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: AppCard(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: () {
+                      // TODO: 이전 기록 보기
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('이전 기록이 없습니다')),
+                      );
+                    },
+                  ),
+                  Text(
+                    'Memo',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: () {
+                      // TODO: 다음 기록 보기
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('다음 기록이 없습니다')),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 48), // 왼쪽 공간 확보
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        pet.suppliesLastUpdated != null
+                            ? DateFormat('yyyy년 MM월 dd일').format(pet.suppliesLastUpdated!)
+                            : '기록 없음',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: pet.suppliesLastUpdated != null
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                            ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 20),
+                    onPressed: () => _editSupplies(context, pet),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildSupplyItem(
+                context,
+                icon: Icons.restaurant,
+                label: '사료',
+                value: pet.suppliesFood,
+              ),
+              const SizedBox(height: 12),
+              _buildSupplyItem(
+                context,
+                icon: Icons.medication,
+                label: '영양제',
+                value: pet.suppliesSupplement,
+              ),
+              const SizedBox(height: 12),
+              _buildSupplyItem(
+                context,
+                icon: Icons.cookie,
+                label: '간식',
+                value: pet.suppliesSnack,
+              ),
+              const SizedBox(height: 12),
+              _buildSupplyItem(
+                context,
+                icon: Icons.cleaning_services,
+                label: '모래',
+                value: pet.suppliesLitter,
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _StatCard(
-              icon: Icons.list_alt,
-              label: 'records.total'.tr(),
-              value: records.length.toString(),
-              color: AppColors.success,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildRecentRecords(BuildContext context, List<dynamic> records) {
-    final recentRecords = records.take(3).toList();
-
-    return Column(
+  Widget _buildSupplyItem(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    String? value,
+  }) {
+    return Row(
       children: [
-        SectionHeader(
-          title: 'records.recent'.tr(),
-          action: TextButton(
-            onPressed: () => context.push('/pets/${widget.petId}/records'),
-            child: Text('common.see_all'.tr()),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
         ),
-        if (recentRecords.isEmpty)
-          AppCard(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Center(
-                child: Text(
-                  'records.no_recent'.tr(),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               ),
-            ),
-          )
-        else
-          ...recentRecords.map((record) => _RecordListItem(record: record)),
+              const SizedBox(height: 2),
+              Text(
+                value ?? '미등록',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: value != null ? FontWeight.w500 : FontWeight.normal,
+                      color: value != null
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
-
 
   String? _calculateAge(DateTime? birthDate) {
     if (birthDate == null) return null;
@@ -358,6 +417,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
       final days = difference.inDays;
       return '$days ${days == 1 ? 'day' : 'days'}';
     }
+  }
+
+  void _editSupplies(BuildContext context, Pet pet) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _EditSuppliesSheet(pet: pet),
+    );
   }
 
   void _editPet(BuildContext context, Pet pet) {
@@ -433,104 +500,6 @@ class _InfoCard extends StatelessWidget {
     );
   }
 }
-
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RecordListItem extends StatelessWidget {
-  const _RecordListItem({required this.record});
-
-  final dynamic record;
-
-  @override
-  Widget build(BuildContext context) {
-    final typeColor = AppColors.getRecordTypeColor(record.type);
-
-    return AppCard(
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: typeColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            _getRecordIcon(record.type),
-            color: typeColor,
-            size: 20,
-          ),
-        ),
-        title: Text(record.title),
-        subtitle: Text(DateFormat('MMM dd, HH:mm').format(record.at)),
-        trailing: RecordTypeChip(type: record.type, size: ChipSize.small),
-      ),
-    );
-  }
-
-  IconData _getRecordIcon(String type) {
-    switch (type.toLowerCase()) {
-      case 'meal': return Icons.restaurant;
-      case 'snack': return Icons.cookie;
-      case 'med': case 'medicine': return Icons.medical_services;
-      case 'vaccine': return Icons.vaccines;
-      case 'visit': return Icons.local_hospital;
-      case 'weight': return Icons.monitor_weight;
-      case 'litter': return Icons.cleaning_services;
-      case 'play': return Icons.sports_tennis;
-      case 'groom': return Icons.content_cut;
-      default: return Icons.note;
-    }
-  }
-}
-
 
 class _EditPetSheet extends ConsumerStatefulWidget {
   const _EditPetSheet({required this.pet});
@@ -816,6 +785,185 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('pets.edit_error'.tr(args: [widget.pet.name])),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+}
+
+class _EditSuppliesSheet extends ConsumerStatefulWidget {
+  const _EditSuppliesSheet({required this.pet});
+
+  final Pet pet;
+
+  @override
+  ConsumerState<_EditSuppliesSheet> createState() => _EditSuppliesSheetState();
+}
+
+class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _foodController = TextEditingController();
+  final _supplementController = TextEditingController();
+  final _snackController = TextEditingController();
+  final _litterController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeForm();
+  }
+
+  void _initializeForm() {
+    final pet = widget.pet;
+    _foodController.text = pet.suppliesFood ?? '';
+    _supplementController.text = pet.suppliesSupplement ?? '';
+    _snackController.text = pet.suppliesSnack ?? '';
+    _litterController.text = pet.suppliesLitter ?? '';
+  }
+
+  @override
+  void dispose() {
+    _foodController.dispose();
+    _supplementController.dispose();
+    _snackController.dispose();
+    _litterController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.9,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.outline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Title
+                  Text(
+                    '물품 기록 수정',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Form fields
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      children: [
+                        AppTextField(
+                          controller: _foodController,
+                          labelText: '사료',
+                          prefixIcon: const Icon(Icons.restaurant),
+                          hintText: '예: 로얄캐닌 3kg',
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        AppTextField(
+                          controller: _supplementController,
+                          labelText: '영양제',
+                          prefixIcon: const Icon(Icons.medication),
+                          hintText: '예: 종합 비타민',
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        AppTextField(
+                          controller: _snackController,
+                          labelText: '간식',
+                          prefixIcon: const Icon(Icons.cookie),
+                          hintText: '예: 츄르 30개입',
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        AppTextField(
+                          controller: _litterController,
+                          labelText: '모래',
+                          prefixIcon: const Icon(Icons.cleaning_services),
+                          hintText: '예: 두부 모래 5L',
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Buttons
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('취소'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: _updateSupplies,
+                          child: const Text('저장'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _updateSupplies() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    final updatedPet = widget.pet.copyWith(
+      suppliesFood: _foodController.text.trim().isEmpty ? null : _foodController.text.trim(),
+      suppliesSupplement: _supplementController.text.trim().isEmpty ? null : _supplementController.text.trim(),
+      suppliesSnack: _snackController.text.trim().isEmpty ? null : _snackController.text.trim(),
+      suppliesLitter: _litterController.text.trim().isEmpty ? null : _litterController.text.trim(),
+      suppliesLastUpdated: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    
+    try {
+      await ref.read(petsProvider.notifier).updatePet(updatedPet);
+      
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('물품 기록이 업데이트되었습니다'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('물품 기록 업데이트에 실패했습니다'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

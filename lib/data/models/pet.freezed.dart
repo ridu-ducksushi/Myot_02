@@ -34,6 +34,11 @@ mixin _$Pet {
   String? get avatarUrl => throw _privateConstructorUsedError;
   String? get defaultIcon => throw _privateConstructorUsedError;
   String? get note => throw _privateConstructorUsedError;
+  String? get suppliesFood => throw _privateConstructorUsedError;
+  String? get suppliesSupplement => throw _privateConstructorUsedError;
+  String? get suppliesSnack => throw _privateConstructorUsedError;
+  String? get suppliesLitter => throw _privateConstructorUsedError;
+  DateTime? get suppliesLastUpdated => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
 
@@ -65,6 +70,11 @@ abstract class $PetCopyWith<$Res> {
     String? avatarUrl,
     String? defaultIcon,
     String? note,
+    String? suppliesFood,
+    String? suppliesSupplement,
+    String? suppliesSnack,
+    String? suppliesLitter,
+    DateTime? suppliesLastUpdated,
     DateTime createdAt,
     DateTime updatedAt,
   });
@@ -97,6 +107,11 @@ class _$PetCopyWithImpl<$Res, $Val extends Pet> implements $PetCopyWith<$Res> {
     Object? avatarUrl = freezed,
     Object? defaultIcon = freezed,
     Object? note = freezed,
+    Object? suppliesFood = freezed,
+    Object? suppliesSupplement = freezed,
+    Object? suppliesSnack = freezed,
+    Object? suppliesLitter = freezed,
+    Object? suppliesLastUpdated = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
@@ -154,6 +169,26 @@ class _$PetCopyWithImpl<$Res, $Val extends Pet> implements $PetCopyWith<$Res> {
                 ? _value.note
                 : note // ignore: cast_nullable_to_non_nullable
                       as String?,
+            suppliesFood: freezed == suppliesFood
+                ? _value.suppliesFood
+                : suppliesFood // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            suppliesSupplement: freezed == suppliesSupplement
+                ? _value.suppliesSupplement
+                : suppliesSupplement // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            suppliesSnack: freezed == suppliesSnack
+                ? _value.suppliesSnack
+                : suppliesSnack // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            suppliesLitter: freezed == suppliesLitter
+                ? _value.suppliesLitter
+                : suppliesLitter // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            suppliesLastUpdated: freezed == suppliesLastUpdated
+                ? _value.suppliesLastUpdated
+                : suppliesLastUpdated // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -188,6 +223,11 @@ abstract class _$$PetImplCopyWith<$Res> implements $PetCopyWith<$Res> {
     String? avatarUrl,
     String? defaultIcon,
     String? note,
+    String? suppliesFood,
+    String? suppliesSupplement,
+    String? suppliesSnack,
+    String? suppliesLitter,
+    DateTime? suppliesLastUpdated,
     DateTime createdAt,
     DateTime updatedAt,
   });
@@ -217,6 +257,11 @@ class __$$PetImplCopyWithImpl<$Res> extends _$PetCopyWithImpl<$Res, _$PetImpl>
     Object? avatarUrl = freezed,
     Object? defaultIcon = freezed,
     Object? note = freezed,
+    Object? suppliesFood = freezed,
+    Object? suppliesSupplement = freezed,
+    Object? suppliesSnack = freezed,
+    Object? suppliesLitter = freezed,
+    Object? suppliesLastUpdated = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
@@ -274,6 +319,26 @@ class __$$PetImplCopyWithImpl<$Res> extends _$PetCopyWithImpl<$Res, _$PetImpl>
             ? _value.note
             : note // ignore: cast_nullable_to_non_nullable
                   as String?,
+        suppliesFood: freezed == suppliesFood
+            ? _value.suppliesFood
+            : suppliesFood // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        suppliesSupplement: freezed == suppliesSupplement
+            ? _value.suppliesSupplement
+            : suppliesSupplement // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        suppliesSnack: freezed == suppliesSnack
+            ? _value.suppliesSnack
+            : suppliesSnack // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        suppliesLitter: freezed == suppliesLitter
+            ? _value.suppliesLitter
+            : suppliesLitter // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        suppliesLastUpdated: freezed == suppliesLastUpdated
+            ? _value.suppliesLastUpdated
+            : suppliesLastUpdated // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -304,6 +369,11 @@ class _$PetImpl implements _Pet {
     this.avatarUrl,
     this.defaultIcon,
     this.note,
+    this.suppliesFood,
+    this.suppliesSupplement,
+    this.suppliesSnack,
+    this.suppliesLitter,
+    this.suppliesLastUpdated,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -338,13 +408,23 @@ class _$PetImpl implements _Pet {
   @override
   final String? note;
   @override
+  final String? suppliesFood;
+  @override
+  final String? suppliesSupplement;
+  @override
+  final String? suppliesSnack;
+  @override
+  final String? suppliesLitter;
+  @override
+  final DateTime? suppliesLastUpdated;
+  @override
   final DateTime createdAt;
   @override
   final DateTime updatedAt;
 
   @override
   String toString() {
-    return 'Pet(id: $id, ownerId: $ownerId, name: $name, species: $species, breed: $breed, sex: $sex, neutered: $neutered, birthDate: $birthDate, bloodType: $bloodType, weightKg: $weightKg, avatarUrl: $avatarUrl, defaultIcon: $defaultIcon, note: $note, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Pet(id: $id, ownerId: $ownerId, name: $name, species: $species, breed: $breed, sex: $sex, neutered: $neutered, birthDate: $birthDate, bloodType: $bloodType, weightKg: $weightKg, avatarUrl: $avatarUrl, defaultIcon: $defaultIcon, note: $note, suppliesFood: $suppliesFood, suppliesSupplement: $suppliesSupplement, suppliesSnack: $suppliesSnack, suppliesLitter: $suppliesLitter, suppliesLastUpdated: $suppliesLastUpdated, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -371,6 +451,16 @@ class _$PetImpl implements _Pet {
             (identical(other.defaultIcon, defaultIcon) ||
                 other.defaultIcon == defaultIcon) &&
             (identical(other.note, note) || other.note == note) &&
+            (identical(other.suppliesFood, suppliesFood) ||
+                other.suppliesFood == suppliesFood) &&
+            (identical(other.suppliesSupplement, suppliesSupplement) ||
+                other.suppliesSupplement == suppliesSupplement) &&
+            (identical(other.suppliesSnack, suppliesSnack) ||
+                other.suppliesSnack == suppliesSnack) &&
+            (identical(other.suppliesLitter, suppliesLitter) ||
+                other.suppliesLitter == suppliesLitter) &&
+            (identical(other.suppliesLastUpdated, suppliesLastUpdated) ||
+                other.suppliesLastUpdated == suppliesLastUpdated) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -379,7 +469,7 @@ class _$PetImpl implements _Pet {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     id,
     ownerId,
@@ -394,9 +484,14 @@ class _$PetImpl implements _Pet {
     avatarUrl,
     defaultIcon,
     note,
+    suppliesFood,
+    suppliesSupplement,
+    suppliesSnack,
+    suppliesLitter,
+    suppliesLastUpdated,
     createdAt,
     updatedAt,
-  );
+  ]);
 
   /// Create a copy of Pet
   /// with the given fields replaced by the non-null parameter values.
@@ -427,6 +522,11 @@ abstract class _Pet implements Pet {
     final String? avatarUrl,
     final String? defaultIcon,
     final String? note,
+    final String? suppliesFood,
+    final String? suppliesSupplement,
+    final String? suppliesSnack,
+    final String? suppliesLitter,
+    final DateTime? suppliesLastUpdated,
     required final DateTime createdAt,
     required final DateTime updatedAt,
   }) = _$PetImpl;
@@ -459,6 +559,16 @@ abstract class _Pet implements Pet {
   String? get defaultIcon;
   @override
   String? get note;
+  @override
+  String? get suppliesFood;
+  @override
+  String? get suppliesSupplement;
+  @override
+  String? get suppliesSnack;
+  @override
+  String? get suppliesLitter;
+  @override
+  DateTime? get suppliesLastUpdated;
   @override
   DateTime get createdAt;
   @override

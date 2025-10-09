@@ -28,6 +28,11 @@ class PetsRepository {
       'avatar_url': pet.avatarUrl,
       'default_icon': pet.defaultIcon,
       'note': pet.note,
+      'supplies_food': pet.suppliesFood,
+      'supplies_supplement': pet.suppliesSupplement,
+      'supplies_snack': pet.suppliesSnack,
+      'supplies_litter': pet.suppliesLitter,
+      'supplies_last_updated': pet.suppliesLastUpdated?.toIso8601String(),
       // created_at/updated_at are defaulted by DB triggers if set; omit to avoid format mismatches
     };
     
@@ -53,6 +58,11 @@ class PetsRepository {
       avatarUrl: row['avatar_url'] as String?,
       defaultIcon: row['default_icon'] as String?,
       note: row['note'] as String?,
+      suppliesFood: row['supplies_food'] as String?,
+      suppliesSupplement: row['supplies_supplement'] as String?,
+      suppliesSnack: row['supplies_snack'] as String?,
+      suppliesLitter: row['supplies_litter'] as String?,
+      suppliesLastUpdated: row['supplies_last_updated'] != null ? DateTime.tryParse(row['supplies_last_updated'] as String) : null,
       createdAt: DateTime.tryParse((row['created_at'] as String?) ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse((row['updated_at'] as String?) ?? '') ?? DateTime.now(),
     );

@@ -22,6 +22,13 @@ _$PetImpl _$$PetImplFromJson(Map<String, dynamic> json) => _$PetImpl(
   avatarUrl: json['avatarUrl'] as String?,
   defaultIcon: json['defaultIcon'] as String?,
   note: json['note'] as String?,
+  suppliesFood: json['suppliesFood'] as String?,
+  suppliesSupplement: json['suppliesSupplement'] as String?,
+  suppliesSnack: json['suppliesSnack'] as String?,
+  suppliesLitter: json['suppliesLitter'] as String?,
+  suppliesLastUpdated: json['suppliesLastUpdated'] == null
+      ? null
+      : DateTime.parse(json['suppliesLastUpdated'] as String),
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
 );
@@ -40,6 +47,11 @@ Map<String, dynamic> _$$PetImplToJson(_$PetImpl instance) => <String, dynamic>{
   'avatarUrl': instance.avatarUrl,
   'defaultIcon': instance.defaultIcon,
   'note': instance.note,
+  'suppliesFood': instance.suppliesFood,
+  'suppliesSupplement': instance.suppliesSupplement,
+  'suppliesSnack': instance.suppliesSnack,
+  'suppliesLitter': instance.suppliesLitter,
+  'suppliesLastUpdated': instance.suppliesLastUpdated?.toIso8601String(),
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
 };

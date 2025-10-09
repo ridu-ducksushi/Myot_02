@@ -19,6 +19,11 @@ class Pet with _$Pet {
     String? avatarUrl,
     String? defaultIcon,
     String? note,
+    String? suppliesFood,
+    String? suppliesSupplement,
+    String? suppliesSnack,
+    String? suppliesLitter,
+    DateTime? suppliesLastUpdated,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _Pet;
