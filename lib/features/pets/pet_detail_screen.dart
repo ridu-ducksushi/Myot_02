@@ -276,45 +276,32 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                     },
                   ),
                   Text(
-                    'Memo',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    pet.suppliesLastUpdated != null
+                        ? DateFormat('yyyy년 MM월 dd일').format(pet.suppliesLastUpdated!)
+                        : '기록 없음',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: pet.suppliesLastUpdated != null
+                              ? Theme.of(context).colorScheme.onSurface
+                              : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
                         ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: () {
-                      // TODO: 다음 기록 보기
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('다음 기록이 없습니다')),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const SizedBox(width: 48), // 왼쪽 공간 확보
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        pet.suppliesLastUpdated != null
-                            ? DateFormat('yyyy년 MM월 dd일').format(pet.suppliesLastUpdated!)
-                            : '기록 없음',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
-                              color: pet.suppliesLastUpdated != null
-                                  ? Theme.of(context).colorScheme.onSurface
-                                  : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
-                            ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 20),
+                        onPressed: () => _editSupplies(context, pet),
                       ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.edit, size: 20),
-                    onPressed: () => _editSupplies(context, pet),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed: () {
+                          // TODO: 다음 기록 보기
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('다음 기록이 없습니다')),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
