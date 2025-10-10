@@ -12,6 +12,51 @@ import 'package:petcare/ui/theme/app_colors.dart';
 
 import 'package:petcare/features/records/records_chart_screen.dart';
 
+// 전역 헬퍼 함수들
+IconData getIconForType(String type) {
+  switch (type) {
+    case 'food_meal': return Icons.dinner_dining;
+    case 'food_snack': return Icons.cookie;
+    case 'food_water': return Icons.water_drop;
+    case 'health_med': return Icons.medical_services;
+    case 'health_supplement': return Icons.medication;
+    case 'health_vaccine': return Icons.vaccines;
+    case 'health_visit': return Icons.local_hospital;
+    case 'health_weight': return Icons.more_horiz;
+    case 'activity_play': return Icons.gamepad_outlined;
+    case 'activity_explore': return Icons.explore_outlined;
+    case 'activity_outing': return Icons.directions_walk;
+    case 'activity_rest': return Icons.hotel_outlined;
+    case 'activity_other': return Icons.more_horiz;
+    case 'poop_urine': return Icons.opacity;
+    case 'poop_feces': return Icons.pets;
+    case 'poop_other': return Icons.more_horiz;
+    default: return Icons.add_circle_outline;
+  }
+}
+
+String getLabelForType(String type) {
+  switch (type) {
+    case 'food_meal': return '사료';
+    case 'food_snack': return '간식';
+    case 'food_water': return '음수';
+    case 'health_med': return '약';
+    case 'health_supplement': return '보조제';
+    case 'health_vaccine': return '백신';
+    case 'health_visit': return '병원';
+    case 'health_weight': return '건강:기타';
+    case 'activity_play': return '놀이';
+    case 'activity_explore': return '탐색';
+    case 'activity_outing': return '산책';
+    case 'activity_rest': return '휴식';
+    case 'activity_other': return '활동:기타';
+    case 'poop_urine': return '소변';
+    case 'poop_feces': return '대변';
+    case 'poop_other': return '배변:기타';
+    default: return type;
+  }
+}
+
 class PetRecordsScreen extends ConsumerStatefulWidget {
   const PetRecordsScreen({
     super.key,
@@ -490,31 +535,6 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     });
   }
 
-  IconData _getIconForType(String type) {
-    switch (type) {
-      case 'food_meal': return Icons.dinner_dining;
-      case 'food_snack': return Icons.cookie;
-      case 'food_water': return Icons.water_drop;
-      case 'health_med': return Icons.medical_services;
-      case 'health_supplement': return Icons.medication;
-      case 'health_vaccine': return Icons.vaccines;
-      case 'health_visit': return Icons.local_hospital;
-      case 'health_weight': return Icons.more_horiz;
-      case 'activity_play': return Icons.gamepad_outlined;
-      case 'activity_explore': return Icons.explore_outlined;
-      case 'activity_outing': return Icons.directions_walk;
-      case 'activity_rest': return Icons.hotel_outlined;
-      case 'activity_other': return Icons.more_horiz;
-      case 'poop_urine': return Icons.opacity;
-      case 'poop_feces': return Icons.pets;
-      case 'poop_other': return Icons.more_horiz;
-      default: return Icons.add_circle_outline;
-    }
-  }
-
-
-
-
   void _addRecord(BuildContext context, Pet pet, String type) {
     showDialog(
       context: context,
@@ -527,7 +547,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             return AlertDialog(
               title: Row(
                 children: [
-                  Icon(_getIconForType(type), color: Theme.of(context).colorScheme.primary),
+                  Icon(getIconForType(type), color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 8),
                   Text('records.add_new'.tr()),
                 ],
@@ -640,9 +660,15 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         border: Border.all(color: Theme.of(context).colorScheme.outline),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        record.title,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                      child: Row(
+                        children: [
+                          Icon(getIconForType(record.type), size: 20, color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            getLabelForType(record.type),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -800,7 +826,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           title: Text('기록 삭제'),
           content: SizedBox(
             width: double.maxFinite,
-            child: Text('이 기록을 삭제하시겠습니까?\n"${record.title}"'),
+            child: Text('이 기록을 삭제하시겠습니까?\n"${getLabelForType(record.type)}"'),
           ),
           actions: <Widget>[
             TextButton(
@@ -870,9 +896,9 @@ class _Time24Table extends StatelessWidget {
                   ),
                   child: Text(
                     label,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                         ),
                   ),
                 ),
@@ -929,15 +955,15 @@ class _Time24Table extends StatelessWidget {
               children: [
                 Icon(
                   _getRecordIcon(record.type),
-                  size: 14, // 아이콘 크기를 줄임
+                  size: 18,
                   color: typeColor,
                 ),
-                const SizedBox(width: 4), // 간격을 줄임
+                const SizedBox(width: 6),
                 Flexible(
                   child: Text(
-                    '${record.title}: ${record.content ?? ""}',
+                    '${getLabelForType(record.type)}${record.content != null && record.content!.isNotEmpty ? ': ${record.content}' : ''}',
                     style: TextStyle(
-                      fontSize: 12, // 텍스트 크기를 줄임
+                      fontSize: 14,
                       color: typeColor,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1021,7 +1047,7 @@ class _RecordCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        record.title,
+                        getLabelForType(record.type),
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
