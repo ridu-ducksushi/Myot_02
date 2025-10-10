@@ -205,8 +205,14 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
   Future<void> _showImageSourceDialog(BuildContext context) async {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 32, // 시스템 네비게이션 바 고려
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -223,7 +229,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
               '프로필 사진 선택',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -266,7 +272,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
           ],
         ),
       ),
