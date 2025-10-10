@@ -333,7 +333,13 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                             children: [
                               const Icon(Icons.calendar_today, size: 16),
                               const SizedBox(width: 8),
-                              Text('시작: ${DateFormat('yyyy-MM-dd').format(_startDate)}'),
+                              Flexible(
+                                child: Text(
+                                  '시작: ${DateFormat('yyyy-MM-dd').format(_startDate)}',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -353,7 +359,13 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                             children: [
                               const Icon(Icons.calendar_today, size: 16),
                               const SizedBox(width: 8),
-                              Text('종료: ${DateFormat('yyyy-MM-dd').format(_endDate)}'),
+                              Flexible(
+                                child: Text(
+                                  '종료: ${DateFormat('yyyy-MM-dd').format(_endDate)}',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
                             ],
                           ),
                         ),

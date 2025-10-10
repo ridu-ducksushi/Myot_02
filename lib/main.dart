@@ -47,15 +47,20 @@ class PetCareApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'PetCare',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      localizationsDelegates: context.localizationDelegates,
-      supportedLocales: context.supportedLocales,
-      locale: context.locale,
-      routerConfig: router,
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaleFactor: 1.0, // 시스템 폰트 크기 변경 무시하고 고정
+      ),
+      child: MaterialApp.router(
+        title: 'PetCare',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
+        localizationsDelegates: context.localizationDelegates,
+        supportedLocales: context.supportedLocales,
+        locale: context.locale,
+        routerConfig: router,
+      ),
     );
   }
 }

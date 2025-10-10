@@ -275,16 +275,19 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                       );
                     },
                   ),
-                  Text(
-                    pet.suppliesLastUpdated != null
-                        ? DateFormat('yyyy년 MM월 dd일').format(pet.suppliesLastUpdated!)
-                        : '기록 없음',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: pet.suppliesLastUpdated != null
-                              ? Theme.of(context).colorScheme.onSurface
-                              : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
-                        ),
+                  Flexible(
+                    child: Text(
+                      pet.suppliesLastUpdated != null
+                          ? DateFormat('yyyy년 MM월 dd일').format(pet.suppliesLastUpdated!)
+                          : '기록 없음',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: pet.suppliesLastUpdated != null
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                          ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   Row(
                     children: [
