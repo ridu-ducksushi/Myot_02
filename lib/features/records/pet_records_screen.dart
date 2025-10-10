@@ -821,6 +821,7 @@ class _Time24Table extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
                     border: Border(
                       right: BorderSide(color: outline),
                       bottom: bottomLine,
@@ -932,11 +933,10 @@ class _Time24Table extends StatelessWidget {
   }
 
   String _labelForRow(int index) {
-    if (index == 0) return '12:00';
-    if (index == 23) return '24:00';
+    if (index == 0) return '12';
+    if (index == 23) return '23';
     final int hour = index;
-    final String two = hour.toString().padLeft(2, '0');
-    return '$two:00';
+    return hour.toString();
   }
 }
 
