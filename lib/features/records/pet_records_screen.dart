@@ -536,12 +536,12 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   }
 
   void _addRecord(BuildContext context, Pet pet, String type) {
+    final TextEditingController noteController = TextEditingController();
+    TimeOfDay selectedTime = TimeOfDay.now();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        final TextEditingController noteController = TextEditingController();
-        TimeOfDay selectedTime = TimeOfDay.now();
-
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -563,24 +563,29 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                       autofocus: true,
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.access_time),
-                          onPressed: () async {
-                            final TimeOfDay? picked = await showTimePicker(
-                              context: context,
-                              initialTime: selectedTime,
-                            );
-                            if (picked != null && picked != selectedTime) {
+                    InkWell(
+                      onTap: () async {
+                        final TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTime,
+                        );
+                            if (picked != null) {
                               setState(() {
                                 selectedTime = picked;
                               });
                             }
-                          },
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                        child: Row(
+                          children: [
+                            Icon(Icons.access_time, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 8),
+                            Text('Time: ${selectedTime.format(context)}'),
+                          ],
                         ),
-                        Text('Time: ${selectedTime.format(context)}'),
-                      ],
+                      ),
                     ),
                   ],
                 ),
