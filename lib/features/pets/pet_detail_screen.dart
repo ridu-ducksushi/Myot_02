@@ -243,7 +243,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   ),
                   child: Text(
                     pet.note!,
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
               ],
@@ -266,66 +266,45 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // 좌측 화살표 - 화면 왼쪽 끝으로
-                  InkWell(
-                    onTap: () {
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: () {
                       // TODO: 이전 기록 보기
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('이전 기록이 없습니다')),
                       );
                     },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.chevron_left,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                  ),
+                  Flexible(
+                    child: Text(
+                      pet.suppliesLastUpdated != null
+                          ? DateFormat('yyyy년 MM월 dd일').format(pet.suppliesLastUpdated!)
+                          : '기록 없음',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: pet.suppliesLastUpdated != null
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                          ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  
-                  // 중앙 영역 - 날짜 + 편집 아이콘
                   Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Flexible(
-                        child: Text(
-                          pet.suppliesLastUpdated != null
-                              ? DateFormat('yyyy년 MM월 dd일').format(pet.suppliesLastUpdated!)
-                              : '기록 없음',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: pet.suppliesLastUpdated != null
-                                    ? Theme.of(context).colorScheme.onSurface
-                                    : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
-                              ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(Icons.edit, size: 24),
+                        icon: const Icon(Icons.edit, size: 20),
                         onPressed: () => _editSupplies(context, pet),
                       ),
-                    ],
-                  ),
-                  
-                  // 우측 화살표 - 화면 오른쪽 끝으로
-                  InkWell(
-                    onTap: () {
-                      // TODO: 다음 기록 보기
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('다음 기록이 없습니다')),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.chevron_right,
-                        color: Theme.of(context).colorScheme.primary,
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed: () {
+                          // TODO: 다음 기록 보기
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('다음 기록이 없습니다')),
+                          );
+                        },
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -373,34 +352,33 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon,
-            size: 24,
+            size: 20,
             color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
                     ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 value ?? '미등록',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: value != null ? FontWeight.bold : FontWeight.normal,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: value != null ? FontWeight.w500 : FontWeight.normal,
                       color: value != null
                           ? Theme.of(context).colorScheme.onSurface
                           : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
@@ -489,21 +467,21 @@ class _InfoCard extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 24,
+              size: 20,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
             ),
             const SizedBox(height: 4),
             Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
               value,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

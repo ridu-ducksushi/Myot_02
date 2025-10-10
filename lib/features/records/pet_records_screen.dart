@@ -313,23 +313,20 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // 이전 날짜 버튼
-                  InkWell(
-                    onTap: () {
+                  IconButton(
+                    onPressed: () {
                       setState(() {
                         _selectedDate = _selectedDate.subtract(const Duration(days: 1));
                       });
                     },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.chevron_left,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
+                    tooltip: '이전 날짜',
                   ),
                   
-                  // 날짜 표시 및 선택 + 차트 아이콘 (중앙 정렬)
+                  // 날짜 표시 및 선택 + 차트 아이콘
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -356,15 +353,15 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                             children: [
                               Text(
                                 DateFormat('yyyy-MM-dd').format(_selectedDate),
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 4),
                               Icon(
                                 Icons.calendar_today,
-                                size: 20,
+                                size: 16,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
                             ],
@@ -398,8 +395,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                   ),
                   
                   // 다음 날짜 버튼
-                  InkWell(
-                    onTap: () {
+                  IconButton(
+                    onPressed: () {
                       final tomorrow = _selectedDate.add(const Duration(days: 1));
                       if (tomorrow.isBefore(DateTime.now().add(const Duration(days: 1)))) {
                         setState(() {
@@ -407,14 +404,11 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         });
                       }
                     },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.chevron_right,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                    icon: Icon(
+                      Icons.chevron_right,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
+                    tooltip: '다음 날짜',
                   ),
                 ],
               ),
