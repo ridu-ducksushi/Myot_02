@@ -551,6 +551,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: Theme.of(context).colorScheme.surface,
               title: Row(
                 children: [
                   Icon(getIconForType(type), color: Theme.of(context).colorScheme.primary),
@@ -647,6 +648,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: Theme.of(context).colorScheme.surface,
               title: Text('기록 편집'),
               content: SizedBox(
                 width: double.maxFinite,
@@ -794,7 +796,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                   icon: Icon(Icons.delete, color: Colors.red),
                   label: Text('삭제', style: TextStyle(color: Colors.red)),
                 ),
-                const Spacer(),
+                const SizedBox(width: 16),
                 // 취소 버튼
                 TextButton(
                   child: Text('취소'),
@@ -834,6 +836,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.surface,
           title: Text('기록 삭제'),
           content: SizedBox(
             width: double.maxFinite,
