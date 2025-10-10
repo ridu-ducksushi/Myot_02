@@ -37,7 +37,7 @@
     "edit_title": "펫 정보 수정",
     "edit_success": "{0}의 정보가 수정되었습니다",
     "edit_error": "{0} 수정 중 오류가 발생했습니다",
-    "image_updated": "{0}의 프로필 이미지가 업데이트되었습니다",
+    "image_updated": "프로필 이미지가 업데이트되었습니다",
     "image_update_error": "{0}의 이미지 업데이트 중 오류가 발생했습니다",
     "image_deleted": "{0}의 프로필 이미지가 삭제되었습니다",
     "image_delete_error": "{0}의 이미지 삭제 중 오류가 발생했습니다"
@@ -68,7 +68,6 @@
       "health": "건강",
       "chart": "차트"
     },
-    "title": "제목",
     "title_required": "제목을 입력해주세요",
     "content": "내용",
     "datetime": "날짜 및 시간",
@@ -92,7 +91,6 @@
     "select_pet": "펫 선택",
     "pet_required": "펫을 선택해주세요",
     "type": "유형",
-    "title": "제목",
     "title_required": "제목을 입력해주세요",
     "note": "메모",
     "scheduled_time": "예약 시간",

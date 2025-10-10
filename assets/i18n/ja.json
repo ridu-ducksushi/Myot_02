@@ -37,7 +37,7 @@
     "edit_title": "ペット情報編集",
     "edit_success": "{0}の情報が更新されました",
     "edit_error": "{0}の更新中にエラーが発生しました",
-    "image_updated": "{0}のプロフィール画像が更新されました",
+    "image_updated": "プロフィール画像が更新されました",
     "image_update_error": "{0}の画像更新中にエラーが発生しました",
     "image_deleted": "{0}のプロフィール画像が削除されました",
     "image_delete_error": "{0}の画像削除中にエラーが発生しました"
@@ -61,21 +61,19 @@
     "add_new": "新しい記録を追加",
     "select_pet": "ペットを選択",
     "pet_required": "ペットを選択してください",
-    "type": "種類",
-    "title": "タイトル",
-    "title_required": "タイトルを入力してください",
-    "content": "内容",
-    "datetime": "日時",
-    "recent": "最近の記録",
-    "no_recent": "最近の記録がありません",
-    "add": "記録を追加",
     "type": {
       "food": "ごはん",
       "play": "遊び",
       "poop": "うんち",
       "health": "健康",
       "chart": "チャート"
-    }
+    },
+    "title_required": "タイトルを入力してください",
+    "content": "内容",
+    "datetime": "日時",
+    "recent": "最近の記録",
+    "no_recent": "最近の記録がありません",
+    "add": "記録を追加"
   },
   "reminders": {
     "title": "リマインダー",
@@ -93,7 +91,6 @@
     "select_pet": "ペットを選択",
     "pet_required": "ペットを選択してください",
     "type": "種類",
-    "title": "タイトル",
     "title_required": "タイトルを入力してください",
     "note": "メモ",
     "scheduled_time": "予定時刻",

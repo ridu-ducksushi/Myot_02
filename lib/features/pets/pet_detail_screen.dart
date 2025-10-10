@@ -95,7 +95,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('pets.image_updated'.tr(args: [pet.name])),
+                            content: Text('pets.image_updated'.tr()),
                             backgroundColor: Theme.of(context).colorScheme.primary,
                           ),
                         );
