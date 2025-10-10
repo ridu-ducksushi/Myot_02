@@ -78,31 +78,31 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         children: [
           _buildSubMenuItem(
             icon: Icons.dinner_dining,
-            label: 'Food',
+            label: '사료',
             onTap: () => _addRecord(context, pet, 'food_meal'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.cookie,
-            label: 'Snack',
+            label: '간식',
             onTap: () => _addRecord(context, pet, 'food_snack'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.water_drop,
-            label: 'Water',
+            label: '음수',
             onTap: () => _addRecord(context, pet, 'food_water'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.local_hospital,
-            label: 'Med',
+            label: '투약',
             onTap: () => _addRecord(context, pet, 'health_med'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.medication,
-            label: 'Supplement',
+            label: '보조제',
             onTap: () => _addRecord(context, pet, 'health_supplement'),
           ),
         ],
@@ -123,31 +123,31 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         children: [
           _buildSubMenuItem(
             icon: Icons.gamepad_outlined,
-            label: 'Play',
+            label: '놀이',
             onTap: () => _addRecord(context, pet, 'activity_play'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.explore_outlined,
-            label: 'Explore',
+            label: '탐색',
             onTap: () => _addRecord(context, pet, 'activity_explore'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.directions_walk,
-            label: 'Outing',
+            label: '산책',
             onTap: () => _addRecord(context, pet, 'activity_outing'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.hotel_outlined,
-            label: 'Rest',
+            label: '휴식',
             onTap: () => _addRecord(context, pet, 'activity_rest'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.more_horiz,
-            label: 'etc',
+            label: '기타',
             onTap: () => _addRecord(context, pet, 'activity_other'),
           ),
         ],
@@ -168,25 +168,25 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         children: [
           _buildSubMenuItem(
             icon: Icons.medical_services,
-            label: 'Medicine',
+            label: '약',
             onTap: () => _addRecord(context, pet, 'health_med'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.vaccines,
-            label: 'Vaccine',
+            label: '백신',
             onTap: () => _addRecord(context, pet, 'health_vaccine'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.local_hospital,
-            label: 'Visit',
+            label: '병원',
             onTap: () => _addRecord(context, pet, 'health_visit'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
-            icon: Icons.monitor_weight,
-            label: 'Weight',
+            icon: Icons.more_horiz,
+            label: '기타',
             onTap: () => _addRecord(context, pet, 'health_weight'),
           ),
         ],
@@ -207,19 +207,19 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         children: [
           _buildSubMenuItem(
             icon: Icons.opacity,
-            label: 'Urine',
+            label: '소변',
             onTap: () => _addRecord(context, pet, 'poop_urine'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.pets,
-            label: 'Feces',
+            label: '대변',
             onTap: () => _addRecord(context, pet, 'poop_feces'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.more_horiz,
-            label: 'etc',
+            label: '기타',
             onTap: () => _addRecord(context, pet, 'poop_other'),
           ),
         ],
@@ -397,6 +397,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                     _isFoodMenuVisible = !_isFoodMenuVisible;
                     _isActivityMenuVisible = false;
                     _isPoopMenuVisible = false;
+                    _isHealthMenuVisible = false;
                   });
                 },
                 child: const Icon(Icons.restaurant),
@@ -420,6 +421,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                     _isActivityMenuVisible = !_isActivityMenuVisible;
                     _isFoodMenuVisible = false;
                     _isPoopMenuVisible = false;
+                    _isHealthMenuVisible = false;
                   });
                 },
                 child: const Icon(Icons.sports_tennis),
@@ -443,6 +445,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                     _isPoopMenuVisible = !_isPoopMenuVisible;
                     _isFoodMenuVisible = false;
                     _isActivityMenuVisible = false;
+                    _isHealthMenuVisible = false;
                   });
                 },
                 child: const Icon(Icons.cleaning_services),
@@ -487,6 +490,31 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     });
   }
 
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'food_meal': return Icons.dinner_dining;
+      case 'food_snack': return Icons.cookie;
+      case 'food_water': return Icons.water_drop;
+      case 'health_med': return Icons.medical_services;
+      case 'health_supplement': return Icons.medication;
+      case 'health_vaccine': return Icons.vaccines;
+      case 'health_visit': return Icons.local_hospital;
+      case 'health_weight': return Icons.more_horiz;
+      case 'activity_play': return Icons.gamepad_outlined;
+      case 'activity_explore': return Icons.explore_outlined;
+      case 'activity_outing': return Icons.directions_walk;
+      case 'activity_rest': return Icons.hotel_outlined;
+      case 'activity_other': return Icons.more_horiz;
+      case 'poop_urine': return Icons.opacity;
+      case 'poop_feces': return Icons.pets;
+      case 'poop_other': return Icons.more_horiz;
+      default: return Icons.add_circle_outline;
+    }
+  }
+
+
+
+
   void _addRecord(BuildContext context, Pet pet, String type) {
     showDialog(
       context: context,
@@ -497,7 +525,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('${'records.add_new'.tr()}: $type'),
+              title: Row(
+                children: [
+                  Icon(_getIconForType(type), color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text('records.add_new'.tr()),
+                ],
+              ),
               content: SizedBox(
                 width: double.maxFinite,
                 child: Column(
