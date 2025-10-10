@@ -498,35 +498,38 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           builder: (context, setState) {
             return AlertDialog(
               title: Text('${'records.add_new'.tr()}: $type'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: noteController,
-                    decoration: InputDecoration(hintText: 'records.content'.tr()),
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.access_time),
-                        onPressed: () async {
-                          final TimeOfDay? picked = await showTimePicker(
-                            context: context,
-                            initialTime: selectedTime,
-                          );
-                          if (picked != null && picked != selectedTime) {
-                            setState(() {
-                              selectedTime = picked;
-                            });
-                          }
-                        },
-                      ),
-                      Text('Time: ${selectedTime.format(context)}'),
-                    ],
-                  ),
-                ],
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: noteController,
+                      decoration: InputDecoration(hintText: 'records.content'.tr()),
+                      autofocus: true,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.access_time),
+                          onPressed: () async {
+                            final TimeOfDay? picked = await showTimePicker(
+                              context: context,
+                              initialTime: selectedTime,
+                            );
+                            if (picked != null && picked != selectedTime) {
+                              setState(() {
+                                selectedTime = picked;
+                              });
+                            }
+                          },
+                        ),
+                        Text('Time: ${selectedTime.format(context)}'),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               actions: <Widget>[
                 TextButton(
@@ -580,18 +583,20 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           builder: (context, setState) {
             return AlertDialog(
               title: Text('기록 편집'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 항목명 (읽기 전용)
-                    Text(
-                      '항목명',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+              content: SizedBox(
+                width: double.maxFinite,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 항목명 (읽기 전용)
+                      Text(
+                        '항목명',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 8),
                     Container(
                       width: double.infinity,
@@ -603,9 +608,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                       ),
                       child: Text(
                         record.title,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -706,7 +709,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               actions: <Widget>[
@@ -760,7 +764,10 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('기록 삭제'),
-          content: Text('이 기록을 삭제하시겠습니까?\n"${record.title}"'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Text('이 기록을 삭제하시겠습니까?\n"${record.title}"'),
+          ),
           actions: <Widget>[
             TextButton(
               child: Text('취소'),
