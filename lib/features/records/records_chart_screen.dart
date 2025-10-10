@@ -180,13 +180,13 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
   List<String> _getAllSubcategoriesForType(String category) {
     switch (category) {
       case 'food':
-        return ['Meal', 'Snack', 'Water', 'Medicine', 'Supplement'];
+        return ['식사', '간식', '음수', '약', '영양제'];
       case 'health':
-        return ['Medicine', 'Vaccine', 'Visit', 'Weight'];
+        return ['약', '백신', '병원', '기타'];
       case 'poop':
-        return ['Litter', 'Feces', 'Urine'];
+        return ['배변', '대변', '소변'];
       case 'activity':
-        return ['Activity', 'Other'];
+        return ['활동', '기타'];
       default:
         return [];
     }
@@ -278,45 +278,45 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
     switch (recordType) {
       // Food subcategories
       case 'food_meal':
-        return 'Meal';
+        return '식사';
       case 'food_snack':
-        return 'Snack';
+        return '간식';
       case 'food_water':
-        return 'Water';
+        return '음수';
       case 'food_treat':
-        return 'Snack';
+        return '간식';
       case 'food_med':
-        return 'Medicine';
+        return '약';
       case 'food_supplement':
-        return 'Supplement';
+        return '영양제';
       
       // Health subcategories
       case 'health_med':
       case 'med':
-        return 'Medicine';
+        return '약';
       case 'health_vaccine':
       case 'vaccine':
-        return 'Vaccine';
+        return '백신';
       case 'health_visit':
       case 'visit':
-        return 'Visit';
+        return '병원';
       case 'health_weight':
       case 'weight':
-        return 'Weight';
+        return '기타';
       
       // Poop subcategories
       case 'litter':
-        return 'Litter';
+        return '배변';
       case 'poop_feces':
-        return 'Feces';
+        return '대변';
       case 'poop_urine':
-        return 'Urine';
+        return '소변';
       
       // Activity subcategories
       case 'activity':
-        return 'Activity';
+        return '활동';
       case 'other':
-        return 'Other';
+        return '기타';
       
       default:
         return recordType;
@@ -505,13 +505,13 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
   String _getRecordTypeDisplayName(String type) {
     switch (type) {
       case 'food':
-        return 'Food';
+        return '식사';
       case 'health':
-        return 'Health';
+        return '건강';
       case 'poop':
-        return 'Poop';
+        return '배변';
       case 'activity':
-        return 'Activity';
+        return '활동';
       default:
         return type;
     }
@@ -584,7 +584,7 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
           // Pie Chart Section (moved to top)
           if (_pieChartData.isNotEmpty) ...[
             Text(
-              '$_selectedRecordType 소분류별 비율',
+              '${_getRecordTypeDisplayName(_selectedRecordType!)} 소분류별 비율',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -660,7 +660,7 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
           ],
           // Line Chart Section (moved to bottom)
           Text(
-            '$_selectedRecordType 레코드 수',
+            '${_getRecordTypeDisplayName(_selectedRecordType!)} 레코드 수',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
