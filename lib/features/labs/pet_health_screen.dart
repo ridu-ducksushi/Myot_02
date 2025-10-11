@@ -1311,6 +1311,24 @@ class _LabTableState extends State<_LabTable> {
   }
 
   Widget _buildBasicInfoRow(String label, String unit, String value) {
+    // 비용 항목일 때 숫자 포맷팅 적용
+    String displayValue = value;
+    String displayUnit = unit;
+    
+    if (label == '비용' && value.isNotEmpty) {
+      // 숫자만 추출
+      final numericValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+      if (numericValue.isNotEmpty) {
+        // 천 단위 쉼표 추가
+        final number = int.tryParse(numericValue);
+        if (number != null) {
+          final formatter = NumberFormat('#,###');
+          displayValue = formatter.format(number);
+          displayUnit = '원';
+        }
+      }
+    }
+    
     return InkWell(
       onTap: () => _showBasicInfoEditDialog(label, value),
       child: Container(
@@ -1327,7 +1345,7 @@ class _LabTableState extends State<_LabTable> {
             Expanded(
               flex: 2,
               child: Text(
-                value.isEmpty ? '-' : value,
+                displayValue.isEmpty ? '-' : displayValue,
                 style: const TextStyle(fontSize: 14),
                 textAlign: TextAlign.center,
               ),
@@ -1335,7 +1353,7 @@ class _LabTableState extends State<_LabTable> {
             Expanded(
               flex: 2,
               child: Text(
-                unit,
+                displayUnit,
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[600],
