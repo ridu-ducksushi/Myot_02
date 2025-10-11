@@ -9,7 +9,9 @@ import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'weight_chart_screen.dart';
 
 class PetHealthScreen extends ConsumerStatefulWidget {
@@ -196,6 +198,9 @@ class _LabTableState extends State<_LabTable> {
   String? _previousDateStr;
   // Pinned rows
   final Set<String> _pinnedKeys = <String>{};
+  // Pinned keys order for drag and drop
+  List<String> _pinnedKeysOrder = [];
+  List<String> _customOrder = []; // 사용자 정의 순서
   
   // Basic info data
   String _weight = '';
@@ -221,6 +226,7 @@ class _LabTableState extends State<_LabTable> {
       _valueCtrls[key] = TextEditingController();
       _valueCtrls[key]!.addListener(_onChanged);
     }
+    _loadCustomOrder();
     _loadFromSupabase();
   }
 
@@ -369,107 +375,214 @@ class _LabTableState extends State<_LabTable> {
       ),
     );
     final baseKeys = _orderedKeys();
-    final sortedKeys = [
-      ...baseKeys.where((k) => _pinnedKeys.contains(k)),
-      ...baseKeys.where((k) => !_pinnedKeys.contains(k)),
-    ];
-
-    final rows = sortedKeys.map((k) {
-      final ref = isCat ? _refCat[k] : _refDog[k];
-      return DataRow(cells: [
-        DataCell(Checkbox(
-          value: _pinnedKeys.contains(k),
-          onChanged: (v) {
-            setState(() {
-              if (v == true) {
-                _pinnedKeys.add(k);
-              } else {
-                _pinnedKeys.remove(k);
-              }
-            });
-          },
-        )),
-        DataCell(InkWell(
-          onTap: () => _showEditDialog(k),
-          child: Text(k, style: const TextStyle(fontSize: 14)),
-        )),
-        DataCell(InkWell(
-          onTap: () => _showEditDialog(k),
-          child: SizedBox(
-            width: 60, // 고정 너비로 5글자 정도 제한
-            child: TextFormField(
-              controller: _valueCtrls[k],
-              keyboardType: TextInputType.number,
-              maxLength: 5, // 최대 5글자로 제한
-              style: TextStyle(
-                fontSize: 14,
-                color: _getValueColor(_valueCtrls[k]?.text, ref),
-                fontWeight: _valueCtrls[k]?.text != null && _valueCtrls[k]!.text.isNotEmpty
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-              ),
-              decoration: const InputDecoration(
-                border: InputBorder.none, 
-                hintText: '-',
-                contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                counterText: '', // 글자 수 표시 제거
-              ),
-              enabled: false, // Disable direct editing, use popup instead
-            ),
-          ),
-        )),
-        DataCell(InkWell(
-          onTap: () => _showEditDialog(k),
-          child: SizedBox(
-            width: 60, // 고정 너비로 5글자 정도 제한
-            child: Text(
-              _previousValues[k] ?? '-', 
-              style: const TextStyle(fontSize: 14),
-              overflow: TextOverflow.ellipsis, // 넘치는 텍스트는 ...으로 표시
-            ),
-          ),
-        )),
-        DataCell(InkWell(
-          onTap: () => _showEditDialog(k),
-          child: Text(ref ?? '-', style: const TextStyle(fontSize: 14)),
-        )),
-        DataCell(InkWell(
-          onTap: () => _showEditDialog(k),
-          child: Text(_units[k] ?? '-', style: const TextStyle(fontSize: 14)),
-        )),
-      ]);
-    }).toList();
+    // 사용자 정의 순서가 있으면 사용, 없으면 기본 순서
+    final sortedKeys = _customOrder.isEmpty ? baseKeys : _customOrder;
 
     return _isLoading
         ? const Center(
             child: CircularProgressIndicator(),
           )
-        : SingleChildScrollView(
-            child: Column(
-              children: [
-                header,
-                basicInfoSection,
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                      columnSpacing: 8,
-                      horizontalMargin: 12,
-                      headingRowHeight: 48,
-                      dataRowHeight: 48,
-                      columns: const [
-                        DataColumn(label: Text('중요', style: TextStyle(fontSize: 14))),
-                        DataColumn(label: Text('검사명', style: TextStyle(fontSize: 14))),
-                        DataColumn(label: Text('현재', style: TextStyle(fontSize: 14))),
-                        DataColumn(label: Text('직전', style: TextStyle(fontSize: 14))),
-                        DataColumn(label: Text('기준치', style: TextStyle(fontSize: 14))),
-                        DataColumn(label: Text('단위', style: TextStyle(fontSize: 14))),
-                      ],
-                      rows: rows,
+        : Column(
+            children: [
+              header,
+              basicInfoSection,
+              // 헤더 행
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
                     ),
                   ),
-              ],
-            ),
+                ),
+                child: Row(
+                  children: [
+                    const Expanded(flex: 2, child: Text('검사명', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
+                    const SizedBox(width: 8),
+                    const SizedBox(width: 60, child: Text('현재', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
+                    const SizedBox(width: 8),
+                    const SizedBox(width: 60, child: Text('직전', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
+                    const SizedBox(width: 8),
+                    const Expanded(flex: 2, child: Text('기준치', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
+                    const SizedBox(width: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(width: 60, child: Text('단위', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
+                        // 초기화 버튼 (항상 표시하되, 순서 변경 시에만 활성화)
+                        const SizedBox(width: 4),
+                        InkWell(
+                          onTap: _customOrder.isNotEmpty ? () async {
+                            setState(() {
+                              _customOrder.clear();
+                            });
+                            // 저장된 순서 삭제
+                            try {
+                              final prefs = await SharedPreferences.getInstance();
+                              final uid = Supabase.instance.client.auth.currentUser?.id;
+                              if (uid != null) {
+                                final key = 'lab_custom_order_${uid}_${widget.petId}';
+                                await prefs.remove(key);
+                              }
+                            } catch (e) {
+                              print('순서 삭제 오류: $e');
+                            }
+                          } : null,
+                          child: Icon(
+                            Icons.refresh,
+                            size: 20,
+                            color: _customOrder.isNotEmpty 
+                              ? Theme.of(context).colorScheme.primary 
+                              : Colors.grey.withOpacity(0.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // 드래그 가능한 리스트
+              Expanded(
+                child: ReorderableListView.builder(
+                  padding: const EdgeInsets.all(8),
+                  onReorder: _onReorder,
+                  itemCount: sortedKeys.length,
+                  itemBuilder: (context, index) {
+                    final k = sortedKeys[index];
+                    final ref = isCat ? _refCat[k] : _refDog[k];
+                    final isPinned = _pinnedKeys.contains(k);
+                    
+                    return Container(
+                      key: ValueKey(k),
+                      margin: const EdgeInsets.symmetric(vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                        ),
+                      ),
+                      child: InkWell(
+                        onTap: () => _showEditDialog(k),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                          child: Row(
+                            children: [
+                              // 검사명
+                              Expanded(
+                                flex: 2,
+                                child: Text(k, style: const TextStyle(fontSize: 14)),
+                              ),
+                              const SizedBox(width: 8),
+                              // 현재 값
+                              SizedBox(
+                                width: 60,
+                                child: TextFormField(
+                                  controller: _valueCtrls[k],
+                                  keyboardType: TextInputType.number,
+                                  maxLength: 5,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: _getValueColor(_valueCtrls[k]?.text, ref),
+                                    fontWeight: _valueCtrls[k]?.text != null && _valueCtrls[k]!.text.isNotEmpty
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: '-',
+                                    contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                                    counterText: '',
+                                  ),
+                                  enabled: false,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // 직전 값
+                              SizedBox(
+                                width: 60,
+                                child: Text(
+                                  _previousValues[k] ?? '-',
+                                  style: const TextStyle(fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // 기준치
+                              Expanded(
+                                flex: 2,
+                                child: Text(ref ?? '-', style: const TextStyle(fontSize: 14)),
+                              ),
+                              const SizedBox(width: 8),
+                              // 단위
+                              SizedBox(
+                                width: 60,
+                                child: Text(_units[k] ?? '', style: const TextStyle(fontSize: 14)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           );
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      // 사용자 정의 순서가 비어있으면 현재 sortedKeys로 초기화
+      if (_customOrder.isEmpty) {
+        _customOrder = List<String>.from(_orderedKeys());
+      }
+      
+      if (oldIndex < newIndex) {
+        newIndex -= 1;
+      }
+      final item = _customOrder.removeAt(oldIndex);
+      _customOrder.insert(newIndex.clamp(0, _customOrder.length), item);
+      
+      // 순서 변경 시 저장
+      _saveCustomOrder();
+    });
+  }
+
+  // 사용자 정의 순서 로드
+  Future<void> _loadCustomOrder() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return;
+      
+      final key = 'lab_custom_order_${uid}_${widget.petId}';
+      final orderJson = prefs.getString(key);
+      if (orderJson != null) {
+        final orderList = jsonDecode(orderJson) as List<dynamic>;
+        setState(() {
+          _customOrder = orderList.cast<String>();
+        });
+      }
+    } catch (e) {
+      print('순서 로드 오류: $e');
+    }
+  }
+
+  // 사용자 정의 순서 저장
+  Future<void> _saveCustomOrder() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return;
+      
+      final key = 'lab_custom_order_${uid}_${widget.petId}';
+      await prefs.setString(key, jsonEncode(_customOrder));
+    } catch (e) {
+      print('순서 저장 오류: $e');
+    }
   }
 
   List<String> _orderedKeys() {
