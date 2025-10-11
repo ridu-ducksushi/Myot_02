@@ -186,8 +186,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
       } else {
         // month
         final monthStart = DateTime(dt.year, dt.month, 1);
-        key = DateFormat('yyyy-MM').format(monthStart);
-        label = DateFormat('yyyy-MM').format(monthStart);
+        key = DateFormat('yyyy-MM-dd').format(monthStart); // yyyy-MM-dd 형식으로 변경
+        label = DateFormat('yyyy-MM').format(monthStart); // 표시용은 yyyy-MM
       }
 
       final list = grouped.putIfAbsent(key, () => []);
@@ -433,6 +433,54 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     }
   }
 
+  double _getLeftTitleInterval(double minValue, double maxValue) {
+    final range = maxValue - minValue;
+    
+    // Y축 범위에 따라 적절한 간격 계산
+    if (range <= 1) return 0.2;
+    if (range <= 5) return 1.0;
+    if (range <= 10) return 2.0;
+    if (range <= 50) return 10.0;
+    if (range <= 100) return 20.0;
+    if (range <= 500) return 100.0;
+    if (range <= 1000) return 200.0;
+    if (range <= 5000) return 1000.0;
+    if (range <= 10000) return 2000.0;
+    return (range / 5).ceil().toDouble();
+  }
+
+  String _formatYAxisValue(double value) {
+    // 음수 처리
+    if (value < 0) {
+      return '-${_formatPositiveValue(-value)}';
+    }
+    return _formatPositiveValue(value);
+  }
+
+  String _formatPositiveValue(double value) {
+    if (value >= 1000000) {
+      // 백만 이상
+      final millions = (value / 1000000);
+      if (millions == millions.roundToDouble()) {
+        return '${millions.round()}M';
+      }
+      return '${millions.toStringAsFixed(1)}M';
+    } else if (value >= 1000) {
+      // 천 이상
+      final thousands = (value / 1000);
+      if (thousands == thousands.roundToDouble()) {
+        return '${thousands.round()}K';
+      }
+      return '${thousands.toStringAsFixed(1)}K';
+    } else {
+      // 천 미만
+      if (value == value.roundToDouble()) {
+        return value.round().toString();
+      }
+      return value.toStringAsFixed(1);
+    }
+  }
+
   List<String> _getTestItemOptions() {
     // pet_health_screen.dart의 baseKeys와 동일한 항목들 (ABC 순)
     return [
@@ -516,7 +564,18 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 40,
+                      reservedSize: 60,
+                      interval: _getLeftTitleInterval(minValue, maxValue),
+                      getTitlesWidget: (value, meta) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Text(
+                            _formatYAxisValue(value),
+                            style: const TextStyle(fontSize: 10),
+                            textAlign: TextAlign.right,
+                          ),
+                        );
+                      },
                     ),
                   ),
                   topTitles: AxisTitles(
@@ -528,24 +587,29 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 30,
+                      reservedSize: 40,
                       interval: _getBottomTitleInterval(),
                       getTitlesWidget: (value, meta) {
                         if (value.toInt() < _chartData.length) {
                           final label = _chartData[value.toInt()]['label'] as String?;
                           if (label != null) {
+                            String displayText;
                             // For day mode, label is yyyy-MM-dd
                             if (_viewMode == 'day') {
                               final date = DateTime.parse(label);
-                              return Text(
-                                DateFormat('MM/dd').format(date),
-                                style: const TextStyle(fontSize: 10),
-                              );
+                              displayText = DateFormat('MM/dd').format(date);
+                            } else {
+                              // For week/month, label is already human-readable
+                              displayText = label;
                             }
-                            // For week/month, label is already human-readable
-                            return Text(
-                              label,
-                              style: const TextStyle(fontSize: 10),
+                            
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                displayText,
+                                style: const TextStyle(fontSize: 10),
+                                textAlign: TextAlign.center,
+                              ),
                             );
                           }
                         }
