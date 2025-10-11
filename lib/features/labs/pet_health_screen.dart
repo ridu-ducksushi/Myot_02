@@ -963,7 +963,7 @@ class _LabTableState extends State<_LabTable> {
               ),
             ),
             Expanded(
-              flex: 1,
+              flex: 2,
               child: Text(
                 value.isEmpty ? '-' : value,
                 style: const TextStyle(fontSize: 14),
@@ -971,7 +971,7 @@ class _LabTableState extends State<_LabTable> {
               ),
             ),
             Expanded(
-              flex: 1,
+              flex: 2,
               child: Text(
                 unit,
                 style: TextStyle(
@@ -981,23 +981,27 @@ class _LabTableState extends State<_LabTable> {
                 textAlign: TextAlign.center,
               ),
             ),
-            // 체중 항목에 체중계 아이콘 추가
-            if (label == '체중')
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: InkWell(
-                  onTap: () => _showWeightChartDialog(widget.petId, widget.petName),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.monitor_weight,
-                      size: 20,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
+            // 모든 행에 동일한 너비의 공간 확보 (체중 항목만 아이콘 표시)
+            SizedBox(
+              width: 44, // 아이콘 영역 고정 너비
+              child: label == '체중'
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: InkWell(
+                        onTap: () => _showWeightChartDialog(widget.petId, widget.petName),
+                        borderRadius: BorderRadius.circular(4),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.monitor_weight,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox(), // 투명한 공간
+            ),
           ],
         ),
       ),
