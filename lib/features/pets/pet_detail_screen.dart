@@ -5,10 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/data/models/pet.dart';
+import 'package:petcare/data/models/pet_supplies.dart';
+import 'package:petcare/data/repositories/pet_supplies_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/widgets/profile_image_picker.dart';
 import 'package:petcare/features/labs/weight_chart_screen.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:uuid/uuid.dart';
 
 class PetDetailScreen extends ConsumerStatefulWidget {
   const PetDetailScreen({
@@ -23,6 +28,62 @@ class PetDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
+  late DateTime _currentSuppliesDate;
+  Set<DateTime> _suppliesRecordDates = {};
+  PetSupplies? _currentSupplies;
+  bool _isInitialized = false;
+  late PetSuppliesRepository _suppliesRepository;
+
+  @override
+  void initState() {
+    super.initState();
+    // Repository 초기화는 build에서 수행
+  }
+
+  void _initialize(Pet pet) {
+    if (_isInitialized) return;
+    
+    // Repository 초기화
+    _suppliesRepository = PetSuppliesRepository(
+      Supabase.instance.client,
+    );
+    
+    // 오늘 날짜로 초기화
+    _currentSuppliesDate = DateTime.now();
+    _loadSuppliesRecordDates();
+    _loadCurrentSupplies();
+    _isInitialized = true;
+  }
+
+  Future<void> _loadSuppliesRecordDates() async {
+    try {
+      final dates = await _suppliesRepository.getSuppliesRecordDates(widget.petId);
+      if (mounted) {
+        setState(() {
+          _suppliesRecordDates = dates.toSet();
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading supplies record dates: $e');
+    }
+  }
+
+  Future<void> _loadCurrentSupplies() async {
+    try {
+      final supplies = await _suppliesRepository.getSuppliesByDate(
+        widget.petId,
+        _currentSuppliesDate,
+      );
+      if (mounted) {
+        setState(() {
+          _currentSupplies = supplies;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading current supplies: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final pet = ref.watch(petByIdProvider(widget.petId));
@@ -38,15 +99,12 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
       );
     }
 
+    // 펫 데이터가 로드되면 초기화
+    _initialize(pet);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(pet.name),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => _editPet(context, pet),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -75,6 +133,16 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
+              // 편집 아이콘을 카드 안쪽 오른쪽 상단에 배치
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: const Icon(Icons.edit, size: 24),
+                  onPressed: () => _editPet(context, pet),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
               // Profile Image Picker
               ProfileImagePicker(
                 imagePath: pet.avatarUrl,
@@ -266,14 +334,9 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // 좌측 화살표 - 화면 왼쪽 끝으로
+                  // 좌측 화살표 - 이전 기록으로 이동
                   InkWell(
-                    onTap: () {
-                      // TODO: 이전 기록 보기
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('이전 기록이 없습니다')),
-                      );
-                    },
+                    onTap: () => _moveToPreviousSuppliesRecord(pet),
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
                       padding: const EdgeInsets.all(8),
@@ -284,40 +347,32 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                     ),
                   ),
                   
-                  // 중앙 영역 - 날짜 + 편집 아이콘
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          pet.suppliesLastUpdated != null
-                              ? DateFormat('yyyy년 MM월 dd일').format(pet.suppliesLastUpdated!)
-                              : '기록 없음',
+                  // 중앙 영역 - 날짜 + 달력 아이콘
+                  InkWell(
+                    onTap: () => _showSuppliesCalendarDialog(pet),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          DateFormat('yyyy년 MM월 dd일').format(_currentSuppliesDate),
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: pet.suppliesLastUpdated != null
-                                    ? Theme.of(context).colorScheme.onSurface
-                                    : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
                               ),
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 24),
-                        onPressed: () => _editSupplies(context, pet),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.calendar_today,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ],
+                    ),
                   ),
                   
-                  // 우측 화살표 - 화면 오른쪽 끝으로
+                  // 우측 화살표 - 다음 기록 또는 오늘 날짜로 이동
                   InkWell(
-                    onTap: () {
-                      // TODO: 다음 기록 보기
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('다음 기록이 없습니다')),
-                      );
-                    },
+                    onTap: () => _moveToNextSuppliesRecord(pet),
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
                       padding: const EdgeInsets.all(8),
@@ -330,32 +385,85 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              _buildSupplyItem(
-                context,
-                icon: Icons.restaurant,
-                label: '사료',
-                value: pet.suppliesFood,
+              // 날짜별 기록 표시 안내
+              if (_currentSupplies == null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '선택한 날짜의 기록이 없습니다',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              InkWell(
+                onTap: () => _editSupplies(context, pet),
+                borderRadius: BorderRadius.circular(8),
+                child: _buildSupplyItem(
+                  context,
+                  icon: Icons.restaurant,
+                  label: '사료',
+                  value: _currentSupplies?.food,
+                ),
               ),
               const SizedBox(height: 12),
-              _buildSupplyItem(
-                context,
-                icon: Icons.medication,
-                label: '영양제',
-                value: pet.suppliesSupplement,
+              InkWell(
+                onTap: () => _editSupplies(context, pet),
+                borderRadius: BorderRadius.circular(8),
+                child: _buildSupplyItem(
+                  context,
+                  icon: Icons.medication,
+                  label: '영양제',
+                  value: _currentSupplies?.supplement,
+                ),
               ),
               const SizedBox(height: 12),
-              _buildSupplyItem(
-                context,
-                icon: Icons.cookie,
-                label: '간식',
-                value: pet.suppliesSnack,
+              InkWell(
+                onTap: () => _editSupplies(context, pet),
+                borderRadius: BorderRadius.circular(8),
+                child: _buildSupplyItem(
+                  context,
+                  icon: Icons.cookie,
+                  label: '간식',
+                  value: _currentSupplies?.snack,
+                ),
               ),
               const SizedBox(height: 12),
-              _buildSupplyItem(
-                context,
-                icon: Icons.cleaning_services,
-                label: '모래',
-                value: pet.suppliesLitter,
+              InkWell(
+                onTap: () => _editSupplies(context, pet),
+                borderRadius: BorderRadius.circular(8),
+                child: _buildSupplyItem(
+                  context,
+                  icon: Icons.cleaning_services,
+                  label: '모래',
+                  value: _currentSupplies?.litter,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // 편집 아이콘을 오른쪽 하단에 배치
+              Align(
+                alignment: Alignment.centerRight,
+                child: FloatingActionButton.small(
+                  onPressed: () => _editSupplies(context, pet),
+                  child: const Icon(Icons.edit),
+                ),
               ),
             ],
           ),
@@ -435,7 +543,19 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => _EditSuppliesSheet(pet: pet),
+      builder: (context) => _EditSuppliesSheet(
+        pet: pet, 
+        selectedDate: _currentSuppliesDate,
+        existingSupplies: _currentSupplies,
+        onSaved: (savedSupplies, dates) {
+          // 부모 상태 즉시 업데이트
+          setState(() {
+            _currentSupplies = savedSupplies;
+            _currentSuppliesDate = savedSupplies.recordedAt;
+            _suppliesRecordDates = dates.toSet();
+          });
+        },
+      ),
     );
   }
 
@@ -454,6 +574,143 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
         builder: (context) => WeightChartScreen(
           petId: pet.id,
           petName: pet.name,
+        ),
+      ),
+    );
+  }
+
+  // 이전 기록으로 이동
+  void _moveToPreviousSuppliesRecord(Pet pet) {
+    // 현재 날짜보다 이전 날짜 중 가장 최근 날짜 찾기
+    final previousDates = _suppliesRecordDates
+        .where((date) => date.isBefore(_currentSuppliesDate))
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    if (previousDates.isNotEmpty) {
+      setState(() {
+        _currentSuppliesDate = previousDates.first;
+      });
+      _loadCurrentSupplies();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('이전 기록이 없습니다')),
+      );
+    }
+  }
+
+  // 다음 기록 또는 오늘 날짜로 이동
+  void _moveToNextSuppliesRecord(Pet pet) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    // 현재 날짜보다 이후 날짜 중 가장 오래된 날짜 찾기
+    final nextDates = _suppliesRecordDates
+        .where((date) => date.isAfter(_currentSuppliesDate))
+        .toList()
+      ..sort((a, b) => a.compareTo(b));
+
+    if (nextDates.isNotEmpty) {
+      setState(() {
+        _currentSuppliesDate = nextDates.first;
+      });
+      _loadCurrentSupplies();
+    } else if (!isSameDay(_currentSuppliesDate, today)) {
+      // 다음 기록이 없으면 오늘로 이동
+      setState(() {
+        _currentSuppliesDate = today;
+      });
+      _loadCurrentSupplies();
+    } else {
+      // 이미 오늘 날짜인 경우
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('현재 최신 기록입니다')),
+      );
+    }
+  }
+
+  // 달력 팝업 표시
+  Future<void> _showSuppliesCalendarDialog(Pet pet) async {
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '날짜 선택',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              TableCalendar(
+                firstDay: DateTime(2000),
+                lastDay: DateTime.now(),
+                focusedDay: _currentSuppliesDate,
+                selectedDayPredicate: (day) => isSameDay(_currentSuppliesDate, day),
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _currentSuppliesDate = selectedDay;
+                  });
+                  _loadCurrentSupplies();
+                  Navigator.of(context).pop();
+                },
+                calendarFormat: CalendarFormat.month,
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+                calendarStyle: CalendarStyle(
+                  selectedDecoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  todayDecoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                calendarBuilders: CalendarBuilders(
+                  defaultBuilder: (context, day, focusedDay) {
+                    // 기록이 있는 날짜에 점 표시
+                    if (_suppliesRecordDates.any((date) => isSameDay(date, day))) {
+                      return Container(
+                        margin: const EdgeInsets.all(4),
+                        alignment: Alignment.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '${day.day}',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Container(
+                              width: 4,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('닫기'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -806,9 +1063,17 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
 }
 
 class _EditSuppliesSheet extends ConsumerStatefulWidget {
-  const _EditSuppliesSheet({required this.pet});
+  const _EditSuppliesSheet({
+    required this.pet,
+    required this.selectedDate,
+    this.existingSupplies,
+    required this.onSaved,
+  });
 
   final Pet pet;
+  final DateTime selectedDate;
+  final PetSupplies? existingSupplies;
+  final Function(PetSupplies, List<DateTime>) onSaved;
 
   @override
   ConsumerState<_EditSuppliesSheet> createState() => _EditSuppliesSheetState();
@@ -820,19 +1085,33 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
   final _supplementController = TextEditingController();
   final _snackController = TextEditingController();
   final _litterController = TextEditingController();
+  late PetSuppliesRepository _suppliesRepository;
 
   @override
   void initState() {
     super.initState();
+    _suppliesRepository = PetSuppliesRepository(
+      Supabase.instance.client,
+    );
     _initializeForm();
   }
 
   void _initializeForm() {
-    final pet = widget.pet;
-    _foodController.text = pet.suppliesFood ?? '';
-    _supplementController.text = pet.suppliesSupplement ?? '';
-    _snackController.text = pet.suppliesSnack ?? '';
-    _litterController.text = pet.suppliesLitter ?? '';
+    final existingSupplies = widget.existingSupplies;
+    
+    if (existingSupplies != null) {
+      // 기존 기록이 있는 경우 데이터 사용
+      _foodController.text = existingSupplies.food ?? '';
+      _supplementController.text = existingSupplies.supplement ?? '';
+      _snackController.text = existingSupplies.snack ?? '';
+      _litterController.text = existingSupplies.litter ?? '';
+    } else {
+      // 새로운 기록인 경우 빈 값으로 초기화
+      _foodController.text = '';
+      _supplementController.text = '';
+      _snackController.text = '';
+      _litterController.text = '';
+    }
   }
 
   @override
@@ -856,9 +1135,10 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
         minChildSize: 0.5,
         expand: false,
         builder: (context, scrollController) {
-          return Container(
-            padding: const EdgeInsets.all(24),
-            child: Form(
+          return SafeArea(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              child: Form(
               key: _formKey,
               child: Column(
                 children: [
@@ -877,6 +1157,15 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                   Text(
                     '물품 기록 수정',
                     style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  // 선택된 날짜 표시
+                  Text(
+                    DateFormat('yyyy년 MM월 dd일').format(widget.selectedDate),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   
@@ -920,7 +1209,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                   ),
                   
                   // Buttons
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 40),
                   Row(
                     children: [
                       Expanded(
@@ -938,8 +1227,10 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 40),
                 ],
               ),
+            ),
             ),
           );
         },
@@ -950,23 +1241,46 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
   Future<void> _updateSupplies() async {
     if (!_formKey.currentState!.validate()) return;
     
-    final updatedPet = widget.pet.copyWith(
-      suppliesFood: _foodController.text.trim().isEmpty ? null : _foodController.text.trim(),
-      suppliesSupplement: _supplementController.text.trim().isEmpty ? null : _supplementController.text.trim(),
-      suppliesSnack: _snackController.text.trim().isEmpty ? null : _snackController.text.trim(),
-      suppliesLitter: _litterController.text.trim().isEmpty ? null : _litterController.text.trim(),
-      suppliesLastUpdated: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    
     try {
-      await ref.read(petsProvider.notifier).updatePet(updatedPet);
+      final now = DateTime.now();
+      final supplies = PetSupplies(
+        id: widget.existingSupplies?.id ?? const Uuid().v4(),
+        petId: widget.pet.id,
+        food: _foodController.text.trim().isEmpty ? null : _foodController.text.trim(),
+        supplement: _supplementController.text.trim().isEmpty ? null : _supplementController.text.trim(),
+        snack: _snackController.text.trim().isEmpty ? null : _snackController.text.trim(),
+        litter: _litterController.text.trim().isEmpty ? null : _litterController.text.trim(),
+        recordedAt: widget.selectedDate,
+        createdAt: widget.existingSupplies?.createdAt ?? now,
+        updatedAt: now,
+      );
       
+      print('🔄 저장 시작: ${supplies.food}, ${supplies.supplement}, ${supplies.snack}, ${supplies.litter}');
+      final savedSupplies = await _suppliesRepository.saveSupplies(supplies);
+      print('✅ 저장 완료: ${savedSupplies?.food}, ${savedSupplies?.supplement}');
+      
+      if (!mounted) {
+        print('❌ Widget disposed');
+        return;
+      }
+      
+      // 날짜 목록 로드
+      final dates = await _suppliesRepository.getSuppliesRecordDates(widget.pet.id);
+      print('📅 날짜 목록 로드: ${dates.length}개');
+      
+      // 콜백을 통해 부모에게 알림
+      if (savedSupplies != null) {
+        print('📝 콜백 호출: ${savedSupplies.food}');
+        widget.onSaved(savedSupplies, dates);
+      }
+      
+      // 다이얼로그 닫기
       if (mounted) {
         Navigator.of(context).pop();
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('물품 기록이 업데이트되었습니다'),
+            content: const Text('물품 기록이 저장되었습니다'),
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
@@ -975,7 +1289,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('물품 기록 업데이트에 실패했습니다'),
+            content: const Text('물품 기록 저장에 실패했습니다'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

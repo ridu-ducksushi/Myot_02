@@ -12,11 +12,11 @@ class PetSupplies with _$PetSupplies {
     String? supplement,
     String? snack,
     String? litter,
-    required DateTime lastUpdated,
+    required DateTime recordedAt,
     required DateTime createdAt,
+    required DateTime updatedAt,
   }) = _PetSupplies;
 
   factory PetSupplies.fromJson(Map<String, dynamic> json) =>
       _$PetSuppliesFromJson(json);
 }
-

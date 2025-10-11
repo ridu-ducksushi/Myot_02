@@ -14,8 +14,9 @@ _$PetSuppliesImpl _$$PetSuppliesImplFromJson(Map<String, dynamic> json) =>
       supplement: json['supplement'] as String?,
       snack: json['snack'] as String?,
       litter: json['litter'] as String?,
-      lastUpdated: DateTime.parse(json['lastUpdated'] as String),
+      recordedAt: DateTime.parse(json['recordedAt'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
 
 Map<String, dynamic> _$$PetSuppliesImplToJson(_$PetSuppliesImpl instance) =>
@@ -26,6 +27,7 @@ Map<String, dynamic> _$$PetSuppliesImplToJson(_$PetSuppliesImpl instance) =>
       'supplement': instance.supplement,
       'snack': instance.snack,
       'litter': instance.litter,
-      'lastUpdated': instance.lastUpdated.toIso8601String(),
+      'recordedAt': instance.recordedAt.toIso8601String(),
       'createdAt': instance.createdAt.toIso8601String(),
+      'updatedAt': instance.updatedAt.toIso8601String(),
     };

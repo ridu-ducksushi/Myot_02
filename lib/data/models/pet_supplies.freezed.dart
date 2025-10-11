@@ -27,8 +27,9 @@ mixin _$PetSupplies {
   String? get supplement => throw _privateConstructorUsedError;
   String? get snack => throw _privateConstructorUsedError;
   String? get litter => throw _privateConstructorUsedError;
-  DateTime get lastUpdated => throw _privateConstructorUsedError;
+  DateTime get recordedAt => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime get updatedAt => throw _privateConstructorUsedError;
 
   /// Serializes this PetSupplies to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -54,8 +55,9 @@ abstract class $PetSuppliesCopyWith<$Res> {
     String? supplement,
     String? snack,
     String? litter,
-    DateTime lastUpdated,
+    DateTime recordedAt,
     DateTime createdAt,
+    DateTime updatedAt,
   });
 }
 
@@ -80,8 +82,9 @@ class _$PetSuppliesCopyWithImpl<$Res, $Val extends PetSupplies>
     Object? supplement = freezed,
     Object? snack = freezed,
     Object? litter = freezed,
-    Object? lastUpdated = null,
+    Object? recordedAt = null,
     Object? createdAt = null,
+    Object? updatedAt = null,
   }) {
     return _then(
       _value.copyWith(
@@ -109,13 +112,17 @@ class _$PetSuppliesCopyWithImpl<$Res, $Val extends PetSupplies>
                 ? _value.litter
                 : litter // ignore: cast_nullable_to_non_nullable
                       as String?,
-            lastUpdated: null == lastUpdated
-                ? _value.lastUpdated
-                : lastUpdated // ignore: cast_nullable_to_non_nullable
+            recordedAt: null == recordedAt
+                ? _value.recordedAt
+                : recordedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            updatedAt: null == updatedAt
+                ? _value.updatedAt
+                : updatedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
           )
           as $Val,
@@ -139,8 +146,9 @@ abstract class _$$PetSuppliesImplCopyWith<$Res>
     String? supplement,
     String? snack,
     String? litter,
-    DateTime lastUpdated,
+    DateTime recordedAt,
     DateTime createdAt,
+    DateTime updatedAt,
   });
 }
 
@@ -164,8 +172,9 @@ class __$$PetSuppliesImplCopyWithImpl<$Res>
     Object? supplement = freezed,
     Object? snack = freezed,
     Object? litter = freezed,
-    Object? lastUpdated = null,
+    Object? recordedAt = null,
     Object? createdAt = null,
+    Object? updatedAt = null,
   }) {
     return _then(
       _$PetSuppliesImpl(
@@ -193,13 +202,17 @@ class __$$PetSuppliesImplCopyWithImpl<$Res>
             ? _value.litter
             : litter // ignore: cast_nullable_to_non_nullable
                   as String?,
-        lastUpdated: null == lastUpdated
-            ? _value.lastUpdated
-            : lastUpdated // ignore: cast_nullable_to_non_nullable
+        recordedAt: null == recordedAt
+            ? _value.recordedAt
+            : recordedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        updatedAt: null == updatedAt
+            ? _value.updatedAt
+            : updatedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
       ),
     );
@@ -216,8 +229,9 @@ class _$PetSuppliesImpl implements _PetSupplies {
     this.supplement,
     this.snack,
     this.litter,
-    required this.lastUpdated,
+    required this.recordedAt,
     required this.createdAt,
+    required this.updatedAt,
   });
 
   factory _$PetSuppliesImpl.fromJson(Map<String, dynamic> json) =>
@@ -236,13 +250,15 @@ class _$PetSuppliesImpl implements _PetSupplies {
   @override
   final String? litter;
   @override
-  final DateTime lastUpdated;
+  final DateTime recordedAt;
   @override
   final DateTime createdAt;
+  @override
+  final DateTime updatedAt;
 
   @override
   String toString() {
-    return 'PetSupplies(id: $id, petId: $petId, food: $food, supplement: $supplement, snack: $snack, litter: $litter, lastUpdated: $lastUpdated, createdAt: $createdAt)';
+    return 'PetSupplies(id: $id, petId: $petId, food: $food, supplement: $supplement, snack: $snack, litter: $litter, recordedAt: $recordedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -257,10 +273,12 @@ class _$PetSuppliesImpl implements _PetSupplies {
                 other.supplement == supplement) &&
             (identical(other.snack, snack) || other.snack == snack) &&
             (identical(other.litter, litter) || other.litter == litter) &&
-            (identical(other.lastUpdated, lastUpdated) ||
-                other.lastUpdated == lastUpdated) &&
+            (identical(other.recordedAt, recordedAt) ||
+                other.recordedAt == recordedAt) &&
             (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+                other.createdAt == createdAt) &&
+            (identical(other.updatedAt, updatedAt) ||
+                other.updatedAt == updatedAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -273,8 +291,9 @@ class _$PetSuppliesImpl implements _PetSupplies {
     supplement,
     snack,
     litter,
-    lastUpdated,
+    recordedAt,
     createdAt,
+    updatedAt,
   );
 
   /// Create a copy of PetSupplies
@@ -299,8 +318,9 @@ abstract class _PetSupplies implements PetSupplies {
     final String? supplement,
     final String? snack,
     final String? litter,
-    required final DateTime lastUpdated,
+    required final DateTime recordedAt,
     required final DateTime createdAt,
+    required final DateTime updatedAt,
   }) = _$PetSuppliesImpl;
 
   factory _PetSupplies.fromJson(Map<String, dynamic> json) =
@@ -319,9 +339,11 @@ abstract class _PetSupplies implements PetSupplies {
   @override
   String? get litter;
   @override
-  DateTime get lastUpdated;
+  DateTime get recordedAt;
   @override
   DateTime get createdAt;
+  @override
+  DateTime get updatedAt;
 
   /// Create a copy of PetSupplies
   /// with the given fields replaced by the non-null parameter values.
