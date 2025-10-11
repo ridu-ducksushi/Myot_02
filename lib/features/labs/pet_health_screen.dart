@@ -10,6 +10,7 @@ import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'weight_chart_screen.dart';
@@ -207,6 +208,9 @@ class _LabTableState extends State<_LabTable> {
   String _hospitalName = '';
   String _cost = '';
   
+  // 기록이 있는 날짜 목록
+  Set<DateTime> _recordDates = {};
+  
   static DateTime _today() {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
@@ -227,6 +231,7 @@ class _LabTableState extends State<_LabTable> {
       _valueCtrls[key]!.addListener(_onChanged);
     }
     _loadCustomOrder();
+    _loadRecordDates();
     _loadFromSupabase();
   }
 
@@ -264,18 +269,7 @@ class _LabTableState extends State<_LabTable> {
                 Text('검사 날짜: ', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(width: 4),
                 InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime.now(),
-                    );
-                    if (picked != null) {
-                      setState(() => _selectedDate = DateTime(picked.year, picked.month, picked.day));
-                      await _loadFromSupabase();
-                    }
-                  },
+                  onTap: _showCalendarDialog,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
@@ -853,6 +847,190 @@ class _LabTableState extends State<_LabTable> {
     return Colors.black; // 정상 또는 파싱 불가
   }
 
+  Future<void> _loadRecordDates() async {
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return;
+      
+      // Supabase에서 이 펫의 모든 기록 날짜를 가져옴
+      final resList = await Supabase.instance.client
+          .from('labs')
+          .select('date')
+          .eq('user_id', uid)
+          .eq('pet_id', widget.petId);
+      
+      setState(() {
+        _recordDates = resList
+            .map((row) {
+              final dateStr = row['date'] as String;
+              final parts = dateStr.split('-');
+              return DateTime(
+                int.parse(parts[0]),
+                int.parse(parts[1]),
+                int.parse(parts[2]),
+              );
+            })
+            .toSet();
+      });
+    } catch (e) {
+      print('❌ Error loading record dates: $e');
+    }
+  }
+
+  Future<void> _showCalendarDialog() async {
+    DateTime? tempSelected = _selectedDate;
+    
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TableCalendar(
+                firstDay: DateTime(2000),
+                lastDay: DateTime.now(),
+                focusedDay: tempSelected ?? _selectedDate,
+                selectedDayPredicate: (day) => isSameDay(day, tempSelected),
+                onDaySelected: (selectedDay, focusedDay) {
+                  tempSelected = selectedDay;
+                  Navigator.pop(context);
+                },
+                calendarFormat: CalendarFormat.month,
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+                calendarStyle: CalendarStyle(
+                  todayDecoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                calendarBuilders: CalendarBuilders(
+                  defaultBuilder: (context, day, focusedDay) {
+                    final hasRecord = _recordDates.any((d) => isSameDay(d, day));
+                    if (hasRecord) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${day.day}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            Container(
+                              width: 4,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return null;
+                  },
+                  todayBuilder: (context, day, focusedDay) {
+                    final hasRecord = _recordDates.any((d) => isSameDay(d, day));
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${day.day}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (hasRecord)
+                              Container(
+                                width: 4,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                  selectedBuilder: (context, day, focusedDay) {
+                    final hasRecord = _recordDates.any((d) => isSameDay(d, day));
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${day.day}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            if (hasRecord)
+                              Container(
+                                width: 4,
+                                height: 4,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('취소'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    
+    if (tempSelected != null && !isSameDay(tempSelected, _selectedDate)) {
+      setState(() => _selectedDate = DateTime(
+        tempSelected!.year,
+        tempSelected!.month,
+        tempSelected!.day,
+      ));
+      await _loadFromSupabase();
+    }
+  }
+
   Future<void> _loadFromSupabase() async {
     if (_isLoading) return;
     
@@ -1101,6 +1279,9 @@ class _LabTableState extends State<_LabTable> {
       }, onConflict: 'user_id,pet_id,date');
       
       print('✅ Save successful: $result');
+      
+      // 저장 후 기록 날짜 목록 업데이트
+      await _loadRecordDates();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
