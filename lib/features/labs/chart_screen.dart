@@ -408,6 +408,31 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     );
   }
 
+  double _getBottomTitleInterval() {
+    final dataCount = _chartData.length;
+    
+    if (dataCount <= 1) return 1.0;
+    
+    switch (_viewMode) {
+      case 'day':
+        // 일간 모드: 데이터가 많으면 간격을 늘림
+        if (dataCount <= 7) return 1.0;
+        if (dataCount <= 14) return 2.0;
+        if (dataCount <= 30) return 3.0;
+        return (dataCount / 10).ceil().toDouble();
+      case 'week':
+        // 주간 모드: 모든 주를 표시하되, 너무 많으면 간격 조정
+        if (dataCount <= 8) return 1.0;
+        if (dataCount <= 16) return 2.0;
+        return (dataCount / 8).ceil().toDouble();
+      case 'month':
+        // 월간 모드: 모든 월을 표시
+        return 1.0;
+      default:
+        return 1.0;
+    }
+  }
+
   List<String> _getTestItemOptions() {
     // pet_health_screen.dart의 baseKeys와 동일한 항목들 (ABC 순)
     return [
@@ -504,6 +529,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 30,
+                      interval: _getBottomTitleInterval(),
                       getTitlesWidget: (value, meta) {
                         if (value.toInt() < _chartData.length) {
                           final label = _chartData[value.toInt()]['label'] as String?;
