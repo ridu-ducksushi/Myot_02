@@ -395,27 +395,39 @@ class _LabTableState extends State<_LabTable> {
         )),
         DataCell(InkWell(
           onTap: () => _showEditDialog(k),
-          child: TextFormField(
-            controller: _valueCtrls[k],
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: 14,
-              color: _getValueColor(_valueCtrls[k]?.text, ref),
-              fontWeight: _valueCtrls[k]?.text != null && _valueCtrls[k]!.text.isNotEmpty
-                  ? FontWeight.bold
-                  : FontWeight.normal,
+          child: SizedBox(
+            width: 60, // 고정 너비로 5글자 정도 제한
+            child: TextFormField(
+              controller: _valueCtrls[k],
+              keyboardType: TextInputType.number,
+              maxLength: 5, // 최대 5글자로 제한
+              style: TextStyle(
+                fontSize: 14,
+                color: _getValueColor(_valueCtrls[k]?.text, ref),
+                fontWeight: _valueCtrls[k]?.text != null && _valueCtrls[k]!.text.isNotEmpty
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
+              decoration: const InputDecoration(
+                border: InputBorder.none, 
+                hintText: '-',
+                contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                counterText: '', // 글자 수 표시 제거
+              ),
+              enabled: false, // Disable direct editing, use popup instead
             ),
-            decoration: const InputDecoration(
-              border: InputBorder.none, 
-              hintText: '-',
-              contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            ),
-            enabled: false, // Disable direct editing, use popup instead
           ),
         )),
         DataCell(InkWell(
           onTap: () => _showEditDialog(k),
-          child: Text(_previousValues[k] ?? '-', style: const TextStyle(fontSize: 14)),
+          child: SizedBox(
+            width: 60, // 고정 너비로 5글자 정도 제한
+            child: Text(
+              _previousValues[k] ?? '-', 
+              style: const TextStyle(fontSize: 14),
+              overflow: TextOverflow.ellipsis, // 넘치는 텍스트는 ...으로 표시
+            ),
+          ),
         )),
         DataCell(InkWell(
           onTap: () => _showEditDialog(k),
@@ -471,10 +483,14 @@ class _LabTableState extends State<_LabTable> {
       'WBC-EOS(#)', 'WBC-EOS(%)'
     ];
     
+    // 기본정보 항목들 (차트에 표시하지 않음)
+    final basicInfoKeys = ['체중', '병원명', '비용'];
+    
     // Only include custom keys that have actual data for this pet
     // This prevents showing custom items from other pets
     final customKeys = _valueCtrls.keys.where((k) => 
       !baseKeys.contains(k) && 
+      !basicInfoKeys.contains(k) && // 기본정보 항목 제외
       (_valueCtrls[k]?.text.isNotEmpty == true || _units.containsKey(k))
     ).toList();
     customKeys.sort(); // Sort custom keys alphabetically
@@ -1099,7 +1115,7 @@ class _LabTableState extends State<_LabTable> {
         currentItems = Map<String, dynamic>.from(currentRes['items'] ?? {});
       }
 
-      // Add basic info to items
+      // Add basic info to items (for storage but not displayed in chart)
       currentItems['체중'] = {
         'value': _weight,
         'unit': 'kg',
