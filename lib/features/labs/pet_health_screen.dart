@@ -387,61 +387,87 @@ class _LabTableState extends State<_LabTable> {
               header,
               basicInfoSection,
               // 헤더 행
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+              Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceVariant,
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Expanded(flex: 2, child: Text('검사명', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
-                    const SizedBox(width: 8),
-                    const SizedBox(width: 60, child: Text('현재', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
-                    const SizedBox(width: 8),
-                    const SizedBox(width: 60, child: Text('직전', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
-                    const SizedBox(width: 8),
-                    const Expanded(flex: 2, child: Text('기준치', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
-                    const SizedBox(width: 8),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Row(
                       children: [
-                        const SizedBox(width: 60, child: Text('단위', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
-                        // 초기화 버튼 (항상 표시하되, 순서 변경 시에만 활성화)
-                        const SizedBox(width: 4),
-                        InkWell(
-                          onTap: _customOrder.isNotEmpty ? () async {
-                            setState(() {
-                              _customOrder.clear();
-                            });
-                            // 저장된 순서 삭제
-                            try {
-                              final prefs = await SharedPreferences.getInstance();
-                              final uid = Supabase.instance.client.auth.currentUser?.id;
-                              if (uid != null) {
-                                final key = 'lab_custom_order_${uid}_${widget.petId}';
-                                await prefs.remove(key);
-                              }
-                            } catch (e) {
-                              print('순서 삭제 오류: $e');
-                            }
-                          } : null,
-                          child: Icon(
-                            Icons.refresh,
-                            size: 20,
-                            color: _customOrder.isNotEmpty 
-                              ? Theme.of(context).colorScheme.primary 
-                              : Colors.grey.withOpacity(0.3),
+                        const Expanded(flex: 2, child: Text('검사명', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 60,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 5),
+                            child: const Text('현재', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 60,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 5),
+                            child: const Text('직전', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 5),
+                            child: const Text('기준치', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 60,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 5),
+                            child: const Text('단위', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  // 새로고침 버튼 (절대 위치)
+                  Positioned(
+                    right: 8,
+                    top: 6,
+                    child: InkWell(
+                      onTap: _customOrder.isNotEmpty ? () async {
+                        setState(() {
+                          _customOrder.clear();
+                        });
+                        // 저장된 순서 삭제
+                        try {
+                          final prefs = await SharedPreferences.getInstance();
+                          final uid = Supabase.instance.client.auth.currentUser?.id;
+                          if (uid != null) {
+                            final key = 'lab_custom_order_${uid}_${widget.petId}';
+                            await prefs.remove(key);
+                          }
+                        } catch (e) {
+                          print('순서 삭제 오류: $e');
+                        }
+                      } : null,
+                      child: Icon(
+                        Icons.refresh,
+                        size: 20,
+                        color: _customOrder.isNotEmpty 
+                          ? Theme.of(context).colorScheme.primary 
+                          : Colors.grey.withOpacity(0.3),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               // 드래그 가능한 리스트
               Expanded(
@@ -467,7 +493,7 @@ class _LabTableState extends State<_LabTable> {
                       child: InkWell(
                         onTap: () => _showEditDialog(k),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                           child: Row(
                             children: [
                               // 검사명
@@ -479,47 +505,73 @@ class _LabTableState extends State<_LabTable> {
                               // 현재 값
                               SizedBox(
                                 width: 60,
-                                child: TextFormField(
-                                  controller: _valueCtrls[k],
-                                  keyboardType: TextInputType.number,
-                                  maxLength: 5,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: _getValueColor(_valueCtrls[k]?.text, ref),
-                                    fontWeight: _valueCtrls[k]?.text != null && _valueCtrls[k]!.text.isNotEmpty
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 5),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.pink.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    child: Text(
+                                      (_valueCtrls[k]?.text ?? '').length > 5 
+                                        ? (_valueCtrls[k]?.text ?? '').substring(0, 5)
+                                        : (_valueCtrls[k]?.text ?? ''),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: _getValueColor(_valueCtrls[k]?.text, ref),
+                                        fontWeight: _valueCtrls[k]?.text != null && _valueCtrls[k]!.text.isNotEmpty
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
                                   ),
-                                  decoration: const InputDecoration(
-                                    border: InputBorder.none,
-                                    hintText: '-',
-                                    contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-                                    counterText: '',
-                                  ),
-                                  enabled: false,
                                 ),
                               ),
                               const SizedBox(width: 8),
                               // 직전 값
                               SizedBox(
                                 width: 60,
-                                child: Text(
-                                  _previousValues[k] ?? '-',
-                                  style: const TextStyle(fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 5),
+                                  child: Text(
+                                    (_previousValues[k] ?? '-').length > 5 
+                                      ? (_previousValues[k] ?? '-').substring(0, 5)
+                                      : (_previousValues[k] ?? '-'),
+                                    style: const TextStyle(fontSize: 14),
+                                    overflow: TextOverflow.clip,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
                               // 기준치
                               Expanded(
                                 flex: 2,
-                                child: Text(ref ?? '-', style: const TextStyle(fontSize: 14)),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 5),
+                                  child: Text(
+                                    (ref ?? '-').length > 10 
+                                      ? (ref ?? '-').substring(0, 10)
+                                      : (ref ?? '-'),
+                                    style: const TextStyle(fontSize: 14),
+                                    overflow: TextOverflow.clip,
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: 8),
                               // 단위
                               SizedBox(
                                 width: 60,
-                                child: Text(_units[k] ?? '', style: const TextStyle(fontSize: 14)),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 5),
+                                  child: Text(
+                                    (_units[k] ?? '').length > 5 
+                                      ? (_units[k] ?? '').substring(0, 5)
+                                      : (_units[k] ?? ''),
+                                    style: const TextStyle(fontSize: 14),
+                                    overflow: TextOverflow.clip,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
