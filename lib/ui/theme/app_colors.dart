@@ -85,30 +85,54 @@ class AppColors {
     }
   }
 
-  /// Get color for record type
+  /// Get color for record type based on main category
   static Color getRecordTypeColor(String type) {
+    // 대분류별 색상 정의
+    const foodColor = Color(0xFFE91E63);      // Pink - 식사 관련
+    const healthColor = Color(0xFF2196F3);    // Blue - 건강 관련
+    const poopColor = Color(0xFFFF9800);      // Orange - 배변 관련
+    const activityColor = Color(0xFF4CAF50);  // Green - 활동 관련
+
     switch (type.toLowerCase()) {
+      // Food category - Pink
+      case 'food_meal':
+      case 'food_snack':
+      case 'food_water':
+      case 'food_treat':
+      case 'food_med':
+      case 'food_supplement':
       case 'meal':
-        return mealColor;
       case 'snack':
-        return snackColor;
+        return foodColor;
+      
+      // Health category - Blue
+      case 'health_med':
+      case 'health_vaccine':
+      case 'health_visit':
+      case 'health_weight':
       case 'med':
       case 'medicine':
-        return medicineColor;
       case 'vaccine':
-        return vaccineColor;
       case 'visit':
-        return visitColor;
       case 'weight':
-        return weightColor;
+        return healthColor;
+      
+      // Poop category - Orange
+      case 'poop_feces':
+      case 'poop_urine':
       case 'litter':
-        return litterColor;
+        return poopColor;
+      
+      // Activity category - Green
+      case 'activity_play':
+      case 'activity_groom':
+      case 'activity_walk':
       case 'play':
-        return playColor;
       case 'groom':
-        return groomeColor;
+        return activityColor;
+      
       default:
-        return otherColor;
+        return foodColor; // 기본값을 food 색상으로 설정
     }
   }
 
