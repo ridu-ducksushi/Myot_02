@@ -126,206 +126,264 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     final speciesColor = AppColors.getSpeciesColor(pet.species);
     final age = _calculateAge(pet.birthDate);
 
-    return Container(
-      margin: const EdgeInsets.all(16),
-      child: InkWell(
-        onTap: () => _editPet(context, pet),
-        borderRadius: BorderRadius.circular(12),
-        child: AppCard(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
+    return InkWell(
+      onTap: () => _editPet(context, pet),
+      borderRadius: BorderRadius.circular(0),
+      child: AppCard(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Profile Image Picker (클릭 이벤트 차단)
-                GestureDetector(
-                  onTap: () {}, // 빈 핸들러로 상위 InkWell 이벤트 차단
-                  child: ProfileImagePicker(
-                imagePath: pet.avatarUrl,
-                selectedDefaultIcon: pet.defaultIcon,
-                species: pet.species, // 동물 종류 전달
-                onImageSelected: (image) async {
-                  if (image != null) {
-                    // ProfileImagePicker에서 이미 저장된 파일을 받음
-                    final updatedPet = pet.copyWith(
-                      avatarUrl: image.path, // 이미 저장된 경로를 사용
-                      defaultIcon: null, // 이미지 선택 시 기본 아이콘 제거
-                      updatedAt: DateTime.now(),
-                    );
-                    
-                    try {
-                      await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                // 왼쪽: 프로필 이미지와 편집 아이콘 + 종족/품종
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {}, // 빈 핸들러로 상위 InkWell 이벤트 차단
+                      child: ProfileImagePicker(
+                    imagePath: pet.avatarUrl,
+                    selectedDefaultIcon: pet.defaultIcon,
+                    species: pet.species, // 동물 종류 전달
+                    onImageSelected: (image) async {
+                      if (image != null) {
+                        // ProfileImagePicker에서 이미 저장된 파일을 받음
+                        final updatedPet = pet.copyWith(
+                          avatarUrl: image.path, // 이미 저장된 경로를 사용
+                          defaultIcon: null, // 이미지 선택 시 기본 아이콘 제거
+                          updatedAt: DateTime.now(),
+                        );
+                        
+                        try {
+                          await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                          
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('pets.image_updated'.tr()),
+                                backgroundColor: Theme.of(context).colorScheme.primary,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('pets.image_update_error'.tr(args: [pet.name])),
+                                backgroundColor: Theme.of(context).colorScheme.error,
+                              ),
+                            );
+                          }
+                        }
+                      } else {
+                        // 이미지 삭제 및 기본 아이콘으로 설정
+                        final updatedPet = pet.copyWith(
+                          avatarUrl: null,
+                          defaultIcon: 'dog1', // 기본 아이콘 설정
+                          updatedAt: DateTime.now(),
+                        );
+
+                        try {
+                          await ref.read(petsProvider.notifier).updatePet(updatedPet);
+
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('프로필 이미지가 기본 아이콘으로 변경되었습니다.'),
+                                backgroundColor: Theme.of(context).colorScheme.primary,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('이미지 삭제에 실패했습니다.'),
+                                backgroundColor: Theme.of(context).colorScheme.error,
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    },
+                    onDefaultIconSelected: (iconName) async {
+                      // 기본 아이콘 선택 시 펫 업데이트
+                      final updatedPet = pet.copyWith(
+                        defaultIcon: iconName,
+                        avatarUrl: null, // 기본 아이콘 선택 시 이미지 제거
+                        updatedAt: DateTime.now(),
+                      );
                       
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('pets.image_updated'.tr()),
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                          ),
-                        );
+                      try {
+                        await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                        
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('기본 아이콘이 설정되었습니다'),
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('기본 아이콘 설정에 실패했습니다'),
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                          );
+                        }
                       }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('pets.image_update_error'.tr(args: [pet.name])),
-                            backgroundColor: Theme.of(context).colorScheme.error,
-                          ),
-                        );
-                      }
-                    }
-                  } else {
-                    // 이미지 삭제 및 기본 아이콘으로 설정
-                    final updatedPet = pet.copyWith(
-                      avatarUrl: null,
-                      defaultIcon: 'dog1', // 기본 아이콘 설정
-                      updatedAt: DateTime.now(),
-                    );
-
-                    try {
-                      await ref.read(petsProvider.notifier).updatePet(updatedPet);
-
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('프로필 이미지가 기본 아이콘으로 변경되었습니다.'),
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('이미지 삭제에 실패했습니다.'),
-                            backgroundColor: Theme.of(context).colorScheme.error,
-                          ),
-                        );
-                      }
-                    }
-                  }
-                },
-                onDefaultIconSelected: (iconName) async {
-                  // 기본 아이콘 선택 시 펫 업데이트
-                  final updatedPet = pet.copyWith(
-                    defaultIcon: iconName,
-                    avatarUrl: null, // 기본 아이콘 선택 시 이미지 제거
-                    updatedAt: DateTime.now(),
-                  );
-                  
-                  try {
-                    await ref.read(petsProvider.notifier).updatePet(updatedPet);
-                    
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('기본 아이콘이 설정되었습니다'),
-                          backgroundColor: Theme.of(context).colorScheme.primary,
+                    },
+                    size: 130,
+                    showEditIcon: true,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // 종족과 품종
+                    Column(
+                      children: [
+                        Transform.scale(
+                          scale: 0.85,
+                          child: PetSpeciesChip(species: pet.species),
                         ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('기본 아이콘 설정에 실패했습니다'),
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                        ),
-                      );
-                    }
-                  }
-                },
-                size: 120,
-                showEditIcon: true,
-                  ),
-                ),
-              const SizedBox(height: 16),
-              
-              // Basic Info
-              Text(
-                pet.name,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  PetSpeciesChip(species: pet.species),
-                  if (pet.breed != null) ...[
-                    const SizedBox(width: 8),
-                    Chip(
-                      label: Text(pet.breed!),
-                      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                        if (pet.breed != null) ...[
+                          const SizedBox(height: 4),
+                          Transform.scale(
+                            scale: 0.85,
+                            child: Chip(
+                              label: Text(pet.breed!),
+                              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
-                ],
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Details Grid
-              Row(
-                children: [
-                  if (age != null)
-                    Expanded(
-                      child: _InfoCard(
-                        icon: Icons.cake,
-                        label: 'pets.age'.tr(),
-                        value: age,
-                      ),
-                    ),
-                  if (pet.weightKg != null)
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {}, // 빈 핸들러로 상위 InkWell 이벤트 차단
-                        child: _InfoCard(
-                          icon: Icons.monitor_weight,
-                          label: 'pets.weight'.tr(),
-                          value: '${pet.weightKg}kg',
-                          onTap: () => _showWeightChart(context, pet),
+                ),
+                
+                const SizedBox(width: 16),
+                
+                // 오른쪽: 펫 정보들
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 이름
+                      Text(
+                        pet.name,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  if (pet.sex != null)
-                    Expanded(
-                      child: _InfoCard(
-                        icon: pet.sex!.toLowerCase() == 'male' ? Icons.male : Icons.female,
-                        label: 'pets.sex'.tr(),
-                        value: pet.sex!,
+                      
+                      const SizedBox(height: 12),
+                      
+                      // 상세 정보들
+                      Column(
+                        children: [
+                          if (age != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _InfoCard(
+                                icon: Icons.cake,
+                                label: 'pets.age'.tr(),
+                                value: age,
+                              ),
+                            ),
+                          if (pet.weightKg != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Container(
+                                width: double.infinity,
+                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: InkWell(
+                                  onTap: () => _editPet(context, pet),
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.monitor_weight,
+                                        size: 18,
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              '${pet.weightKg}kg',
+                                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            GestureDetector(
+                                              onTap: () => _showWeightChart(context, pet),
+                                              child: Icon(
+                                                Icons.bar_chart,
+                                                size: 18,
+                                                color: Theme.of(context).colorScheme.primary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if (pet.sex != null)
+                            _InfoCard(
+                              icon: pet.sex!.toLowerCase() == 'male' ? Icons.male : Icons.female,
+                              label: 'pets.sex'.tr(),
+                              value: pet.sex!,
+                            ),
+                        ],
                       ),
-                    ),
-                ],
-              ),
-              
-              if (pet.note != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    pet.note!,
-                    style: Theme.of(context).textTheme.bodyLarge,
+                      
+                      // 메모 섹션
+                      if (pet.note != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            pet.note!,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
-            ],
+            ),
           ),
         ),
-        ),
-      ),
     );
   }
 
   Widget _buildPetSupplies(BuildContext context, Pet pet) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      margin: const EdgeInsets.fromLTRB(0, 0, 0, 16),
       child: AppCard(
+        margin: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -520,14 +578,13 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     final years = difference.inDays ~/ 365;
     final months = (difference.inDays % 365) ~/ 30;
     
-    if (years > 0) {
-      return '$years ${years == 1 ? 'year' : 'years'}';
-    } else if (months > 0) {
-      return '$months ${months == 1 ? 'month' : 'months'}';
-    } else {
-      final days = difference.inDays;
-      return '$days ${days == 1 ? 'day' : 'days'}';
-    }
+    // 생년월일 형식: yyyy.mm.dd
+    final birthDateStr = '${birthDate.year}.${birthDate.month.toString().padLeft(2, '0')}.${birthDate.day.toString().padLeft(2, '0')}';
+    
+    // 나이 형식: yy년 mm개월
+    final ageStr = '${years}년 ${months}개월';
+    
+    return '$birthDateStr ($ageStr)';
   }
 
   void _editSupplies(BuildContext context, Pet pet) {
@@ -724,34 +781,31 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      padding: const EdgeInsets.all(12),
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Column(
+        borderRadius: BorderRadius.circular(6),
+        child: Row(
           children: [
             Icon(
               icon,
-              size: 24,
+              size: 18,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
             ),
           ],
@@ -1334,3 +1388,4 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
     }
   }
 }
+
