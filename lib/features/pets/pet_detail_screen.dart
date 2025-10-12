@@ -128,23 +128,18 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
 
     return Container(
       margin: const EdgeInsets.all(16),
-      child: AppCard(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              // 편집 아이콘을 카드 안쪽 오른쪽 상단에 배치
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  icon: const Icon(Icons.edit, size: 24),
-                  onPressed: () => _editPet(context, pet),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ),
-              // Profile Image Picker
-              ProfileImagePicker(
+      child: InkWell(
+        onTap: () => _editPet(context, pet),
+        borderRadius: BorderRadius.circular(12),
+        child: AppCard(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // Profile Image Picker (클릭 이벤트 차단)
+                GestureDetector(
+                  onTap: () {}, // 빈 핸들러로 상위 InkWell 이벤트 차단
+                  child: ProfileImagePicker(
                 imagePath: pet.avatarUrl,
                 selectedDefaultIcon: pet.defaultIcon,
                 species: pet.species, // 동물 종류 전달
@@ -241,7 +236,8 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                 },
                 size: 120,
                 showEditIcon: true,
-              ),
+                  ),
+                ),
               const SizedBox(height: 16),
               
               // Basic Info
@@ -282,11 +278,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                     ),
                   if (pet.weightKg != null)
                     Expanded(
-                      child: _InfoCard(
-                        icon: Icons.monitor_weight,
-                        label: 'pets.weight'.tr(),
-                        value: '${pet.weightKg}kg',
-                        onTap: () => _showWeightChart(context, pet),
+                      child: GestureDetector(
+                        onTap: () {}, // 빈 핸들러로 상위 InkWell 이벤트 차단
+                        child: _InfoCard(
+                          icon: Icons.monitor_weight,
+                          label: 'pets.weight'.tr(),
+                          value: '${pet.weightKg}kg',
+                          onTap: () => _showWeightChart(context, pet),
+                        ),
                       ),
                     ),
                   if (pet.sex != null)
@@ -317,6 +316,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               ],
             ],
           ),
+        ),
         ),
       ),
     );
@@ -454,15 +454,6 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   icon: Icons.cleaning_services,
                   label: '모래',
                   value: _currentSupplies?.litter,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // 편집 아이콘을 오른쪽 하단에 배치
-              Align(
-                alignment: Alignment.centerRight,
-                child: FloatingActionButton.small(
-                  onPressed: () => _editSupplies(context, pet),
-                  child: const Icon(Icons.edit),
                 ),
               ),
             ],
