@@ -18,6 +18,7 @@ class Pet with _$Pet {
     double? weightKg,
     String? avatarUrl,
     String? defaultIcon,
+    String? profileBgColor, // 프로필 배경색 (Color_1 ~ Color_7)
     String? note,
     String? suppliesFood,
     String? suppliesSupplement,

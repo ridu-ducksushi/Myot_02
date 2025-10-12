@@ -27,6 +27,7 @@ class PetsRepository {
       'weight_kg': pet.weightKg,
       'avatar_url': pet.avatarUrl,
       'default_icon': pet.defaultIcon,
+      'profile_bg_color': pet.profileBgColor,
       'note': pet.note,
       'supplies_food': pet.suppliesFood,
       'supplies_supplement': pet.suppliesSupplement,
@@ -38,7 +39,7 @@ class PetsRepository {
     
     // avatarUrl과 defaultIcon은 명시적으로 null을 허용 (이미지 삭제/변경 시 필요)
     // 나머지 필드만 null 제거
-    row.removeWhere((k, v) => v == null && k != 'avatar_url' && k != 'default_icon');
+    row.removeWhere((k, v) => v == null && k != 'avatar_url' && k != 'default_icon' && k != 'profile_bg_color');
     
     return row;
   }
@@ -57,6 +58,7 @@ class PetsRepository {
       weightKg: (row['weight_kg'] as num?)?.toDouble(),
       avatarUrl: row['avatar_url'] as String?,
       defaultIcon: row['default_icon'] as String?,
+      profileBgColor: row['profile_bg_color'] as String?,
       note: row['note'] as String?,
       suppliesFood: row['supplies_food'] as String?,
       suppliesSupplement: row['supplies_supplement'] as String?,

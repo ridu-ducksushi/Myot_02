@@ -147,6 +147,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                       child: ProfileImagePicker(
                     imagePath: pet.avatarUrl,
                     selectedDefaultIcon: pet.defaultIcon,
+                    selectedBgColor: pet.profileBgColor,
                     species: pet.species, // 동물 종류 전달
                     onImageSelected: (image) async {
                       if (image != null) {
@@ -209,10 +210,11 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                         }
                       }
                     },
-                    onDefaultIconSelected: (iconName) async {
-                      // 기본 아이콘 선택 시 펫 업데이트
+                    onDefaultIconSelected: (iconName, bgColor) async {
+                      // 기본 아이콘과 배경색을 함께 업데이트
                       final updatedPet = pet.copyWith(
                         defaultIcon: iconName,
+                        profileBgColor: bgColor,
                         avatarUrl: null, // 기본 아이콘 선택 시 이미지 제거
                         updatedAt: DateTime.now(),
                       );
@@ -223,7 +225,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('기본 아이콘이 설정되었습니다'),
+                              content: Text('프로필이 설정되었습니다'),
                               backgroundColor: Theme.of(context).colorScheme.primary,
                             ),
                           );
@@ -232,7 +234,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('기본 아이콘 설정에 실패했습니다'),
+                              content: Text('프로필 설정에 실패했습니다'),
                               backgroundColor: Theme.of(context).colorScheme.error,
                             ),
                           );
@@ -351,7 +353,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                             _InfoCard(
                               icon: pet.sex!.toLowerCase() == 'male' || pet.sex == '남아' ? Icons.male : Icons.female,
                               label: 'pets.sex'.tr(),
-                              value: pet.sex == 'Male' ? '남아' : (pet.sex == 'Female' ? '여아' : pet.sex!),
+                              value: _getSexWithNeuteredText(pet),
                             ),
                         ],
                       ),
@@ -606,6 +608,21 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     final ageStr = '${years}년 ${months}개월';
     
     return '$birthDateStr ($ageStr)';
+  }
+
+  String _getSexWithNeuteredText(Pet pet) {
+    // 성별 텍스트
+    String sexText = pet.sex == 'Male' ? '남아' : (pet.sex == 'Female' ? '여아' : pet.sex ?? '');
+    
+    // 중성화 여부 텍스트
+    String neuteredText = '';
+    if (pet.neutered == true) {
+      neuteredText = ' / 중성화 완료';
+    } else if (pet.neutered == false) {
+      neuteredText = ' / 중성화 미완료';
+    }
+    
+    return sexText + neuteredText;
   }
 
   void _editSupplies(BuildContext context, Pet pet) {

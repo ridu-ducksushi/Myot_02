@@ -591,6 +591,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   DateTime? _birthDate;
   File? _selectedImage;
   String? _selectedDefaultIcon;
+  String? _selectedBgColor;
   
   final List<String> _species = [
     'Dog', 'Cat', 'Other'
@@ -655,9 +656,10 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                           _selectedDefaultIcon = null; // 이미지 선택 시 기본 아이콘 제거
                         });
                       },
-                      onDefaultIconSelected: (iconName) {
+                      onDefaultIconSelected: (iconName, bgColor) {
                         setState(() {
                           _selectedDefaultIcon = iconName;
+                          _selectedBgColor = bgColor;
                           _selectedImage = null; // 기본 아이콘 선택 시 이미지 제거
                         });
                       },
@@ -850,6 +852,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
       weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),
       avatarUrl: avatarUrl,
       defaultIcon: _selectedDefaultIcon,
+      profileBgColor: _selectedBgColor,
       note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -885,6 +888,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   DateTime? _birthDate;
   File? _selectedImage;
   String? _selectedDefaultIcon;
+  String? _selectedBgColor;
   
   final List<String> _species = [
     'Dog', 'Cat', 'Other'
@@ -911,6 +915,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     _isNeutered = pet.neutered;
     _birthDate = pet.birthDate;
     _selectedDefaultIcon = pet.defaultIcon;
+    _selectedBgColor = pet.profileBgColor;
     
     // Load existing image if available
     if (pet.avatarUrl != null && pet.avatarUrl!.isNotEmpty) {
@@ -972,6 +977,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                   child: ProfileImagePicker(
                     imagePath: _selectedImage?.path,
                     selectedDefaultIcon: _selectedDefaultIcon,
+                    selectedBgColor: _selectedBgColor,
                     species: _selectedSpecies, // 동물 종류 전달
                     onImageSelected: (image) {
                       setState(() {
@@ -979,9 +985,10 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                         _selectedDefaultIcon = null; // 이미지 선택 시 기본 아이콘 제거
                       });
                     },
-                    onDefaultIconSelected: (iconName) {
+                    onDefaultIconSelected: (iconName, bgColor) {
                       setState(() {
                         _selectedDefaultIcon = iconName;
+                        _selectedBgColor = bgColor;
                         _selectedImage = null; // 기본 아이콘 선택 시 이미지 제거
                       });
                     },
@@ -1172,6 +1179,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
       weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),
       avatarUrl: avatarUrl,
       defaultIcon: _selectedDefaultIcon,
+      profileBgColor: _selectedBgColor,
       note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       updatedAt: DateTime.now(),
     );

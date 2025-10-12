@@ -37,6 +37,9 @@ ALTER TABLE public.pets ADD COLUMN IF NOT EXISTS supplies_snack TEXT;
 ALTER TABLE public.pets ADD COLUMN IF NOT EXISTS supplies_litter TEXT;
 ALTER TABLE public.pets ADD COLUMN IF NOT EXISTS supplies_last_updated TIMESTAMPTZ;
 
+-- 기존 pets 테이블에 프로필 배경색 컬럼 추가
+ALTER TABLE public.pets ADD COLUMN IF NOT EXISTS profile_bg_color TEXT;
+
 create table if not exists public.records (
   id uuid primary key default gen_random_uuid(),
   pet_id uuid not null references public.pets(id) on delete cascade,

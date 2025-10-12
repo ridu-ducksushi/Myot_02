@@ -111,6 +111,7 @@ flutter:
     - assets/images/profile_icons/cats/
     - assets/images/profile_icons/dogs/
     - assets/images/profile_icons/others/
+    - assets/images/profile_bg/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

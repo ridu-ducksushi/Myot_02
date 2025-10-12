@@ -33,6 +33,8 @@ mixin _$Pet {
   double? get weightKg => throw _privateConstructorUsedError;
   String? get avatarUrl => throw _privateConstructorUsedError;
   String? get defaultIcon => throw _privateConstructorUsedError;
+  String? get profileBgColor =>
+      throw _privateConstructorUsedError; // 프로필 배경색 (Color_1 ~ Color_7)
   String? get note => throw _privateConstructorUsedError;
   String? get suppliesFood => throw _privateConstructorUsedError;
   String? get suppliesSupplement => throw _privateConstructorUsedError;
@@ -69,6 +71,7 @@ abstract class $PetCopyWith<$Res> {
     double? weightKg,
     String? avatarUrl,
     String? defaultIcon,
+    String? profileBgColor,
     String? note,
     String? suppliesFood,
     String? suppliesSupplement,
@@ -106,6 +109,7 @@ class _$PetCopyWithImpl<$Res, $Val extends Pet> implements $PetCopyWith<$Res> {
     Object? weightKg = freezed,
     Object? avatarUrl = freezed,
     Object? defaultIcon = freezed,
+    Object? profileBgColor = freezed,
     Object? note = freezed,
     Object? suppliesFood = freezed,
     Object? suppliesSupplement = freezed,
@@ -165,6 +169,10 @@ class _$PetCopyWithImpl<$Res, $Val extends Pet> implements $PetCopyWith<$Res> {
                 ? _value.defaultIcon
                 : defaultIcon // ignore: cast_nullable_to_non_nullable
                       as String?,
+            profileBgColor: freezed == profileBgColor
+                ? _value.profileBgColor
+                : profileBgColor // ignore: cast_nullable_to_non_nullable
+                      as String?,
             note: freezed == note
                 ? _value.note
                 : note // ignore: cast_nullable_to_non_nullable
@@ -222,6 +230,7 @@ abstract class _$$PetImplCopyWith<$Res> implements $PetCopyWith<$Res> {
     double? weightKg,
     String? avatarUrl,
     String? defaultIcon,
+    String? profileBgColor,
     String? note,
     String? suppliesFood,
     String? suppliesSupplement,
@@ -256,6 +265,7 @@ class __$$PetImplCopyWithImpl<$Res> extends _$PetCopyWithImpl<$Res, _$PetImpl>
     Object? weightKg = freezed,
     Object? avatarUrl = freezed,
     Object? defaultIcon = freezed,
+    Object? profileBgColor = freezed,
     Object? note = freezed,
     Object? suppliesFood = freezed,
     Object? suppliesSupplement = freezed,
@@ -315,6 +325,10 @@ class __$$PetImplCopyWithImpl<$Res> extends _$PetCopyWithImpl<$Res, _$PetImpl>
             ? _value.defaultIcon
             : defaultIcon // ignore: cast_nullable_to_non_nullable
                   as String?,
+        profileBgColor: freezed == profileBgColor
+            ? _value.profileBgColor
+            : profileBgColor // ignore: cast_nullable_to_non_nullable
+                  as String?,
         note: freezed == note
             ? _value.note
             : note // ignore: cast_nullable_to_non_nullable
@@ -368,6 +382,7 @@ class _$PetImpl implements _Pet {
     this.weightKg,
     this.avatarUrl,
     this.defaultIcon,
+    this.profileBgColor,
     this.note,
     this.suppliesFood,
     this.suppliesSupplement,
@@ -406,6 +421,9 @@ class _$PetImpl implements _Pet {
   @override
   final String? defaultIcon;
   @override
+  final String? profileBgColor;
+  // 프로필 배경색 (Color_1 ~ Color_7)
+  @override
   final String? note;
   @override
   final String? suppliesFood;
@@ -424,7 +442,7 @@ class _$PetImpl implements _Pet {
 
   @override
   String toString() {
-    return 'Pet(id: $id, ownerId: $ownerId, name: $name, species: $species, breed: $breed, sex: $sex, neutered: $neutered, birthDate: $birthDate, bloodType: $bloodType, weightKg: $weightKg, avatarUrl: $avatarUrl, defaultIcon: $defaultIcon, note: $note, suppliesFood: $suppliesFood, suppliesSupplement: $suppliesSupplement, suppliesSnack: $suppliesSnack, suppliesLitter: $suppliesLitter, suppliesLastUpdated: $suppliesLastUpdated, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Pet(id: $id, ownerId: $ownerId, name: $name, species: $species, breed: $breed, sex: $sex, neutered: $neutered, birthDate: $birthDate, bloodType: $bloodType, weightKg: $weightKg, avatarUrl: $avatarUrl, defaultIcon: $defaultIcon, profileBgColor: $profileBgColor, note: $note, suppliesFood: $suppliesFood, suppliesSupplement: $suppliesSupplement, suppliesSnack: $suppliesSnack, suppliesLitter: $suppliesLitter, suppliesLastUpdated: $suppliesLastUpdated, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -450,6 +468,8 @@ class _$PetImpl implements _Pet {
                 other.avatarUrl == avatarUrl) &&
             (identical(other.defaultIcon, defaultIcon) ||
                 other.defaultIcon == defaultIcon) &&
+            (identical(other.profileBgColor, profileBgColor) ||
+                other.profileBgColor == profileBgColor) &&
             (identical(other.note, note) || other.note == note) &&
             (identical(other.suppliesFood, suppliesFood) ||
                 other.suppliesFood == suppliesFood) &&
@@ -483,6 +503,7 @@ class _$PetImpl implements _Pet {
     weightKg,
     avatarUrl,
     defaultIcon,
+    profileBgColor,
     note,
     suppliesFood,
     suppliesSupplement,
@@ -521,6 +542,7 @@ abstract class _Pet implements Pet {
     final double? weightKg,
     final String? avatarUrl,
     final String? defaultIcon,
+    final String? profileBgColor,
     final String? note,
     final String? suppliesFood,
     final String? suppliesSupplement,
@@ -557,6 +579,8 @@ abstract class _Pet implements Pet {
   String? get avatarUrl;
   @override
   String? get defaultIcon;
+  @override
+  String? get profileBgColor; // 프로필 배경색 (Color_1 ~ Color_7)
   @override
   String? get note;
   @override

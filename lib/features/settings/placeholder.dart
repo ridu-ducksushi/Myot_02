@@ -267,7 +267,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                 border: Border.all(color: speciesColor.withOpacity(0.3), width: 2),
               ),
               child: pet.defaultIcon != null
-                  ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species)
+                  ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species, bgColor: pet.profileBgColor)
                   : pet.avatarUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(30),
@@ -275,10 +275,10 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                             File(pet.avatarUrl!),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
-                                _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species),
+                                _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species, bgColor: pet.profileBgColor),
                           ),
                         )
-                      : _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species),
+                      : _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species, bgColor: pet.profileBgColor),
             ),
             const SizedBox(height: 12),
             
@@ -360,28 +360,41 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     );
   }
 
-  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color fallbackColor, {String? species}) {
+  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color fallbackColor, {String? species, String? bgColor}) {
     if (defaultIcon != null) {
       // Supabase Storage에서 이미지 URL 가져오기
       final imageUrl = ImageService.getDefaultIconUrl(species ?? 'cat', defaultIcon);
       if (imageUrl.isNotEmpty) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(30),
-          child: Image.asset(
-            imageUrl,
-            width: 60,
-            height: 60,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              // Assets 이미지 로드 실패 시 기존 아이콘으로 폴백
-              final iconData = _getDefaultIconData(defaultIcon);
-              final color = _getDefaultIconColor(defaultIcon);
-              return Icon(
-                iconData,
-                size: 30,
-                color: color,
-              );
-            },
+          child: Stack(
+            children: [
+              // 배경색
+              if (bgColor != null)
+                Image.asset(
+                  'assets/images/profile_bg/$bgColor.png',
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                ),
+              // 아이콘
+              Image.asset(
+                imageUrl,
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Assets 이미지 로드 실패 시 기존 아이콘으로 폴백
+                  final iconData = _getDefaultIconData(defaultIcon);
+                  final color = _getDefaultIconColor(defaultIcon);
+                  return Icon(
+                    iconData,
+                    size: 30,
+                    color: color,
+                  );
+                },
+              ),
+            ],
           ),
         );
       }
