@@ -60,7 +60,7 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
           onPressed: () => context.go('/pets/${widget.petId}'),
         ),
       ),
-      body: _LabTable(species: pet.species, petId: pet.id, petName: pet.name, key: ValueKey(pet.id)),
+      body: _LabTable(species: pet.species, petId: pet.id, petName: pet.name, petWeight: pet.weightKg, key: ValueKey(pet.id)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddItemDialog(pet.species, pet.id),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -176,10 +176,11 @@ class _ReminderSection extends StatelessWidget {
 }
 
 class _LabTable extends StatefulWidget {
-  const _LabTable({required this.species, required this.petId, required this.petName, Key? key}) : super(key: key);
+  const _LabTable({required this.species, required this.petId, required this.petName, this.petWeight, Key? key}) : super(key: key);
   final String species; // 'Dog' or 'Cat'
   final String petId;
   final String petName;
+  final double? petWeight;
 
   @override
   State<_LabTable> createState() => _LabTableState();
@@ -1147,11 +1148,14 @@ class _LabTableState extends State<_LabTable> {
         
         // Load basic info data
         _weight = (items['체중'] is Map && items['체중']['value'] is String) 
-            ? items['체중']['value'] as String : '';
+            ? items['체중']['value'] as String 
+            : (widget.petWeight != null ? widget.petWeight.toString() : '');
         _hospitalName = (items['병원명'] is Map && items['병원명']['value'] is String) 
             ? items['병원명']['value'] as String : '';
         _cost = (items['비용'] is Map && items['비용']['value'] is String) 
             ? items['비용']['value'] as String : '';
+        
+        print('🏋️ Weight loaded: $_weight (from labs: ${items['체중']}, from pet: ${widget.petWeight})');
         
         // Clear controllers for items not in current data
         for (final k in _orderedKeys()) {
@@ -1164,6 +1168,13 @@ class _LabTableState extends State<_LabTable> {
         for (final k in _orderedKeys()) {
           _valueCtrls[k]?.text = '';
         }
+        
+        // Use pet's weight as default if no lab data exists
+        _weight = widget.petWeight != null ? widget.petWeight.toString() : '';
+        _hospitalName = '';
+        _cost = '';
+        
+        print('🏋️ No lab data, using pet weight: $_weight (from pet: ${widget.petWeight})');
       }
 
       // Store previous values for display
@@ -1506,6 +1517,21 @@ class _LabTableState extends State<_LabTable> {
             'panel': 'BloodTest',
             'items': currentItems,
           });
+
+      // Update pet's weight if weight value is not empty
+      if (_weight.isNotEmpty) {
+        final weightValue = double.tryParse(_weight);
+        if (weightValue != null) {
+          // Update pet's weightKg in the database directly
+          await Supabase.instance.client
+              .from('pets')
+              .update({
+                'weight_kg': weightValue,
+                'updated_at': DateTime.now().toIso8601String(),
+              })
+              .eq('id', widget.petId);
+        }
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

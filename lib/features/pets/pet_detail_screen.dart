@@ -1031,6 +1031,52 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     try {
       await ref.read(petsProvider.notifier).updatePet(updatedPet);
       
+      // Update weight in health tab's basic info if weight was changed
+      if (updatedPet.weightKg != null && updatedPet.weightKg != widget.pet.weightKg) {
+        try {
+          final uid = Supabase.instance.client.auth.currentUser?.id;
+          if (uid != null) {
+            final today = DateTime.now();
+            final dateKey = '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+            
+            // Get current lab data for today
+            final currentRes = await Supabase.instance.client
+                .from('labs')
+                .select('items')
+                .eq('user_id', uid)
+                .eq('pet_id', widget.pet.id)
+                .eq('date', dateKey)
+                .eq('panel', 'BloodTest')
+                .maybeSingle();
+
+            Map<String, dynamic> currentItems = {};
+            if (currentRes != null) {
+              currentItems = Map<String, dynamic>.from(currentRes['items'] ?? {});
+            }
+
+            // Update weight in lab data
+            currentItems['체중'] = {
+              'value': updatedPet.weightKg.toString(),
+              'unit': 'kg',
+              'reference': '',
+            };
+
+            // Save to Supabase
+            await Supabase.instance.client
+                .from('labs')
+                .upsert({
+                  'user_id': uid,
+                  'pet_id': widget.pet.id,
+                  'date': dateKey,
+                  'panel': 'BloodTest',
+                  'items': currentItems,
+                });
+          }
+        } catch (e) {
+          print('⚠️ Failed to update weight in health tab: $e');
+        }
+      }
+      
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
