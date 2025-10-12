@@ -596,7 +596,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
     'Dog', 'Cat', 'Other'
   ];
   
-  final List<String> _sexOptions = ['Male', 'Female'];
+  final List<String> _sexOptions = ['남아', '여아'];
 
   @override
   void dispose() {
@@ -833,13 +833,18 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
     // _selectedImage는 이미 ProfileImagePicker에서 저장된 파일이므로 경로만 사용
     final String? avatarUrl = _selectedImage?.path;
     
+    // 남아/여아를 Male/Female로 변환 (DB 저장용)
+    String? sexForDb = _selectedSex;
+    if (_selectedSex == '남아') sexForDb = 'Male';
+    if (_selectedSex == '여아') sexForDb = 'Female';
+    
     final pet = Pet(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       ownerId: Supabase.instance.client.auth.currentUser?.id ?? 'guest',
       name: _nameController.text.trim(),
       species: _selectedSpecies,
       breed: _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
-      sex: _selectedSex,
+      sex: sexForDb,
       neutered: _isNeutered,
       birthDate: _birthDate,
       weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),
@@ -885,7 +890,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     'Dog', 'Cat', 'Other'
   ];
   
-  final List<String> _sexOptions = ['Male', 'Female'];
+  final List<String> _sexOptions = ['남아', '여아'];
 
   @override
   void initState() {
@@ -901,7 +906,8 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     _noteController.text = pet.note ?? '';
     
     _selectedSpecies = pet.species;
-    _selectedSex = pet.sex;
+    // Male/Female을 남아/여아로 변환
+    _selectedSex = pet.sex == 'Male' ? '남아' : (pet.sex == 'Female' ? '여아' : pet.sex);
     _isNeutered = pet.neutered;
     _birthDate = pet.birthDate;
     _selectedDefaultIcon = pet.defaultIcon;
@@ -1151,11 +1157,16 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     // _selectedImage는 이미 ProfileImagePicker에서 저장된 파일이므로 경로만 사용
     final String? avatarUrl = _selectedImage?.path ?? widget.pet.avatarUrl;
     
+    // 남아/여아를 Male/Female로 변환 (DB 저장용)
+    String? sexForDb = _selectedSex;
+    if (_selectedSex == '남아') sexForDb = 'Male';
+    if (_selectedSex == '여아') sexForDb = 'Female';
+    
     final updatedPet = widget.pet.copyWith(
       name: _nameController.text.trim(),
       species: _selectedSpecies,
       breed: _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
-      sex: _selectedSex,
+      sex: sexForDb,
       neutered: _isNeutered,
       birthDate: _birthDate,
       weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),

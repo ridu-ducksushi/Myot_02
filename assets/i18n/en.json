@@ -10,6 +10,7 @@
   "add": "Add",
   "pets": {
     "title": "Pets",
+    "profile": "Profile",
     "empty_title": "No pets registered",
     "empty_message": "Add your first pet to get started!",
     "add_first": "Add Pet",

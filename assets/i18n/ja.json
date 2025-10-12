@@ -10,6 +10,7 @@
   "add": "追加",
   "pets": {
     "title": "ペット",
+    "profile": "プロフィール",
     "empty_title": "登録されたペットがありません",
     "empty_message": "最初のペットを登録しましょう！",
     "add_first": "ペットを追加",

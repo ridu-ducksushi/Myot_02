@@ -54,7 +54,9 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${pet.name} - ${'tabs.health'.tr()}'),
+        title: Text('tabs.health'.tr()),
+        backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.95),
+        elevation: 2,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/pets/${widget.petId}'),

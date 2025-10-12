@@ -104,7 +104,9 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(pet.name),
+        title: Text('pets.profile'.tr()),
+        backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.95),
+        elevation: 2,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -133,7 +135,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
         margin: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(20),
-            child: Row(
+          child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // 왼쪽: 프로필 이미지와 편집 아이콘 + 종족/품종
@@ -319,6 +321,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
                                             Text(
                                               '${pet.weightKg}kg',
@@ -346,9 +349,9 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                             ),
                           if (pet.sex != null)
                             _InfoCard(
-                              icon: pet.sex!.toLowerCase() == 'male' ? Icons.male : Icons.female,
+                              icon: pet.sex!.toLowerCase() == 'male' || pet.sex == '남아' ? Icons.male : Icons.female,
                               label: 'pets.sex'.tr(),
-                              value: pet.sex!,
+                              value: pet.sex == 'Male' ? '남아' : (pet.sex == 'Female' ? '여아' : pet.sex!),
                             ),
                         ],
                       ),
@@ -365,6 +368,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                           ),
                           child: Text(
                             pet.note!,
+                            textAlign: TextAlign.right,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
@@ -373,76 +377,91 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   ),
                 ),
               ],
-            ),
-          ),
         ),
+        ),
+      ),
     );
   }
 
   Widget _buildPetSupplies(BuildContext context, Pet pet) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(0, 0, 0, 16),
+      margin: const EdgeInsets.fromLTRB(0, 40, 0, 16),
       child: AppCard(
         margin: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // 좌측 화살표 - 이전 기록으로 이동
-                  InkWell(
-                    onTap: () => _moveToPreviousSuppliesRecord(pet),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.chevron_left,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
+              // 날짜 헤더 영역 (배경색 추가)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
                   ),
-                  
-                  // 중앙 영역 - 날짜 + 달력 아이콘
-                  InkWell(
-                    onTap: () => _showSuppliesCalendarDialog(pet),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          DateFormat('yyyy년 MM월 dd일').format(_currentSuppliesDate),
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.calendar_today,
-                          size: 20,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // 좌측 화살표 - 이전 기록으로 이동
+                    InkWell(
+                      onTap: () => _moveToPreviousSuppliesRecord(pet),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.chevron_left,
                           color: Theme.of(context).colorScheme.primary,
                         ),
-                      ],
-                    ),
-                  ),
-                  
-                  // 우측 화살표 - 다음 기록 또는 오늘 날짜로 이동
-                  InkWell(
-                    onTap: () => _moveToNextSuppliesRecord(pet),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.chevron_right,
-                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                  ),
-                ],
+                    
+                    // 중앙 영역 - 날짜 + 달력 아이콘
+                    InkWell(
+                      onTap: () => _showSuppliesCalendarDialog(pet),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            DateFormat('yyyy년 MM월 dd일').format(_currentSuppliesDate),
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.calendar_today,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // 우측 화살표 - 다음 기록 또는 오늘 날짜로 이동
+                    InkWell(
+                      onTap: () => _moveToNextSuppliesRecord(pet),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.chevron_right,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
+              
+              // 물품 목록 영역
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               // 날짜별 기록 표시 안내
               if (_currentSupplies == null)
                 Container(
@@ -514,8 +533,10 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   value: _currentSupplies?.litter,
                 ),
               ),
+                  ],
+                ),
+              ),
             ],
-          ),
         ),
       ),
     );
@@ -802,6 +823,7 @@ class _InfoCard extends StatelessWidget {
             Expanded(
               child: Text(
                 value,
+                textAlign: TextAlign.right,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -840,7 +862,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     'Dog', 'Cat', 'Other'
   ];
   
-  final List<String> _sexOptions = ['Male', 'Female'];
+  final List<String> _sexOptions = ['남아', '여아'];
 
   @override
   void initState() {
@@ -856,7 +878,8 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     _noteController.text = pet.note ?? '';
     
     _selectedSpecies = pet.species;
-    _selectedSex = pet.sex;
+    // Male/Female을 남아/여아로 변환
+    _selectedSex = pet.sex == 'Male' ? '남아' : (pet.sex == 'Female' ? '여아' : pet.sex);
     _isNeutered = pet.neutered;
     _birthDate = pet.birthDate;
   }
@@ -1070,11 +1093,16 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   Future<void> _updatePet() async {
     if (!_formKey.currentState!.validate()) return;
     
+    // 남아/여아를 Male/Female로 변환 (DB 저장용)
+    String? sexForDb = _selectedSex;
+    if (_selectedSex == '남아') sexForDb = 'Male';
+    if (_selectedSex == '여아') sexForDb = 'Female';
+    
     final updatedPet = widget.pet.copyWith(
       name: _nameController.text.trim(),
       species: _selectedSpecies,
       breed: _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
-      sex: _selectedSex,
+      sex: sexForDb,
       neutered: _isNeutered,
       birthDate: _birthDate,
       weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),

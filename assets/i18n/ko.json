@@ -10,6 +10,7 @@
   "add": "추가",
   "pets": {
     "title": "펫",
+    "profile": "프로필",
     "empty_title": "등록된 펫이 없습니다",
     "empty_message": "첫 번째 펫을 등록해보세요!",
     "add_first": "펫 추가하기",

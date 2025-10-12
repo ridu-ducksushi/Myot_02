@@ -646,10 +646,10 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   DateTime? _birthDate;
   
   final List<String> _species = [
-    'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Reptile', 'Other'
+    'Dog', 'Cat', 'Other'
   ];
   
-  final List<String> _sexOptions = ['Male', 'Female'];
+  final List<String> _sexOptions = ['남아', '여아'];
 
   @override
   void dispose() {
@@ -860,13 +860,18 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   Future<void> _savePet() async {
     if (!_formKey.currentState!.validate()) return;
     
+    // 남아/여아를 Male/Female로 변환 (DB 저장용)
+    String? sexForDb = _selectedSex;
+    if (_selectedSex == '남아') sexForDb = 'Male';
+    if (_selectedSex == '여아') sexForDb = 'Female';
+    
     final pet = Pet(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       ownerId: '', // Will be set by repository
       name: _nameController.text.trim(),
       species: _selectedSpecies,
       breed: _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
-      sex: _selectedSex,
+      sex: sexForDb,
       neutered: _isNeutered,
       birthDate: _birthDate,
       weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),
