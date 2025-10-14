@@ -132,6 +132,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
       onTap: () => _editPet(context, pet),
       borderRadius: BorderRadius.circular(0),
       child: AppCard(
+        borderRadius: BorderRadius.zero,
         margin: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -241,7 +242,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                         }
                       }
                     },
-                    size: 130,
+                    size: 136.5,
                     showEditIcon: true,
                       ),
                     ),
@@ -270,7 +271,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   ],
                 ),
                 
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 
                 // 오른쪽: 펫 정보들
                 Expanded(
@@ -302,7 +303,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                           if (pet.weightKg != null)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
-                              child: Container(
+                          child: Container(
                                 width: double.infinity,
                                 margin: const EdgeInsets.symmetric(horizontal: 2),
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -387,8 +388,9 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
 
   Widget _buildPetSupplies(BuildContext context, Pet pet) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(0, 40, 0, 16),
+      margin: const EdgeInsets.fromLTRB(0, 0, 0, 16),
       child: AppCard(
+        borderRadius: BorderRadius.zero,
         margin: EdgeInsets.zero,
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,10 +399,11 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                    ),
                   ),
                 ),
                 child: Row(
@@ -607,7 +610,8 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     // 나이 형식: yy년 mm개월
     final ageStr = '${years}년 ${months}개월';
     
-    return '$birthDateStr ($ageStr)';
+    // 줄바꿈으로 생년월일과 나이를 분리 표기
+    return '$birthDateStr\n($ageStr)';
   }
 
   String _getSexWithNeuteredText(Pet pet) {
