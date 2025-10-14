@@ -23,7 +23,8 @@ PetSupplies _$PetSuppliesFromJson(Map<String, dynamic> json) {
 mixin _$PetSupplies {
   String get id => throw _privateConstructorUsedError;
   String get petId => throw _privateConstructorUsedError;
-  String? get food => throw _privateConstructorUsedError;
+  String? get dryFood => throw _privateConstructorUsedError;
+  String? get wetFood => throw _privateConstructorUsedError;
   String? get supplement => throw _privateConstructorUsedError;
   String? get snack => throw _privateConstructorUsedError;
   String? get litter => throw _privateConstructorUsedError;
@@ -51,7 +52,8 @@ abstract class $PetSuppliesCopyWith<$Res> {
   $Res call({
     String id,
     String petId,
-    String? food,
+    String? dryFood,
+    String? wetFood,
     String? supplement,
     String? snack,
     String? litter,
@@ -78,7 +80,8 @@ class _$PetSuppliesCopyWithImpl<$Res, $Val extends PetSupplies>
   $Res call({
     Object? id = null,
     Object? petId = null,
-    Object? food = freezed,
+    Object? dryFood = freezed,
+    Object? wetFood = freezed,
     Object? supplement = freezed,
     Object? snack = freezed,
     Object? litter = freezed,
@@ -96,9 +99,13 @@ class _$PetSuppliesCopyWithImpl<$Res, $Val extends PetSupplies>
                 ? _value.petId
                 : petId // ignore: cast_nullable_to_non_nullable
                       as String,
-            food: freezed == food
-                ? _value.food
-                : food // ignore: cast_nullable_to_non_nullable
+            dryFood: freezed == dryFood
+                ? _value.dryFood
+                : dryFood // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            wetFood: freezed == wetFood
+                ? _value.wetFood
+                : wetFood // ignore: cast_nullable_to_non_nullable
                       as String?,
             supplement: freezed == supplement
                 ? _value.supplement
@@ -142,7 +149,8 @@ abstract class _$$PetSuppliesImplCopyWith<$Res>
   $Res call({
     String id,
     String petId,
-    String? food,
+    String? dryFood,
+    String? wetFood,
     String? supplement,
     String? snack,
     String? litter,
@@ -168,7 +176,8 @@ class __$$PetSuppliesImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? petId = null,
-    Object? food = freezed,
+    Object? dryFood = freezed,
+    Object? wetFood = freezed,
     Object? supplement = freezed,
     Object? snack = freezed,
     Object? litter = freezed,
@@ -186,9 +195,13 @@ class __$$PetSuppliesImplCopyWithImpl<$Res>
             ? _value.petId
             : petId // ignore: cast_nullable_to_non_nullable
                   as String,
-        food: freezed == food
-            ? _value.food
-            : food // ignore: cast_nullable_to_non_nullable
+        dryFood: freezed == dryFood
+            ? _value.dryFood
+            : dryFood // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        wetFood: freezed == wetFood
+            ? _value.wetFood
+            : wetFood // ignore: cast_nullable_to_non_nullable
                   as String?,
         supplement: freezed == supplement
             ? _value.supplement
@@ -225,7 +238,8 @@ class _$PetSuppliesImpl implements _PetSupplies {
   const _$PetSuppliesImpl({
     required this.id,
     required this.petId,
-    this.food,
+    this.dryFood,
+    this.wetFood,
     this.supplement,
     this.snack,
     this.litter,
@@ -242,7 +256,9 @@ class _$PetSuppliesImpl implements _PetSupplies {
   @override
   final String petId;
   @override
-  final String? food;
+  final String? dryFood;
+  @override
+  final String? wetFood;
   @override
   final String? supplement;
   @override
@@ -258,7 +274,7 @@ class _$PetSuppliesImpl implements _PetSupplies {
 
   @override
   String toString() {
-    return 'PetSupplies(id: $id, petId: $petId, food: $food, supplement: $supplement, snack: $snack, litter: $litter, recordedAt: $recordedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PetSupplies(id: $id, petId: $petId, dryFood: $dryFood, wetFood: $wetFood, supplement: $supplement, snack: $snack, litter: $litter, recordedAt: $recordedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -268,7 +284,8 @@ class _$PetSuppliesImpl implements _PetSupplies {
             other is _$PetSuppliesImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.petId, petId) || other.petId == petId) &&
-            (identical(other.food, food) || other.food == food) &&
+            (identical(other.dryFood, dryFood) || other.dryFood == dryFood) &&
+            (identical(other.wetFood, wetFood) || other.wetFood == wetFood) &&
             (identical(other.supplement, supplement) ||
                 other.supplement == supplement) &&
             (identical(other.snack, snack) || other.snack == snack) &&
@@ -287,7 +304,8 @@ class _$PetSuppliesImpl implements _PetSupplies {
     runtimeType,
     id,
     petId,
-    food,
+    dryFood,
+    wetFood,
     supplement,
     snack,
     litter,
@@ -314,7 +332,8 @@ abstract class _PetSupplies implements PetSupplies {
   const factory _PetSupplies({
     required final String id,
     required final String petId,
-    final String? food,
+    final String? dryFood,
+    final String? wetFood,
     final String? supplement,
     final String? snack,
     final String? litter,
@@ -331,7 +350,9 @@ abstract class _PetSupplies implements PetSupplies {
   @override
   String get petId;
   @override
-  String? get food;
+  String? get dryFood;
+  @override
+  String? get wetFood;
   @override
   String? get supplement;
   @override

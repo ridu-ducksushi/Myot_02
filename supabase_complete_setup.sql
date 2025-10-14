@@ -30,8 +30,8 @@ create table if not exists public.pets (
   updated_at timestamptz default now()
 );
 
--- 기존 pets 테이블에 물품 기록 관련 컬럼 추가
-ALTER TABLE public.pets ADD COLUMN IF NOT EXISTS supplies_food TEXT;
+-- 기존 pets 테이블에 물품 기록 관련 컬럼 추가 (이력형 pet_supplies 테이블은 별도 관리)
+ALTER TABLE public.pets ADD COLUMN IF NOT EXISTS supplies_food TEXT; -- 유지(프로필의 요약 표시용)
 ALTER TABLE public.pets ADD COLUMN IF NOT EXISTS supplies_supplement TEXT;
 ALTER TABLE public.pets ADD COLUMN IF NOT EXISTS supplies_snack TEXT;
 ALTER TABLE public.pets ADD COLUMN IF NOT EXISTS supplies_litter TEXT;
@@ -338,8 +338,38 @@ INSERT INTO public.default_icons (name, icon_data, color, category, sort_order) 
 -- =========================================
 -- 6) 물품 기록 관련 설정
 -- =========================================
+-- pet_supplies 이력 테이블 (일자별 5항목: 건사료/습식사료/영양제/간식/모래)
+create table if not exists public.pet_supplies (
+  id uuid primary key default gen_random_uuid(),
+  pet_id uuid not null references public.pets(id) on delete cascade,
+  dry_food text,
+  wet_food text,
+  supplement text,
+  snack text,
+  litter text,
+  recorded_at timestamptz not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.pet_supplies enable row level security;
+
+drop policy if exists "owner can read supplies" on public.pet_supplies;
+create policy "owner can read supplies" on public.pet_supplies for select using (
+  exists (select 1 from public.pets p where p.id = pet_supplies.pet_id and p.owner_id = auth.uid())
+);
+
+drop policy if exists "owner can write supplies" on public.pet_supplies;
+create policy "owner can write supplies" on public.pet_supplies for all using (
+  exists (select 1 from public.pets p where p.id = pet_supplies.pet_id and p.owner_id = auth.uid())
+) with check (
+  exists (select 1 from public.pets p where p.id = pet_supplies.pet_id and p.owner_id = auth.uid())
+);
+
+create index if not exists idx_pet_supplies_pet_id on public.pet_supplies(pet_id);
+create index if not exists idx_pet_supplies_recorded_at on public.pet_supplies(recorded_at);
 -- 물품 관련 컬럼에 대한 코멘트 추가
-COMMENT ON COLUMN public.pets.supplies_food IS '펫의 사료 정보';
+COMMENT ON COLUMN public.pets.supplies_food IS '펫의 건사료 정보(요약)';
 COMMENT ON COLUMN public.pets.supplies_supplement IS '펫의 영양제 정보';
 COMMENT ON COLUMN public.pets.supplies_snack IS '펫의 간식 정보';
 COMMENT ON COLUMN public.pets.supplies_litter IS '펫의 모래 정보';

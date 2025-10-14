@@ -8,7 +8,8 @@ class PetSupplies with _$PetSupplies {
   const factory PetSupplies({
     required String id,
     required String petId,
-    String? food,
+    String? dryFood,
+    String? wetFood,
     String? supplement,
     String? snack,
     String? litter,

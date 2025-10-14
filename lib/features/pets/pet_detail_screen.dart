@@ -392,12 +392,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
       child: AppCard(
         borderRadius: BorderRadius.zero,
         margin: EdgeInsets.zero,
+        elevation: 0,
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 날짜 헤더 영역 (배경색 추가)
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                constraints: const BoxConstraints(minHeight: 30),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceVariant,
                   border: Border(
@@ -501,8 +503,19 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                 child: _buildSupplyItem(
                   context,
                   icon: Icons.restaurant,
-                  label: '사료',
-                  value: _currentSupplies?.food,
+                  label: '건사료',
+                  value: _currentSupplies?.dryFood,
+                ),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () => _editSupplies(context, pet),
+                borderRadius: BorderRadius.circular(8),
+                child: _buildSupplyItem(
+                  context,
+                  icon: Icons.rice_bowl,
+                  label: '습식사료',
+                  value: _currentSupplies?.wetFood,
                 ),
               ),
               const SizedBox(height: 12),
@@ -1221,7 +1234,8 @@ class _EditSuppliesSheet extends ConsumerStatefulWidget {
 
 class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
   final _formKey = GlobalKey<FormState>();
-  final _foodController = TextEditingController();
+  final _dryFoodController = TextEditingController();
+  final _wetFoodController = TextEditingController();
   final _supplementController = TextEditingController();
   final _snackController = TextEditingController();
   final _litterController = TextEditingController();
@@ -1241,13 +1255,15 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
     
     if (existingSupplies != null) {
       // 기존 기록이 있는 경우 데이터 사용
-      _foodController.text = existingSupplies.food ?? '';
+      _dryFoodController.text = existingSupplies.dryFood ?? '';
+      _wetFoodController.text = existingSupplies.wetFood ?? '';
       _supplementController.text = existingSupplies.supplement ?? '';
       _snackController.text = existingSupplies.snack ?? '';
       _litterController.text = existingSupplies.litter ?? '';
     } else {
       // 새로운 기록인 경우 빈 값으로 초기화
-      _foodController.text = '';
+      _dryFoodController.text = '';
+      _wetFoodController.text = '';
       _supplementController.text = '';
       _snackController.text = '';
       _litterController.text = '';
@@ -1256,7 +1272,8 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
 
   @override
   void dispose() {
-    _foodController.dispose();
+    _dryFoodController.dispose();
+    _wetFoodController.dispose();
     _supplementController.dispose();
     _snackController.dispose();
     _litterController.dispose();
@@ -1315,10 +1332,18 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                       controller: scrollController,
                       children: [
                         AppTextField(
-                          controller: _foodController,
-                          labelText: '사료',
+                          controller: _dryFoodController,
+                          labelText: '건사료',
                           prefixIcon: const Icon(Icons.restaurant),
                           hintText: '예: 로얄캐닌 3kg',
+                        ),
+                        const SizedBox(height: 16),
+
+                        AppTextField(
+                          controller: _wetFoodController,
+                          labelText: '습식사료',
+                          prefixIcon: const Icon(Icons.rice_bowl),
+                          hintText: '예: 습식 파우치 85g',
                         ),
                         const SizedBox(height: 16),
                         
@@ -1386,7 +1411,8 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
       final supplies = PetSupplies(
         id: widget.existingSupplies?.id ?? const Uuid().v4(),
         petId: widget.pet.id,
-        food: _foodController.text.trim().isEmpty ? null : _foodController.text.trim(),
+        dryFood: _dryFoodController.text.trim().isEmpty ? null : _dryFoodController.text.trim(),
+        wetFood: _wetFoodController.text.trim().isEmpty ? null : _wetFoodController.text.trim(),
         supplement: _supplementController.text.trim().isEmpty ? null : _supplementController.text.trim(),
         snack: _snackController.text.trim().isEmpty ? null : _snackController.text.trim(),
         litter: _litterController.text.trim().isEmpty ? null : _litterController.text.trim(),
@@ -1395,9 +1421,9 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
         updatedAt: now,
       );
       
-      print('🔄 저장 시작: ${supplies.food}, ${supplies.supplement}, ${supplies.snack}, ${supplies.litter}');
+      print('🔄 저장 시작: ${supplies.dryFood}, ${supplies.wetFood}, ${supplies.supplement}, ${supplies.snack}, ${supplies.litter}');
       final savedSupplies = await _suppliesRepository.saveSupplies(supplies);
-      print('✅ 저장 완료: ${savedSupplies?.food}, ${savedSupplies?.supplement}');
+      print('✅ 저장 완료: ${savedSupplies?.dryFood}, ${savedSupplies?.wetFood}, ${savedSupplies?.supplement}');
       
       if (!mounted) {
         print('❌ Widget disposed');
@@ -1410,7 +1436,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
       
       // 콜백을 통해 부모에게 알림
       if (savedSupplies != null) {
-        print('📝 콜백 호출: ${savedSupplies.food}');
+        print('📝 콜백 호출: ${savedSupplies.dryFood}');
         widget.onSaved(savedSupplies, dates);
       }
       

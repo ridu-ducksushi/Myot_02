@@ -103,7 +103,8 @@ class PetSuppliesRepository {
     return {
       'id': row['id'],
       'petId': row['pet_id'],
-      'food': row['food'],
+      'dryFood': row['dry_food'],
+      'wetFood': row['wet_food'],
       'supplement': row['supplement'],
       'snack': row['snack'],
       'litter': row['litter'],
@@ -118,7 +119,8 @@ class PetSuppliesRepository {
     return {
       'id': supplies.id,
       'pet_id': supplies.petId,
-      'food': supplies.food,
+      'dry_food': supplies.dryFood,
+      'wet_food': supplies.wetFood,
       'supplement': supplies.supplement,
       'snack': supplies.snack,
       'litter': supplies.litter,
