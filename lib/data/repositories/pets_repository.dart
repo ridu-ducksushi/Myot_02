@@ -37,9 +37,9 @@ class PetsRepository {
       // created_at/updated_at are defaulted by DB triggers if set; omit to avoid format mismatches
     };
     
-    // avatarUrl과 defaultIcon은 명시적으로 null을 허용 (이미지 삭제/변경 시 필요)
+    // avatarUrl/defaultIcon/profileBgColor/note 는 명시적으로 null 허용 (삭제/초기화 반영)
     // 나머지 필드만 null 제거
-    row.removeWhere((k, v) => v == null && k != 'avatar_url' && k != 'default_icon' && k != 'profile_bg_color');
+    row.removeWhere((k, v) => v == null && k != 'avatar_url' && k != 'default_icon' && k != 'profile_bg_color' && k != 'note');
     
     return row;
   }

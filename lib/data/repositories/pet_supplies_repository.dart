@@ -6,6 +6,15 @@ class PetSuppliesRepository {
 
   PetSuppliesRepository(this._client);
 
+  bool _isEmptySuppliesRow(Map<String, dynamic> row) {
+    bool _isEmpty(dynamic v) => v == null || (v is String && v.trim().isEmpty);
+    return _isEmpty(row['dry_food']) &&
+        _isEmpty(row['wet_food']) &&
+        _isEmpty(row['supplement']) &&
+        _isEmpty(row['snack']) &&
+        _isEmpty(row['litter']);
+  }
+
   // 특정 날짜의 물품 기록 조회
   Future<PetSupplies?> getSuppliesByDate(String petId, DateTime date) async {
     try {
@@ -23,6 +32,7 @@ class PetSuppliesRepository {
           .maybeSingle();
 
       if (response == null) return null;
+      if (_isEmptySuppliesRow(response)) return null;
 
       return PetSupplies.fromJson(_fromSupabaseRow(response));
     } catch (e) {
@@ -36,15 +46,18 @@ class PetSuppliesRepository {
     try {
       final response = await _client
           .from('pet_supplies')
-          .select('recorded_at')
+          .select('recorded_at,dry_food,wet_food,supplement,snack,litter')
           .eq('pet_id', petId)
           .order('recorded_at', ascending: false);
 
-      return (response as List)
+      final filtered = (response as List)
+          .where((row) => !_isEmptySuppliesRow(row as Map<String, dynamic>))
           .map((row) => DateTime.parse(row['recorded_at'] as String))
           .map((dt) => DateTime(dt.year, dt.month, dt.day))
           .toSet()
           .toList();
+
+      return filtered;
     } catch (e) {
       print('❌ Error getting supplies record dates: $e');
       return [];
@@ -59,7 +72,21 @@ class PetSuppliesRepository {
       // 같은 날짜의 기록이 있는지 확인
       final existing = await getSuppliesByDate(supplies.petId, supplies.recordedAt);
 
+      bool isAllEmpty = [
+        supplies.dryFood,
+        supplies.wetFood,
+        supplies.supplement,
+        supplies.snack,
+        supplies.litter,
+      ].every((v) => v == null || (v?.trim().isEmpty ?? true));
+
       if (existing != null) {
+        if (isAllEmpty) {
+          // 모든 값이 비어있으면 해당 날짜 레코드 삭제
+          await _client.from('pet_supplies').delete().eq('id', existing.id);
+          // 삭제 후에도 상위 로직이 날짜 목록을 재조회하여 UI 갱신하도록 빈 값 그대로 반환
+          return supplies;
+        }
         // 업데이트
         final response = await _client
             .from('pet_supplies')
@@ -70,7 +97,10 @@ class PetSuppliesRepository {
 
         return PetSupplies.fromJson(_fromSupabaseRow(response));
       } else {
-        // 새로 생성
+        // 새로 생성: 단, 모두 비어있으면 생성하지 않음
+        if (isAllEmpty) {
+          return supplies;
+        }
         final response = await _client
             .from('pet_supplies')
             .insert(data)

@@ -254,7 +254,12 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                           scale: 0.85,
                           child: PetSpeciesChip(species: pet.species),
                         ),
-                        if (pet.breed != null) ...[
+                        // 디버그: 품종 정보 로그
+                        Builder(builder: (context) {
+                          print('🔍 품종 정보: breed="${pet.breed}", isNull=${pet.breed == null}, isEmpty=${pet.breed?.isEmpty ?? true}');
+                          return const SizedBox.shrink();
+                        }),
+                        if (pet.breed != null && pet.breed!.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Transform.scale(
                             scale: 0.85,
@@ -359,23 +364,21 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                         ],
                       ),
                       
-                      // 메모 섹션
-                      if (pet.note != null) ...[
-                        const SizedBox(height: 12),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            pet.note!,
-                            textAlign: TextAlign.right,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
+                      // 메모 섹션 (기록이 없어도 영역 유지)
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                      ],
+                        child: Text(
+                          pet.note ?? '',
+                          textAlign: TextAlign.right,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1132,10 +1135,13 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     if (_selectedSex == '남아') sexForDb = 'Male';
     if (_selectedSex == '여아') sexForDb = 'Female';
     
+    final breedValue = _breedController.text.trim();
+    print('🔍 품종 저장 디버그: 원본="${_breedController.text}", trim="${breedValue}", isEmpty=${breedValue.isEmpty}');
+    
     final updatedPet = widget.pet.copyWith(
       name: _nameController.text.trim(),
       species: _selectedSpecies,
-      breed: _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
+      breed: breedValue.isEmpty ? null : breedValue,
       sex: sexForDb,
       neutered: _isNeutered,
       birthDate: _birthDate,
