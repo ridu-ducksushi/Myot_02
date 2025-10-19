@@ -194,6 +194,7 @@ class _PetCard extends ConsumerWidget {
 
   final Pet pet;
 
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final age = _calculateAge(pet.birthDate);
@@ -211,23 +212,62 @@ class _PetCard extends ConsumerWidget {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: (pet.profileBgColor ?? speciesColor).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: (pet.profileBgColor ?? speciesColor).withOpacity(0.3)),
               ),
-              child: pet.defaultIcon != null
-                  ? _buildDefaultIcon(context, pet.defaultIcon, pet.profileBgColor ?? speciesColor, species: pet.species)
-                  : pet.avatarUrl != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(30),
-                          child: Image.file(
-                            File(pet.avatarUrl!),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _buildDefaultIcon(context, pet.defaultIcon, pet.profileBgColor ?? speciesColor, species: pet.species),
-                          ),
-                        )
-                      : _buildDefaultIcon(context, pet.defaultIcon, pet.profileBgColor ?? speciesColor, species: pet.species),
+              child: Stack(
+                children: [
+                  // 배경색 레이어 (기본 아이콘이 선택된 경우에만)
+                  if (pet.defaultIcon != null && pet.profileBgColor != null)
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/profile_bg/${pet.profileBgColor}.png',
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: speciesColor.withOpacity(0.1),
+                              child: Icon(
+                                Icons.pets,
+                                color: speciesColor,
+                                size: 30,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  // 아이콘 레이어
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: pet.defaultIcon != null && pet.profileBgColor != null 
+                          ? Colors.transparent 
+                          : speciesColor.withOpacity(0.1),
+                    ),
+                    child: ClipOval(
+                      child: pet.defaultIcon != null
+                          ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species)
+                          : pet.avatarUrl != null
+                              ? Image.file(
+                                  File(pet.avatarUrl!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species),
+                                )
+                              : _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(width: 16),
             
