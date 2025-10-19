@@ -211,12 +211,12 @@ class _PetCard extends ConsumerWidget {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: speciesColor.withOpacity(0.1),
+                color: (pet.profileBgColor ?? speciesColor).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: speciesColor.withOpacity(0.3)),
+                border: Border.all(color: (pet.profileBgColor ?? speciesColor).withOpacity(0.3)),
               ),
               child: pet.defaultIcon != null
-                  ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species)
+                  ? _buildDefaultIcon(context, pet.defaultIcon, pet.profileBgColor ?? speciesColor, species: pet.species)
                   : pet.avatarUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(30),
@@ -224,10 +224,10 @@ class _PetCard extends ConsumerWidget {
                             File(pet.avatarUrl!),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
-                                _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species),
+                                _buildDefaultIcon(context, pet.defaultIcon, pet.profileBgColor ?? speciesColor, species: pet.species),
                           ),
                         )
-                      : _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species),
+                      : _buildDefaultIcon(context, pet.defaultIcon, pet.profileBgColor ?? speciesColor, species: pet.species),
             ),
             const SizedBox(width: 16),
             
@@ -474,7 +474,7 @@ class _PetCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color fallbackColor, {String? species}) {
+  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color backgroundColor, {String? species}) {
     if (defaultIcon != null) {
       // Supabase Storage에서 이미지 URL 가져오기
       final imageUrl = ImageService.getDefaultIconUrl(species ?? 'cat', defaultIcon);
@@ -511,7 +511,7 @@ class _PetCard extends ConsumerWidget {
       );
     }
     
-    return Icon(Icons.pets, color: fallbackColor, size: 30);
+    return Icon(Icons.pets, color: backgroundColor, size: 30);
   }
 
   // 기본 아이콘 데이터 매핑
