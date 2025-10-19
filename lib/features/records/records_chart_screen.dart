@@ -31,9 +31,6 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
   List<Map<String, dynamic>> _chartData = [];
   // Raw per-day data fetched from records; aggregation derives from this
   List<Map<String, dynamic>> _rawData = [];
-  // Pie chart data for subcategory breakdown
-  List<PieChartSectionData> _pieChartData = [];
-  Map<String, int> _allSubcategoryData = {}; // 모든 소분류 데이터 (0 포함)
   bool _isLoading = false;
   // View granularity: day | week | month
   String _viewMode = 'day';
@@ -97,8 +94,6 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
           _applyAggregation();
           _isLoading = false;
         });
-        // Generate pie chart data after setState
-        _generatePieChartData();
       }
     } catch (e) {
       print('❌ Load chart data error: $e');
@@ -176,152 +171,6 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
     _chartData = aggregated;
   }
 
-  // Generate pie chart data for subcategory breakdown
-  List<String> _getAllSubcategoriesForType(String category) {
-    switch (category) {
-      case 'food':
-        return ['식사', '간식', '음수', '약', '영양제'];
-      case 'health':
-        return ['약', '백신', '병원', '기타'];
-      case 'poop':
-        return ['배변', '대변', '소변'];
-      case 'activity':
-        return ['활동', '기타'];
-      default:
-        return [];
-    }
-  }
-
-  void _generatePieChartData() {
-    if (_selectedRecordType == null) {
-      setState(() {
-        _pieChartData = [];
-      });
-      return;
-    }
-
-    final List<Record> allRecords = ref.read(recordsForPetProvider(widget.petId));
-    final List<Record> filteredRecords = allRecords
-        .where((r) => _isRecordTypeMatch(r.type, _selectedRecordType!))
-        .where((r) => r.at.isAfter(_startDate.subtract(const Duration(days: 1))))
-        .where((r) => r.at.isBefore(_endDate.add(const Duration(days: 1))))
-        .toList();
-
-    // Get all subcategories for this type
-    final List<String> allSubcategories = _getAllSubcategoriesForType(_selectedRecordType!);
-    
-    // Initialize all subcategories with 0 count
-    final Map<String, int> subcategoryCounts = {};
-    for (final subcategory in allSubcategories) {
-      subcategoryCounts[subcategory] = 0;
-    }
-
-    // Count actual records
-    for (final record in filteredRecords) {
-      final subcategory = _getSubcategoryDisplayName(record.type);
-      if (subcategoryCounts.containsKey(subcategory)) {
-        subcategoryCounts[subcategory] = subcategoryCounts[subcategory]! + 1;
-      }
-    }
-
-    if (allSubcategories.isEmpty) {
-      setState(() {
-        _pieChartData = [];
-      });
-      return;
-    }
-
-    // Generate pie chart sections - 연한 색상으로 변경
-    final List<Color> colors = [
-      Colors.blue.shade200,
-      Colors.green.shade200,
-      Colors.orange.shade200,
-      Colors.purple.shade200,
-      Colors.teal.shade200,
-      Colors.pink.shade200,
-      Colors.indigo.shade200,
-      Colors.red.shade200,
-    ];
-
-    final List<PieChartSectionData> pieChartData = [];
-    int colorIndex = 0;
-    final totalCount = subcategoryCounts.values.fold(0, (sum, count) => sum + count);
-
-    // Only add sections with actual data to pie chart
-    subcategoryCounts.forEach((subcategory, count) {
-      if (count > 0) {
-        pieChartData.add(
-          PieChartSectionData(
-            color: colors[colorIndex % colors.length],
-            value: count.toDouble(),
-            title: '${((count / totalCount) * 100).toStringAsFixed(1)}%\n$subcategory',
-            radius: 80,
-            titleStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-        );
-        colorIndex++;
-      }
-    });
-
-    setState(() {
-      _pieChartData = pieChartData;
-      _allSubcategoryData = subcategoryCounts; // 모든 소분류 데이터 저장 (0 포함)
-    });
-  }
-
-  // Get display name for subcategory
-  String _getSubcategoryDisplayName(String recordType) {
-    switch (recordType) {
-      // Food subcategories
-      case 'food_meal':
-        return '식사';
-      case 'food_snack':
-        return '간식';
-      case 'food_water':
-        return '음수';
-      case 'food_treat':
-        return '간식';
-      case 'food_med':
-        return '약';
-      case 'food_supplement':
-        return '영양제';
-      
-      // Health subcategories
-      case 'health_med':
-      case 'med':
-        return '약';
-      case 'health_vaccine':
-      case 'vaccine':
-        return '백신';
-      case 'health_visit':
-      case 'visit':
-        return '병원';
-      case 'health_weight':
-      case 'weight':
-        return '기타';
-      
-      // Poop subcategories
-      case 'litter':
-        return '배변';
-      case 'poop_feces':
-        return '대변';
-      case 'poop_urine':
-        return '소변';
-      
-      // Activity subcategories
-      case 'activity':
-        return '활동';
-      case 'other':
-        return '기타';
-      
-      default:
-        return recordType;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -469,28 +318,7 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _chartData.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.analytics_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              '선택한 기간에 데이터가 없습니다',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _buildChart(),
+                : _buildChart(),
           ),
         ],
       ),
@@ -560,7 +388,21 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
   }
 
   Widget _buildChart() {
-    if (_chartData.isEmpty) return const SizedBox.shrink();
+    if (_chartData.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.analytics_outlined, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              '선택한 기간에 데이터가 없습니다',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
     
     final spots = _chartData.asMap().entries.map((entry) {
       final index = entry.key;
@@ -568,97 +410,34 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
       return FlSpot(index.toDouble(), data['count'].toDouble());
     }).toList();
     
-    // Y축 범위 자동 계산
+    // Y축 범위 자동 계산 (몸무게 차트와 동일한 방식)
     final values = _chartData.map((data) => data['count'] as int).toList();
     final maxValue = values.isNotEmpty ? values.reduce((a, b) => a > b ? a : b) : 10;
     final minValue = 0;
     final range = maxValue - minValue;
-    final padding = range * 0.1; // 10% 패딩 추가
     
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+    // 적응형 Y축 설정
+    double minY, maxY;
+    if (range <= 5) {
+      // 작은 범위: 1 단위로 설정
+      minY = 0;
+      maxY = maxValue + 1;
+    } else if (range <= 20) {
+      // 중간 범위: 2 단위로 설정
+      minY = 0;
+      maxY = ((maxValue + 1) / 2).ceil() * 2;
+    } else {
+      // 큰 범위: 5 단위로 설정
+      minY = 0;
+      maxY = ((maxValue + 1) / 5).ceil() * 5;
+    }
+    
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Pie Chart Section (moved to top)
-          if (_pieChartData.isNotEmpty) ...[
-            Text(
-              '${_getRecordTypeDisplayName(_selectedRecordType!)} 소분류별 비율',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Column(
-              children: [
-                SizedBox(
-                  height: 250,
-                  child: Center(
-                    child: PieChart(
-                      PieChartData(
-                        sections: _pieChartData,
-                        centerSpaceRadius: 40,
-                        sectionsSpace: 2,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  children: _allSubcategoryData.entries.map((entry) {
-                    final subcategory = entry.key;
-                    final count = entry.value;
-                    final totalCount = _allSubcategoryData.values.fold(0, (sum, c) => sum + c);
-                    final percentage = totalCount > 0 ? '${((count / totalCount) * 100).toStringAsFixed(1)}%' : '0.0%';
-                    
-                    // 색상 결정 (실제 데이터가 있는 항목과 동일한 색상 사용)
-                    Color color = Colors.grey.shade300; // 기본 회색
-                    if (count > 0) {
-                      // 실제 데이터가 있는 항목의 색상 찾기
-                      final pieChartEntry = _pieChartData.firstWhere(
-                        (section) => section.title.split('\n').last == subcategory,
-                        orElse: () => PieChartSectionData(
-                          color: Colors.grey.shade300,
-                          value: 0,
-                          title: '',
-                        ),
-                      );
-                      color = pieChartEntry.color;
-                    }
-                    
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '$subcategory ($percentage)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: count > 0 ? Colors.black : Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-          ],
-          // Line Chart Section (moved to bottom)
+          // 차트 제목
           Text(
             '${_getRecordTypeDisplayName(_selectedRecordType!)} 레코드 수',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -674,46 +453,53 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 400, // 고정 높이 설정
+          // 차트
+          Expanded(
             child: LineChart(
               LineChartData(
-                minY: minValue - padding,
-                maxY: maxValue + padding,
+                minY: minY,
+                maxY: maxY,
                 gridData: FlGridData(show: true),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          '${value.toInt()}',
+                          style: const TextStyle(fontSize: 12),
+                        );
+                      },
                     ),
-                  ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
                   ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 30,
+                      reservedSize: 40, // 텍스트 겹침 방지를 위해 높이 증가
+                      interval: _calculateBottomInterval(), // 간격 조정
                       getTitlesWidget: (value, meta) {
-                        if (value.toInt() < _chartData.length) {
-                          final label = _chartData[value.toInt()]['label'] as String?;
+                        final index = value.toInt();
+                        if (index >= 0 && index < _chartData.length) {
+                          final label = _chartData[index]['label'] as String?;
                           if (label != null) {
-                            // For day mode, label is yyyy-MM-dd
+                            String displayText;
                             if (_viewMode == 'day') {
                               final date = DateTime.parse(label);
-                              return Text(
-                                DateFormat('MM/dd').format(date),
-                                style: const TextStyle(fontSize: 10),
-                              );
+                              displayText = DateFormat('MM/dd').format(date);
+                            } else if (_viewMode == 'week') {
+                              displayText = label; // 이미 "MM/dd~MM/dd" 형식
+                            } else { // month
+                              displayText = DateFormat('MM월').format(DateTime.parse('${label}-01'));
                             }
-                            // For week/month, label is already human-readable
-                            return Text(
-                              label,
-                              style: const TextStyle(fontSize: 10),
+                            
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                displayText,
+                                style: const TextStyle(fontSize: 11),
+                                textAlign: TextAlign.center,
+                              ),
                             );
                           }
                         }
@@ -721,6 +507,8 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
                       },
                     ),
                   ),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(show: true),
                 lineBarsData: [
@@ -728,10 +516,21 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
                     spots: spots,
                     isCurved: false,
                     color: Theme.of(context).colorScheme.primary,
-                    barWidth: 2,
-                    dotData: FlDotData(show: true),
+                    barWidth: 3,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 4,
+                          color: Theme.of(context).colorScheme.primary,
+                          strokeWidth: 2,
+                          strokeColor: Theme.of(context).colorScheme.surface,
+                        );
+                      },
+                    ),
                     belowBarData: BarAreaData(
-                      show: false,
+                      show: true,
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     ),
                   ),
                 ],
@@ -741,15 +540,17 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
                         final dataIndex = spot.x.toInt();
-                        if (dataIndex < _chartData.length) {
+                        if (dataIndex >= 0 && dataIndex < _chartData.length) {
                           final data = _chartData[dataIndex];
                           final label = data['label'] as String? ?? data['date'] as String;
                           String labelText;
                           if (_viewMode == 'day') {
                             final date = DateTime.parse(label);
                             labelText = DateFormat('yyyy-MM-dd').format(date);
-                          } else {
-                            labelText = label; // already formatted for week/month
+                          } else if (_viewMode == 'week') {
+                            labelText = label; // 이미 "MM/dd~MM/dd" 형식
+                          } else { // month
+                            labelText = DateFormat('yyyy년 MM월').format(DateTime.parse('${label}-01'));
                           }
                           return LineTooltipItem(
                             '$labelText\n${data['count']}개',
@@ -768,8 +569,21 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
             ),
           ),
         ],
-        ),
       ),
     );
+  }
+
+  // X축 라벨 간격 계산 (텍스트 겹침 방지)
+  double _calculateBottomInterval() {
+    final dataLength = _chartData.length;
+    if (dataLength <= 7) {
+      return 1.0; // 7개 이하면 모든 라벨 표시
+    } else if (dataLength <= 14) {
+      return 2.0; // 14개 이하면 2개마다 표시
+    } else if (dataLength <= 30) {
+      return 3.0; // 30개 이하면 3개마다 표시
+    } else {
+      return (dataLength / 10).ceil().toDouble(); // 10개 정도만 표시
+    }
   }
 }

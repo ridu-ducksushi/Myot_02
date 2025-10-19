@@ -893,14 +893,14 @@ class _Time24Table extends StatelessWidget {
           final String label = _labelForRow(i);
           final BorderSide bottomLine = i == 23 ? BorderSide.none : BorderSide(color: outline);
            return SizedBox(
-             height: 42, // 행 높이를 42로 변경
+             height: 32, // 행 높이를 32로 변경
              child: Row(
               children: [
                 // Left time label cell
                 Container(
-                  width: 64,
+                  width: 45, // 시간 라벨 영역의 고정 너비를 45px로 줄임
                   alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
                     border: Border(
@@ -955,7 +955,7 @@ class _Time24Table extends StatelessWidget {
           onTap: () => onRecordTap(record),
           borderRadius: BorderRadius.circular(6),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), // 패딩을 줄여서 작은 공간에 맞춤
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), // 타임라인 행 높이 32px에 맞춰 패딩 조정
             decoration: BoxDecoration(
               color: typeColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
