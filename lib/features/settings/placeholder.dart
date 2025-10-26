@@ -140,14 +140,12 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                   final pet = petsState.pets[index];
                   return Container(
                     width: 200, // 카드 너비
-                    margin: const EdgeInsets.only(right: 2), // 카드 간격
                     child: _buildHorizontalPetCard(context, ref, pet),
                   );
                 } else {
                   // 새 펫 추가 카드
                   return Container(
                     width: 200,
-                    margin: const EdgeInsets.only(right: 2),
                     child: _buildAddPetCard(context),
                   );
                 }
