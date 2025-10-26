@@ -32,16 +32,16 @@
     "not_found": "ペットが見つかりません",
     "not_found_message": "リクエストされたペット情報が見つかりません",
     "delete_confirm_title": "ペット削除",
-    "delete_confirm_message": "{0}を本当に削除しますか？この操作は元に戻せません。",
-    "delete_success": "{0}が削除されました",
-    "delete_error": "{0}の削除中にエラーが発生しました",
+    "delete_confirm_message": "このペットを本当に削除しますか？この操作は元に戻せません。",
+    "delete_success": "ペットが削除されました",
+    "delete_error": "ペットの削除中にエラーが発生しました",
     "edit_title": "ペット情報編集",
-    "edit_success": "{0}の情報が更新されました",
-    "edit_error": "{0}の更新中にエラーが発生しました",
+    "edit_success": "情報が更新されました",
+    "edit_error": "情報の更新中にエラーが発生しました",
     "image_updated": "プロフィール画像が更新されました",
-    "image_update_error": "{0}の画像更新中にエラーが発生しました",
-    "image_deleted": "{0}のプロフィール画像が削除されました",
-    "image_delete_error": "{0}の画像削除中にエラーが発生しました"
+    "image_update_error": "ペットの画像更新中にエラーが発生しました",
+    "image_deleted": "ペットのプロフィール画像が削除されました",
+    "image_delete_error": "ペットの画像削除中にエラーが発生しました"
   },
   "common": {
     "save": "保存",
@@ -100,6 +100,19 @@
     "no_upcoming": "予定されたリマインダーがありません"
   },
   "reminder": "リマインダー",
+  "supplies": {
+    "daily_record": "一日記録",
+    "dry_food": "ドライフード",
+    "wet_food": "ウェットフード",
+    "supplement": "サプリメント",
+    "snack": "おやつ",
+    "litter": "砂",
+    "dry_food_hint": "例：ライトウェイト",
+    "wet_food_hint": "例：ライトウェイト",
+    "supplement_hint": "例：総合ビタミン",
+    "snack_hint": "例：セモネチュル、ネモネトリート",
+    "litter_hint": "例：豆腐砂 5L"
+  },
   "views": {
     "daily": "日次",
     "weekly": "週次",

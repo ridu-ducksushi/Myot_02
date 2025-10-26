@@ -1318,7 +1318,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                   
                   // Title
                   Text(
-                    '하루 기록',
+                    'supplies.daily_record'.tr(),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 8),
@@ -1339,41 +1339,41 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                       children: [
                         AppTextField(
                           controller: _dryFoodController,
-                          labelText: '건사료',
+                          labelText: 'supplies.dry_food'.tr(),
                           prefixIcon: const Icon(Icons.restaurant),
-                          hintText: '예: 라이트웨이트',
+                          hintText: 'supplies.dry_food_hint'.tr(),
                         ),
                         const SizedBox(height: 16),
 
                         AppTextField(
                           controller: _wetFoodController,
-                          labelText: '습식사료',
+                          labelText: 'supplies.wet_food'.tr(),
                           prefixIcon: const Icon(Icons.rice_bowl),
-                          hintText: '예: 라이트웨이트',
+                          hintText: 'supplies.wet_food_hint'.tr(),
                         ),
                         const SizedBox(height: 16),
                         
                         AppTextField(
                           controller: _supplementController,
-                          labelText: '영양제',
+                          labelText: 'supplies.supplement'.tr(),
                           prefixIcon: const Icon(Icons.medication),
-                          hintText: '예: 종합 비타민',
+                          hintText: 'supplies.supplement_hint'.tr(),
                         ),
                         const SizedBox(height: 16),
                         
                         AppTextField(
                           controller: _snackController,
-                          labelText: '간식',
+                          labelText: 'supplies.snack'.tr(),
                           prefixIcon: const Icon(Icons.cookie),
-                          hintText: '예: 세모네 츄르, 네모네 트릿',
+                          hintText: 'supplies.snack_hint'.tr(),
                         ),
                         const SizedBox(height: 16),
                         
                         AppTextField(
                           controller: _litterController,
-                          labelText: '모래',
+                          labelText: 'supplies.litter'.tr(),
                           prefixIcon: const Icon(Icons.cleaning_services),
-                          hintText: '예: 두부 모래 5L',
+                          hintText: 'supplies.litter_hint'.tr(),
                         ),
                       ],
                     ),

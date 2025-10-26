@@ -32,16 +32,16 @@
     "not_found": "펫을 찾을 수 없습니다",
     "not_found_message": "요청한 펫 정보를 찾을 수 없습니다",
     "delete_confirm_title": "펫 삭제",
-    "delete_confirm_message": "{0}을(를) 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
-    "delete_success": "{0}이(가) 삭제되었습니다",
-    "delete_error": "{0} 삭제 중 오류가 발생했습니다",
+    "delete_confirm_message": "펫을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "delete_success": "펫이 삭제되었습니다",
+    "delete_error": "펫펫 삭제 중 오류가 발생했습니다",
     "edit_title": "펫 정보 수정",
-    "edit_success": "{0}의 정보가 수정되었습니다",
-    "edit_error": "{0} 수정 중 오류가 발생했습니다",
+    "edit_success": "정보가 수정되었습니다",
+    "edit_error": "정보 수정 중 오류가 발생했습니다",
     "image_updated": "프로필 이미지가 업데이트되었습니다",
-    "image_update_error": "{0}의 이미지 업데이트 중 오류가 발생했습니다",
-    "image_deleted": "{0}의 프로필 이미지가 삭제되었습니다",
-    "image_delete_error": "{0}의 이미지 삭제 중 오류가 발생했습니다"
+    "image_update_error": "펫의 이미지 업데이트 중 오류가 발생했습니다",
+    "image_deleted": "펫의 프로필 이미지가 삭제되었습니다",
+    "image_delete_error": "펫의 이미지 삭제 중 오류가 발생했습니다"
   },
   "common": {
     "save": "저장",
@@ -100,6 +100,19 @@
     "no_upcoming": "예정된 알림이 없습니다"
   },
   "reminder": "알림",
+  "supplies": {
+    "daily_record": "하루 기록",
+    "dry_food": "건사료",
+    "wet_food": "습식사료",
+    "supplement": "영양제",
+    "snack": "간식",
+    "litter": "모래",
+    "dry_food_hint": "예: 라이트웨이트",
+    "wet_food_hint": "예: 라이트웨이트",
+    "supplement_hint": "예: 종합 비타민",
+    "snack_hint": "예: 세모네 츄르, 네모네 트릿",
+    "litter_hint": "예: 두부 모래 5L"
+  },
   "views": {
     "daily": "일간",
     "weekly": "주간",
