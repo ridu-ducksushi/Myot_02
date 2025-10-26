@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/data/local/database.dart';
 import 'package:petcare/data/services/image_service.dart';
@@ -43,6 +45,51 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('로그아웃 실패: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendEmail(BuildContext context) async {
+    try {
+      final Uri emailUri = Uri(
+        scheme: 'mailto',
+        path: 'yogir@naver.com',
+        query: 'subject=PetCare 문의&body=안녕하세요, PetCare 앱에 대해 문의드립니다.',
+      );
+      
+      print('이메일 URI: $emailUri');
+      
+      // canLaunchUrl 체크를 건너뛰고 직접 실행 시도
+      final bool launched = await launchUrl(
+        emailUri,
+        mode: LaunchMode.externalApplication,
+      );
+      
+      if (launched) {
+        print('이메일 앱이 성공적으로 실행되었습니다.');
+      } else {
+        print('이메일 앱 실행 실패, 클립보드에 복사합니다.');
+        await Clipboard.setData(const ClipboardData(text: 'yogir@naver.com'));
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('이메일 주소가 클립보드에 복사되었습니다.'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('이메일 발송 오류: $e');
+      // 오류 발생 시에도 클립보드에 복사
+      await Clipboard.setData(const ClipboardData(text: 'yogir@naver.com'));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('이메일 주소가 클립보드에 복사되었습니다. 오류: $e'),
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
     }
@@ -150,6 +197,19 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                   );
                 }
               },
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // 문의하기 섹션
+          SectionHeader(title: 'contact.title'.tr()),
+          AppCard(
+            child: ListTile(
+              leading: const Icon(Icons.email, color: AppColors.primary),
+              title: Text('yogir@naver.com'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _sendEmail(context),
             ),
           ),
           

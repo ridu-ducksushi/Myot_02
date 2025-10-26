@@ -121,5 +121,8 @@
   },
   "labs": {
     "reference_range": "基準値"
+  },
+  "contact": {
+    "title": "お問い合わせ"
   }
 }
