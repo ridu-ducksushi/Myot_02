@@ -323,7 +323,7 @@ class _LabTableState extends State<_LabTable> {
             ),
           ),
           if (_previousDateStr != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -352,7 +352,7 @@ class _LabTableState extends State<_LabTable> {
               color: Theme.of(context).colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 3),
           Container(
             decoration: BoxDecoration(
               border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
@@ -1345,7 +1345,7 @@ class _LabTableState extends State<_LabTable> {
     return InkWell(
       onTap: () => _showBasicInfoEditDialog(label, value),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
         child: Row(
           children: [
             Expanded(
