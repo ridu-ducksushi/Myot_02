@@ -118,5 +118,8 @@
     "weekly": "주간",
     "monthly": "월간",
     "yearly": "연간"
+  },
+  "labs": {
+    "reference_range": "기준치"
   }
 }

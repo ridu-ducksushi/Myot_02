@@ -177,6 +177,10 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.petName} - 레코드 차트 보기'),
+
+
+        backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.95),
+        elevation: 2,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/pets/${widget.petId}/records'),

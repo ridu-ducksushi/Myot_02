@@ -121,5 +121,8 @@
     "weekly": "Weekly",
     "monthly": "Monthly",
     "yearly": "Yearly"
+  },
+  "labs": {
+    "reference_range": "Reference Range"
   }
 }

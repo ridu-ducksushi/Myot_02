@@ -227,6 +227,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('$petName - 검사 결과 차트'),
+        backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.95),
+        elevation: 2,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/pets/${widget.petId}/health'),
@@ -546,7 +548,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
           if (reference.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              '정상범위: $reference',
+              'labs.reference_range'.tr() + ': $reference',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 14,
