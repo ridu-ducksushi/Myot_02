@@ -11,6 +11,7 @@ import 'package:petcare/data/local/database.dart';
 import 'package:petcare/data/services/image_service.dart';
 import 'package:petcare/features/pets/pets_screen.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
+// import 'package:petcare/ui/widgets/banner_ad_widget.dart'; // AdMob 승인 전까지 비활성화
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:petcare/data/models/pet.dart';
 

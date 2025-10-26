@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+// import 'package:petcare/data/services/admob_service.dart'; // AdMob 승인 전까지 비활성화
 
 // import 'package:petcare/app/notifications.dart';
 // import 'package:firebase_core/firebase_core.dart';
@@ -28,6 +29,9 @@ void main() async {
 
   // Initialize app services
   await AppBootstrap.initialize();
+
+  // Initialize AdMob (AdMob 승인 전까지 비활성화)
+  // await AdMobService.initialize();
 
   // Initialize FCM (임시 비활성화)
   // await initNotifications();

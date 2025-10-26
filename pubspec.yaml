@@ -80,6 +80,9 @@ dependencies:
   
   # UUID
   uuid: ^4.0.0
+  
+  # AdMob (승인 전까지 비활성화)
+  # google_mobile_ads: ^5.1.0
 
 dev_dependencies:
   flutter_test:
