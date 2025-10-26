@@ -1318,7 +1318,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                   
                   // Title
                   Text(
-                    '물품 기록 수정',
+                    '하루 기록',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 8),
@@ -1341,7 +1341,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                           controller: _dryFoodController,
                           labelText: '건사료',
                           prefixIcon: const Icon(Icons.restaurant),
-                          hintText: '예: 로얄캐닌 3kg',
+                          hintText: '예: 라이트웨이트',
                         ),
                         const SizedBox(height: 16),
 
@@ -1349,7 +1349,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                           controller: _wetFoodController,
                           labelText: '습식사료',
                           prefixIcon: const Icon(Icons.rice_bowl),
-                          hintText: '예: 습식 파우치 85g',
+                          hintText: '예: 라이트웨이트',
                         ),
                         const SizedBox(height: 16),
                         
@@ -1365,7 +1365,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                           controller: _snackController,
                           labelText: '간식',
                           prefixIcon: const Icon(Icons.cookie),
-                          hintText: '예: 츄르 30개입',
+                          hintText: '예: 세모네 츄르, 네모네 트릿',
                         ),
                         const SizedBox(height: 16),
                         
