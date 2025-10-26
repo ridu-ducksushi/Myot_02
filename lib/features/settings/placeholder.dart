@@ -55,7 +55,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     try {
       final Uri emailUri = Uri(
         scheme: 'mailto',
-        path: 'yogir@naver.com',
+        path: 'ridusoft@gmail.com',
         query: 'subject=PetCare 문의&body=안녕하세요, PetCare 앱에 대해 문의드립니다.',
       );
       
@@ -71,7 +71,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         print('이메일 앱이 성공적으로 실행되었습니다.');
       } else {
         print('이메일 앱 실행 실패, 클립보드에 복사합니다.');
-        await Clipboard.setData(const ClipboardData(text: 'yogir@naver.com'));
+        await Clipboard.setData(const ClipboardData(text: 'ridusoft@gmail.com'));
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -84,7 +84,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     } catch (e) {
       print('이메일 발송 오류: $e');
       // 오류 발생 시에도 클립보드에 복사
-      await Clipboard.setData(const ClipboardData(text: 'yogir@naver.com'));
+      await Clipboard.setData(const ClipboardData(text: 'ridusoft@gmail.com'));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -208,7 +208,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
           AppCard(
             child: ListTile(
               leading: const Icon(Icons.email, color: AppColors.primary),
-              title: Text('yogir@naver.com'),
+              title: Text('ridusoft@gmail.com'),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () => _sendEmail(context),
             ),
