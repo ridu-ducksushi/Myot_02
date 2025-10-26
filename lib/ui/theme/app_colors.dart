@@ -93,6 +93,8 @@ class AppColors {
     const poopColor = Color(0xFFFF9800);      // Orange - 배변 관련
     const activityColor = Color(0xFF4CAF50);  // Green - 활동 관련
 
+    print('🎨 getRecordTypeColor called with type: "$type"');
+    
     switch (type.toLowerCase()) {
       // Food category - Pink
       case 'food_meal':
@@ -120,11 +122,17 @@ class AppColors {
       // Poop category - Orange
       case 'poop_feces':
       case 'poop_urine':
+      case 'poop_other':
+      case 'hygiene_brush':
       case 'litter':
         return poopColor;
       
       // Activity category - Green
       case 'activity_play':
+      case 'activity_explore':
+      case 'activity_outing':
+      case 'activity_rest':
+      case 'activity_other':
       case 'activity_groom':
       case 'activity_walk':
       case 'play':
@@ -132,6 +140,7 @@ class AppColors {
         return activityColor;
       
       default:
+        print('⚠️ Unknown record type: "$type" - returning foodColor (pink)');
         return foodColor; // 기본값을 food 색상으로 설정
     }
   }

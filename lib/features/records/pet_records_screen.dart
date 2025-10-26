@@ -18,7 +18,8 @@ IconData getIconForType(String type) {
     case 'food_meal': return Icons.dinner_dining;
     case 'food_snack': return Icons.cookie;
     case 'food_water': return Icons.water_drop;
-    case 'health_med': return Icons.medical_services;
+    case 'food_med': return Icons.medical_services;
+    case 'food_supplement': return Icons.medication;
     case 'health_supplement': return Icons.medication;
     case 'health_vaccine': return Icons.vaccines;
     case 'health_visit': return Icons.local_hospital;
@@ -30,6 +31,7 @@ IconData getIconForType(String type) {
     case 'activity_other': return Icons.more_horiz;
     case 'poop_urine': return Icons.opacity;
     case 'poop_feces': return Icons.pets;
+    case 'hygiene_brush': return Icons.brush;
     case 'poop_other': return Icons.more_horiz;
     default: return Icons.add_circle_outline;
   }
@@ -40,7 +42,8 @@ String getLabelForType(String type) {
     case 'food_meal': return '사료';
     case 'food_snack': return '간식';
     case 'food_water': return '음수';
-    case 'health_med': return '약';
+    case 'food_med': return '투약';
+    case 'food_supplement': return '보조제';
     case 'health_supplement': return '보조제';
     case 'health_vaccine': return '백신';
     case 'health_visit': return '병원';
@@ -52,6 +55,7 @@ String getLabelForType(String type) {
     case 'activity_other': return '활동:기타';
     case 'poop_urine': return '소변';
     case 'poop_feces': return '대변';
+    case 'hygiene_brush': return '양치';
     case 'poop_other': return '배변:기타';
     default: return type;
   }
@@ -140,15 +144,15 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
-            icon: Icons.local_hospital,
+            icon: Icons.medical_services,
             label: '투약',
-            onTap: () => _addRecord(context, pet, 'health_med'),
+            onTap: () => _addRecord(context, pet, 'food_med'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
             icon: Icons.medication,
             label: '보조제',
-            onTap: () => _addRecord(context, pet, 'health_supplement'),
+            onTap: () => _addRecord(context, pet, 'food_supplement'),
           ),
         ],
       ),
@@ -212,12 +216,6 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildSubMenuItem(
-            icon: Icons.medical_services,
-            label: '약',
-            onTap: () => _addRecord(context, pet, 'health_med'),
-          ),
-          const SizedBox(width: 16),
-          _buildSubMenuItem(
             icon: Icons.vaccines,
             label: '백신',
             onTap: () => _addRecord(context, pet, 'health_vaccine'),
@@ -260,6 +258,12 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             icon: Icons.pets,
             label: '대변',
             onTap: () => _addRecord(context, pet, 'poop_feces'),
+          ),
+          const SizedBox(width: 16),
+          _buildSubMenuItem(
+            icon: Icons.brush,
+            label: '양치',
+            onTap: () => _addRecord(context, pet, 'hygiene_brush'),
           ),
           const SizedBox(width: 16),
           _buildSubMenuItem(
