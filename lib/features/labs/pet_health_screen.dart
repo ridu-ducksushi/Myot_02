@@ -657,7 +657,7 @@ class _LabTableState extends State<_LabTable> {
     ).toList();
     customKeys.sort(); // Sort custom keys alphabetically
     
-    return [...baseKeys, ...customKeys];
+    return [...customKeys, ...baseKeys];
   }
 
   void _initRefs() {
