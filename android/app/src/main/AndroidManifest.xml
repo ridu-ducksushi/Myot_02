@@ -7,7 +7,7 @@
     <application
         android:label="petcare"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         
         <!-- AdMob 설정 (승인 전까지 비활성화) -->
         <!-- <meta-data
