@@ -858,12 +858,26 @@ class _LabTableState extends State<_LabTable> {
       // Supabase에서 이 펫의 모든 기록 날짜를 가져옴
       final resList = await Supabase.instance.client
           .from('labs')
-          .select('date')
+          .select('date, items')
           .eq('user_id', uid)
           .eq('pet_id', widget.petId);
       
       setState(() {
         _recordDates = resList
+            .where((row) {
+              // Check if this row has actual data (non-empty values)
+              final items = row['items'];
+              if (items is! Map) return false;
+              
+              for (final k in items.keys) {
+                final v = items[k];
+                final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+                if (value.isNotEmpty) {
+                  return true; // Has actual data
+                }
+              }
+              return false; // No actual data
+            })
             .map((row) {
               final dateStr = row['date'] as String;
               final parts = dateStr.split('-');
@@ -1070,7 +1084,7 @@ class _LabTableState extends State<_LabTable> {
         _refCat.remove(key);
       }
       
-      // Fetch up to two entries: selected date (현재) and previous (직전)
+      // Fetch up to 10 entries to find the most recent with actual data
       final resList = await Supabase.instance.client
           .from('labs')
           .select('date, items')
@@ -1078,7 +1092,7 @@ class _LabTableState extends State<_LabTable> {
           .eq('pet_id', widget.petId)
           .lte('date', _dateKey())
           .order('date', ascending: false)
-          .limit(2);
+          .limit(10);
 
       print('📊 Query result (<= selected date): $resList');
 
@@ -1090,25 +1104,35 @@ class _LabTableState extends State<_LabTable> {
       Map<String, dynamic>? previousRow;
 
       if (resList is List && resList.isNotEmpty) {
-        // Determine current vs previous by matching date
+        // Find current row (exact date match)
         for (final row in resList) {
           final r = row as Map<String, dynamic>;
           if (r['date'] == _dateKey()) {
             currentRow = r;
+            break;
           }
         }
-        if (resList.length >= 2) {
-          // previous is the first row that is not the selected date
-          for (final row in resList) {
-            final r = row as Map<String, dynamic>;
-            if (r['date'] != _dateKey()) {
+        
+        // Find previous row with actual data (skip empty data)
+        for (final row in resList) {
+          final r = row as Map<String, dynamic>;
+          if (r['date'] != _dateKey() && r['items'] is Map) {
+            final items = r['items'] as Map;
+            // Check if this row has actual data
+            bool hasData = false;
+            for (final k in items.keys) {
+              final v = items[k];
+              final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+              if (value.isNotEmpty) {
+                hasData = true;
+                break;
+              }
+            }
+            if (hasData) {
               previousRow = r;
               break;
             }
           }
-        } else if (currentRow == null) {
-          // No exact match for selected date; treat first as previous reference
-          previousRow = resList.first as Map<String, dynamic>;
         }
       }
 
@@ -1179,15 +1203,32 @@ class _LabTableState extends State<_LabTable> {
         print('🏋️ No lab data, using pet weight: $_weight (from pet: ${widget.petWeight})');
       }
 
-      // Store previous values for display
+      // Store previous values for display (only if there's actual data)
       if (previousRow != null && previousRow['items'] is Map) {
         final Map items = previousRow['items'] as Map;
-        _previousDateStr = previousRow['date'] as String?;
-        print('ℹ️ Previous (${_previousDateStr ?? '-'}) with ${items.length} items');
-        for (final k in _orderedKeys()) {
+        
+        // Check if there's any actual data (non-empty values)
+        bool hasActualData = false;
+        for (final k in items.keys) {
           final v = items[k];
           final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
-          _previousValues[k] = value;
+          if (value.isNotEmpty) {
+            hasActualData = true;
+            break;
+          }
+        }
+        
+        // Only set as previous if there's actual data
+        if (hasActualData) {
+          _previousDateStr = previousRow['date'] as String?;
+          print('ℹ️ Previous (${_previousDateStr ?? '-'}) with ${items.length} items');
+          for (final k in _orderedKeys()) {
+            final v = items[k];
+            final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+            _previousValues[k] = value;
+          }
+        } else {
+          print('ℹ️ Previous row has no actual data, skipping');
         }
       }
     } catch (e) {
