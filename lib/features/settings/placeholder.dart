@@ -56,7 +56,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       final Uri emailUri = Uri(
         scheme: 'mailto',
         path: 'ridusoft@gmail.com',
-        query: 'subject=PetCare 문의&body=안녕하세요, PetCare 앱에 대해 문의드립니다.',
+        query: 'subject=Myot 문의&body=안녕하세요, Myot 앱에 대해 문의드립니다.',
       );
       
       print('이메일 URI: $emailUri');
@@ -93,6 +93,34 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _confirmDeleteRequest(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('계정 삭제 요청'),
+        content: const Text(
+          '계정 및 모든 서버 데이터의 영구 삭제를 요청하시겠습니까?\n\n'
+          '• 본 요청은 이메일로 접수되며, 본인 확인 후 처리됩니다.\n'
+          '• 처리 전까지 앱 데이터는 삭제되지 않습니다.'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('이메일 보내기'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      await _sendEmail(context);
     }
   }
 
@@ -224,6 +252,15 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
               title: Text('로그아웃'),
               subtitle: Text('세션을 종료하고 로그인 화면으로 돌아갑니다.'),
               onTap: () => _signOut(context),
+            ),
+          ),
+          const SizedBox(height: 12),
+          AppCard(
+            child: ListTile(
+              leading: const Icon(Icons.delete_forever, color: AppColors.error),
+              title: const Text('계정 삭제'),
+              subtitle: const Text('계정 및 서버 데이터 삭제를 이메일로 요청합니다.'),
+              onTap: () => _confirmDeleteRequest(context),
             ),
           ),
         ],
