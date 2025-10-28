@@ -241,18 +241,12 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       print('🚪 로그아웃 중...');
       await Supabase.instance.client.auth.signOut();
       print('✅ 로그아웃 완료');
+      print('✅ 계정 삭제 완료');
 
+      // Close loading dialog and show success (navigation will happen automatically via auth redirect)
       if (context.mounted) {
         Navigator.of(context).pop(); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('계정이 완전히 삭제되었습니다. 이용해 주셔서 감사합니다.'),
-            duration: Duration(seconds: 3),
-          ),
-        );
       }
-
-      print('✅ 계정 삭제 완료');
     } catch (e, stackTrace) {
       print('❌ 계정 삭제 오류: $e');
       print('❌ 스택 트레이스: $stackTrace');
