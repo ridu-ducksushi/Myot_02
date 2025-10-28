@@ -333,13 +333,14 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     return Scaffold(
       appBar: AppBar(
         title: Text('tabs.settings'.tr()),
+        backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
       ),
       body: ListView(
         children: [
           // 사용자 프로필 섹션
           _buildUserProfileSection(context),
           
-          const SizedBox(height: 16),
+          const SizedBox(height: 2),
           
           // 펫 정보 섹션 (통합)
           SectionHeader(title: '펫 정보'),
@@ -370,7 +371,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
             ),
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 2),
           
           // 문의하기 섹션
           SectionHeader(title: 'contact.title'.tr()),
@@ -383,7 +384,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
             ),
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 2),
           
           // 계정 설정 섹션
           SectionHeader(title: '계정 설정'),
