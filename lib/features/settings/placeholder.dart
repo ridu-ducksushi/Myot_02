@@ -102,7 +102,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       builder: (context) => AlertDialog(
         title: const Text('계정 삭제 요청'),
         content: const Text(
-          '계정 및 모든 서버 데이터의 영구 삭제를 요청하시겠습니까?\n\n'
+          '계정 및 모든 데이터의 영구 삭제를 요청하시겠습니까?\n\n'
           '• 본 요청은 이메일로 접수되며, 본인 확인 후 처리됩니다.\n'
           '• 처리 전까지 앱 데이터는 삭제되지 않습니다.'
         ),
