@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -100,11 +101,12 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('계정 삭제 요청'),
+        title: const Text('계정 삭제'),
         content: const Text(
-          '계정 및 모든 데이터의 영구 삭제를 요청하시겠습니까?\n\n'
-          '• 본 요청은 이메일로 접수되며, 본인 확인 후 처리됩니다.\n'
-          '• 처리 전까지 앱 데이터는 삭제되지 않습니다.'
+          '이 작업은 되돌릴 수 없습니다.\n\n'
+          '• 서버에 저장된 모든 데이터(펫, 기록, 리마인더)가 삭제됩니다.\n'
+          '• 인증 계정도 삭제되어 재로그인이 불가합니다.\n'
+          '• 로컬 캐시 데이터도 정리됩니다.'
         ),
         actions: [
           TextButton(
@@ -113,14 +115,161 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('이메일 보내기'),
+            child: const Text('완전 삭제'),
           ),
         ],
       ),
     );
 
     if (result == true) {
-      await _sendEmail(context);
+      await _performHardDelete(context);
+    }
+  }
+
+  Future<void> _performHardDelete(BuildContext context) async {
+    if (!context.mounted) return;
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        if (context.mounted) Navigator.of(context).pop();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('로그인이 필요합니다.')),
+          );
+        }
+        return;
+      }
+
+      print('🔄 계정 삭제 시작: ${user.id}');
+
+      // Ensure fresh session (older emulators may have skew causing token invalidation)
+      try {
+        print('🔄 세션 새로고침 시도...');
+        await Supabase.instance.client.auth.refreshSession();
+        print('✅ 세션 새로고침 성공');
+      } catch (e) {
+        print('⚠️ 세션 새로고침 실패 (무시하고 진행): $e');
+      }
+
+      // Invoke Edge Function with JWT to delete server-side data and auth user
+      final session = Supabase.instance.client.auth.currentSession;
+      final token = session?.accessToken;
+      if (token == null) {
+        if (context.mounted) Navigator.of(context).pop();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('세션이 만료되었습니다. 다시 로그인 후 시도해주세요.')),
+          );
+        }
+        return;
+      }
+
+      print('🔑 JWT 토큰 획득 완료: ${token.substring(0, 20)}...');
+
+      Future<dynamic> _call() async {
+        print('📞 Edge Function 호출 중...');
+        final result = await Supabase.instance.client.functions.invoke(
+          'delete-account',
+          body: const {},
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
+        print('📞 Edge Function 응답: ${result.data}');
+        return result;
+      }
+
+      dynamic response;
+      try {
+        response = await _call().timeout(
+          const Duration(seconds: 20),
+          onTimeout: () {
+            print('⏱️ Edge Function 타임아웃 (20초)');
+            throw TimeoutException('서버 응답 시간 초과');
+          },
+        );
+      } on TimeoutException catch (e) {
+        print('⏱️ 첫 시도 타임아웃, 재시도 중...');
+        // One-time retry for slow/older emulators or flaky network
+        response = await _call().timeout(
+          const Duration(seconds: 20),
+          onTimeout: () {
+            print('⏱️ Edge Function 재시도 타임아웃 (20초)');
+            throw TimeoutException('서버 응답 시간 초과 (재시도 실패)');
+          },
+        );
+      }
+
+      print('📊 Edge Function 응답 타입: ${response.runtimeType}');
+      print('📊 Edge Function 응답 데이터: ${response.data}');
+
+      // Check response
+      final data = response.data;
+      final isSuccess = data is Map && data['ok'] == true;
+
+      if (!isSuccess) {
+        final errorDetail = data is Map 
+            ? (data['error']?.toString() ?? data.toString())
+            : data?.toString() ?? '알 수 없는 오류';
+        print('❌ Edge Function 실패: $errorDetail');
+        throw Exception('서버 삭제 실패: $errorDetail');
+      }
+
+      print('✅ 서버 데이터 삭제 완료');
+
+      // Clear local scoped caches
+      print('🗑️ 로컬 캐시 삭제 중...');
+      await LocalDatabase.instance.clearAll();
+      print('✅ 로컬 캐시 삭제 완료');
+
+      // Delete all locally saved images
+      print('🗑️ 로컬 이미지 삭제 중...');
+      await ImageService.deleteAllSavedImages();
+      print('✅ 로컬 이미지 삭제 완료');
+
+      // Sign out locally (session becomes invalid anyway after auth deletion)
+      print('🚪 로그아웃 중...');
+      await Supabase.instance.client.auth.signOut();
+      print('✅ 로그아웃 완료');
+
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('계정이 완전히 삭제되었습니다. 이용해 주셔서 감사합니다.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+
+      print('✅ 계정 삭제 완료');
+    } catch (e, stackTrace) {
+      print('❌ 계정 삭제 오류: $e');
+      print('❌ 스택 트레이스: $stackTrace');
+
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('삭제 중 오류가 발생했습니다.\n오류: ${e.toString()}'),
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: '문의',
+              onPressed: () => _sendEmail(context),
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -259,7 +408,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
             child: ListTile(
               leading: const Icon(Icons.delete_forever, color: AppColors.error),
               title: const Text('계정 삭제'),
-              subtitle: const Text('계정 및 서버 데이터 삭제를 이메일로 요청합니다.'),
+              subtitle: const Text('계정 및 모든 데이터가 영구 삭제됩니다.'),
               onTap: () => _confirmDeleteRequest(context),
             ),
           ),

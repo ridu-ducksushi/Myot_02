@@ -117,6 +117,20 @@ class ImageService {
     }
   }
 
+  /// 앱 내부에 저장된 모든 사용자 이미지 삭제 (pet_images 디렉토리 통째로 제거)
+  static Future<void> deleteAllSavedImages() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final imagesDir = Directory(path.join(directory.path, 'pet_images'));
+      if (await imagesDir.exists()) {
+        await imagesDir.delete(recursive: true);
+        print('🗑️ 로컬 사용자 이미지 디렉토리 삭제 완료: ${imagesDir.path}');
+      }
+    } catch (e) {
+      print('❌ 로컬 사용자 이미지 일괄 삭제 실패: $e');
+    }
+  }
+
   /// 이미지 선택 옵션 표시 (갤러리/카메라)
   static Future<File?> showImageSourceDialog() async {
     // 이 메서드는 UI에서 호출되어야 하므로 여기서는 null을 반환
