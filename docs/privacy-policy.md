@@ -1,33 +1,90 @@
-# Privacy Policy
+# 개인정보 처리방침 (Myot)
 
-**Effective Date**: [DATE]
+최종 업데이트: 2025-10-28
 
-## Information We Collect
+본 개인정보 처리방침은 Myot(이하 "앱")이 이용자의 개인정보를 어떻게 수집, 이용, 보관, 공유하는지에 대해 설명합니다. Android, iOS, Web 등 모든 플랫폼에서 동일하게 적용됩니다.
 
-PetCare collects the following information:
-- Pet information you enter (name, breed, health records)
-- Usage analytics to improve the app
-- Crash reports for debugging
+## 1. 앱 및 운영자 정보
+- 앱 이름: Myot
+- 개발/운영: RiduSoft
+- 문의처: ridusoft@gmail.com
 
-## How We Use Information
+## 2. 수집하는 정보
+앱은 다음 정보를 서비스 제공 및 개선을 위해 처리할 수 있습니다.
+- 계정 정보: 이메일/프로필 정보(소셜 로그인을 사용하는 경우 제공되는 최소 범위)
+- 앱 사용 데이터: 기록(식사·활동·위생·건강 등), 펫 정보(이름, 종 등), 알림 설정
+- 기기/로그 정보: 기기 식별자, OS/앱 버전, 충돌 로그, 성능 지표
+- 알림 토큰: 푸시 알림 발송을 위한 Firebase Cloud Messaging(FCM) 토큰
+- 로컬 저장 데이터: 오프라인 사용을 위한 Isar/SharedPreferences 저장 데이터
 
-- To provide pet care tracking services
-- To sync your data across devices
-- To send relevant notifications and reminders
-- To improve app performance and features
+## 3. 수집 방법
+- 이용자 입력: 사용자가 직접 입력한 기록/설정/문의 내용
+- 자동 수집: 앱 안정성 및 성능 향상을 위한 충돌 로그, 성능/사용 데이터
+- 백엔드 연동: Supabase(클라우드 DB), Firebase(알림/Crashlytics 등)
 
-## Data Storage
+## 4. 이용 목적
+- 핵심 기능 제공: 타임라인 기록/조회, 다국어 지원, 오프라인 동기화
+- 알림 제공: 리마인더·푸시 알림 발송 및 관리
+- 안정성·성능 개선: 오류 분석, 문제 해결, 품질 향상
+- 고객 지원: 문의 대응, 서비스 공지
 
-- Your data is stored securely on Supabase servers
-- Local data is encrypted on your device
-- We implement industry-standard security measures
+## 5. 제3자 제공 및 위탁
+앱은 이용자 정보를 판매하지 않습니다. 다만 서비스 제공을 위해 다음 수탁자/서비스를 사용하며, 각 서비스는 필요한 범위 내에서만 정보를 처리합니다.
+- Supabase: 사용자 계정 및 애플리케이션 데이터 저장/처리
+- Firebase Cloud Messaging: 푸시 알림 전송
+- Firebase Crashlytics/Analytics(활성화 시): 충돌/성능 로그 수집 및 분석
 
-## Data Sharing
+법령 준수 또는 수사기관의 적법한 요청이 있는 경우 제공될 수 있습니다.
 
-We do not sell or share your personal information with third parties except as required by law.
+## 6. 보관 및 보안
+- 클라우드 보관: Supabase에 저장, 적절한 접근 제어 및 RLS(Row Level Security) 정책 적용
+- 로컬 보관: Isar/SharedPreferences에 오프라인 데이터 저장(기기 내 보관)
+- 보호조치: 암호화(전송 중 TLS), 접근 권한 최소화, 계정 인증·인가 절차 운영
+- 보관기간: 서비스 제공에 필요한 기간 동안 보관 후 파기(관련 법령이 정한 기간이 있는 경우 그에 따름)
 
-## Contact
+## 7. 이용자의 권리
+- 열람/정정/삭제: 앱 내에서 기록 삭제 가능, 계정/데이터 정정 또는 삭제는 문의처를 통해 요청 가능
+- 동의 철회: 알림 수신, 일부 데이터 수집은 설정에서 비활성화 가능
+- 데이터 이동·삭제 요청: supabase 계정/앱 데이터의 삭제 요청 시 신속히 처리
 
-For privacy concerns, contact: [YOUR_EMAIL]
+## 8. 계정 및 데이터 삭제 절차
+- 앱 내 기록 삭제: 타임라인에서 항목별 삭제 가능
+- 계정/서버 데이터 삭제 요청: ridusoft@gmail.com으로 이메일 발송 (계정 식별 정보 포함). 본인 확인 후 관련 데이터 일괄 삭제를 진행합니다.
 
-This policy may be updated. Continued use constitutes acceptance of changes.
+## 9. 아동의 개인정보
+본 앱은 아동을 대상으로 한 서비스가 아니며, 아동의 개인정보를 고의로 수집하지 않습니다.
+
+## 10. 국외 이전
+서비스 제공을 위해 데이터가 국외 서버(예: Supabase, Firebase)에 저장·처리될 수 있습니다. 해당 서비스 사업자의 위치·인프라에 따라 데이터의 저장 국가가 달라질 수 있습니다.
+
+## 11. 광고/추적
+- 현재 AdMob 광고는 비활성화 상태입니다(승인 전). 추후 활성화 시 수집 항목 및 목적을 본 방침에 반영하고 앱 내 고지합니다.
+
+## 12. 외부 링크
+앱 또는 문서에서 외부 사이트로 연결될 수 있습니다. 외부 사이트의 개인정보 처리방침은 본 방침과 다를 수 있으므로 별도로 확인하시기 바랍니다.
+
+## 13. 개인정보 처리방침 변경
+본 방침은 수시로 변경될 수 있으며, 중요한 변경이 있을 경우 앱 내 알림 또는 본 문서 페이지를 통해 고지합니다. 변경사항은 게시 즉시 효력이 발생합니다.
+
+## 14. 문의처
+- 이메일: ridusoft@gmail.com
+- 처리방침, 데이터 삭제/이동, 권리 행사 관련 문의는 위 연락처로 요청 바랍니다.
+
+## 15. 아동 보호 및 Google Play 가족 정책 준수
+본 앱은 아동을 포함한 사용자를 대상으로 할 수 있으며, Google Play 가족 정책을 준수합니다. 핵심 원칙은 다음과 같습니다.
+- 민감 식별자 미수집: 광고 식별자(AD_ID) 및 전화/IMEI/SSID/MAC 등 민감 식별자를 수집·전송하지 않습니다.
+- 정밀 위치 미사용: 아동 대상 기능에서 정밀 위치를 요청·수집·전송하지 않습니다.
+- 광고: 현재 광고를 표시하지 않습니다. 추후 광고 도입 시에도 Families Self‑Certified Ads SDK만 사용하고, 아동에게 부적절한 콘텐츠/행태 광고/프로파일링은 허용하지 않습니다.
+- 소셜 기능: 자유 입력·대규모 교류 등 아동에게 위험할 수 있는 소셜 기능을 제공하지 않습니다. 해당 기능 도입 시 성인 확인(Adult action) 및 안전 고지를 구현합니다.
+- SDK 사용: API/SDK는 아동 대상 서비스에서 허용되는 범위로만 사용하며, 최소 수집 원칙을 준수합니다.
+
+## 16. Data safety(데이터 보안) 안내
+Google Play의 Data safety 섹션에 아래와 같이 고지합니다.
+- 수집 항목: 서비스 제공을 위한 최소한의 앱 사용 데이터/펫 정보/오류 로그만 처리
+- 공유 여부: 제3자 제공 없음(처리 위탁: Supabase/Firebase 등 서비스 운영 목적 범위)
+- 암호화: 전송 시 TLS 등 암호화 적용, 접근 제어(RLS 등) 운영
+- 데이터 삭제 수단: 이메일(ridusoft@gmail.com)로 계정/데이터 삭제 요청 가능(본 문서 8항)
+- 아동 데이터: 정밀 위치, 광고 식별자 수집·프로파일링·개인화 광고 미사용
+ 
+---
+본 문서는 Google Play 개인정보처리방침 및 Data safety 제출 요건과의 정합성을 목표로 작성되었습니다. 실제 서비스 설정(Firebase/Crashlytics/Analytics 활성화 여부 등)에 따라 수집 항목·목적을 최신 상태로 유지하시기 바랍니다.
