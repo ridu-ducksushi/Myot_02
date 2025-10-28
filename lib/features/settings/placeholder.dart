@@ -243,10 +243,8 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       print('✅ 로그아웃 완료');
       print('✅ 계정 삭제 완료');
 
-      // Close loading dialog and show success (navigation will happen automatically via auth redirect)
-      if (context.mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
-      }
+      // Navigation will happen automatically via auth redirect (GoRouter)
+      // No need to manually pop or navigate
     } catch (e, stackTrace) {
       print('❌ 계정 삭제 오류: $e');
       print('❌ 스택 트레이스: $stackTrace');
