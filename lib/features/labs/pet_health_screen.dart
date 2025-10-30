@@ -57,10 +57,7 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
         title: Text('tabs.health'.tr()),
         backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.95),
         elevation: 2,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/pets/${widget.petId}'),
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: _LabTable(species: pet.species, petId: pet.id, petName: pet.name, petWeight: pet.weightKg, key: ValueKey(pet.id)),
       floatingActionButton: FloatingActionButton(
