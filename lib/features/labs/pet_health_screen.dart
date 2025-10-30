@@ -1344,11 +1344,7 @@ class _LabTableState extends State<_LabTable> {
       // 저장 후 기록 날짜 목록 업데이트
       await _loadRecordDates();
       
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('저장 완료'), duration: Duration(seconds: 1)),
-        );
-      }
+      // 성공 시에는 알림을 띄우지 않음 (건강 탭 UX 정책)
     } catch (e) {
       print('❌ Save error: $e');
       // 실패 시 로컬 저장 및 보류 큐에 추가
@@ -1586,11 +1582,7 @@ class _LabTableState extends State<_LabTable> {
         }
       }
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('기본정보가 저장되었습니다'), duration: Duration(seconds: 1)),
-        );
-      }
+      // 성공 시에는 알림을 띄우지 않음 (건강 탭 UX 정책)
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1942,9 +1934,7 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
           });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('새로운 검사 항목 "$itemKey"이 추가되었습니다')),
-        );
+        // 성공 시에는 알림을 띄우지 않음 (건강 탭 UX 정책)
         widget.onItemAdded();
         Navigator.of(context).pop();
       }
