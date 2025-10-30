@@ -9,6 +9,7 @@ import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/data/models/record.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:petcare/features/records/records_chart_screen.dart';
 
@@ -87,6 +88,34 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(recordsProvider.notifier).loadRecords(widget.petId);
     });
+    _loadSelectedDate();
+  }
+
+  Future<void> _loadSelectedDate() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final iso = prefs.getString('selected_date_${widget.petId}');
+      if (iso != null && iso.isNotEmpty) {
+        final parts = iso.split('-');
+        if (parts.length == 3) {
+          setState(() {
+            _selectedDate = DateTime(
+              int.parse(parts[0]),
+              int.parse(parts[1]),
+              int.parse(parts[2]),
+            );
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveSelectedDate(DateTime date) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final iso = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      await prefs.setString('selected_date_${widget.petId}', iso);
+    } catch (_) {}
   }
 
   Widget _buildSubMenuItem({
@@ -322,6 +351,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                       setState(() {
                         _selectedDate = _selectedDate.subtract(const Duration(days: 1));
                       });
+                      _saveSelectedDate(_selectedDate);
                     },
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
@@ -347,6 +377,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                           );
                           if (picked != null) {
                             setState(() => _selectedDate = DateTime(picked.year, picked.month, picked.day));
+                            _saveSelectedDate(_selectedDate);
                           }
                         },
                         child: Container(
@@ -409,6 +440,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         setState(() {
                           _selectedDate = tomorrow;
                         });
+                        _saveSelectedDate(_selectedDate);
                       }
                     },
                     borderRadius: BorderRadius.circular(20),

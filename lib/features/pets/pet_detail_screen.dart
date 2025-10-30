@@ -15,6 +15,7 @@ import 'package:petcare/features/labs/weight_chart_screen.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:uuid/uuid.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PetDetailScreen extends ConsumerStatefulWidget {
   const PetDetailScreen({
@@ -49,11 +50,37 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
       Supabase.instance.client,
     );
     
-    // 오늘 날짜로 초기화
+    // 오늘 날짜로 초기화 후, 저장된 선택 날짜가 있으면 복원
     _currentSuppliesDate = DateTime.now();
+    _loadSelectedDate(pet.id);
     _loadSuppliesRecordDates();
     _loadCurrentSupplies();
     _isInitialized = true;
+  }
+
+  Future<void> _loadSelectedDate(String petId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final iso = prefs.getString('selected_date_$petId');
+      if (iso != null && iso.isNotEmpty) {
+        final parts = iso.split('-');
+        if (parts.length == 3) {
+          _currentSuppliesDate = DateTime(
+            int.parse(parts[0]),
+            int.parse(parts[1]),
+            int.parse(parts[2]),
+          );
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveSelectedDate(String petId, DateTime date) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final iso = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      await prefs.setString('selected_date_$petId', iso);
+    } catch (_) {}
   }
 
   Future<void> _loadSuppliesRecordDates() async {
@@ -705,6 +732,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
       setState(() {
         _currentSuppliesDate = previousDates.first;
       });
+      _saveSelectedDate(pet.id, _currentSuppliesDate);
       _loadCurrentSupplies();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -728,12 +756,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
       setState(() {
         _currentSuppliesDate = nextDates.first;
       });
+      _saveSelectedDate(pet.id, _currentSuppliesDate);
       _loadCurrentSupplies();
     } else if (!isSameDay(_currentSuppliesDate, today)) {
       // 다음 기록이 없으면 오늘로 이동
       setState(() {
         _currentSuppliesDate = today;
       });
+      _saveSelectedDate(pet.id, _currentSuppliesDate);
       _loadCurrentSupplies();
     } else {
       // 이미 오늘 날짜인 경우
@@ -767,6 +797,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   setState(() {
                     _currentSuppliesDate = selectedDay;
                   });
+                  _saveSelectedDate(pet.id, _currentSuppliesDate);
                   _loadCurrentSupplies();
                   Navigator.of(context).pop();
                 },
