@@ -632,12 +632,12 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                value ?? '미등록',
+                value ?? 'supplies.add_placeholder'.tr(),
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: value != null ? FontWeight.bold : FontWeight.normal,
                       color: value != null
                           ? Theme.of(context).colorScheme.onSurface
-                          : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                      : Theme.of(context).colorScheme.primary,
                     ),
               ),
             ],
@@ -1332,7 +1332,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: DraggableScrollableSheet(
-        initialChildSize: 0.7,
+        initialChildSize: 0.9,
         maxChildSize: 0.9,
         minChildSize: 0.5,
         expand: false,
