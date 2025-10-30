@@ -233,6 +233,8 @@ class _LabTableState extends State<_LabTable> {
     _loadCustomOrder();
     _loadRecordDates();
     _loadFromSupabase();
+    // 온라인이면 보류된 항목 동기화
+    unawaited(_syncPendingIfOnline());
   }
 
   @override
@@ -888,6 +890,7 @@ class _LabTableState extends State<_LabTable> {
       });
     } catch (e) {
       print('❌ Error loading record dates: $e');
+      await _loadFromLocal();
     }
   }
 
@@ -1055,7 +1058,8 @@ class _LabTableState extends State<_LabTable> {
       print('🔍 Loading data: uid=$uid, petId=${widget.petId}, date=${_dateKey()}');
       
       if (uid == null) {
-        print('❌ User not authenticated');
+        print('❌ User not authenticated → 로컬 캐시에서 로드');
+        await _loadFromLocal();
         setState(() => _isLoading = false);
         return;
       }
@@ -1198,6 +1202,8 @@ class _LabTableState extends State<_LabTable> {
         _cost = '';
         
         print('🏋️ No lab data, using pet weight: $_weight (from pet: ${widget.petWeight})');
+        // 서버 데이터 없을 때 로컬 캐시에서 보강 로드
+        await _loadFromLocal();
       }
 
       // Store previous values for display (only if there's actual data)
@@ -1295,7 +1301,9 @@ class _LabTableState extends State<_LabTable> {
       print('💾 Saving data: uid=$uid, petId=${widget.petId}, date=${_dateKey()}');
       
       if (uid == null) {
-        print('❌ User not authenticated');
+        print('❌ User not authenticated → 로컬 저장');
+        final offlineItems = _collectItemsForSave();
+        await _saveToLocal(offlineItems, enqueuePending: true);
         if (mounted) setState(() => _isSaving = false);
         return;
       }
@@ -1330,6 +1338,8 @@ class _LabTableState extends State<_LabTable> {
       }, onConflict: 'user_id,pet_id,date');
       
       print('✅ Save successful: $result');
+      // 로컬 캐시에도 저장 (오프라인 표시/재로딩용)
+      await _saveToLocal(items);
       
       // 저장 후 기록 날짜 목록 업데이트
       await _loadRecordDates();
@@ -1341,6 +1351,9 @@ class _LabTableState extends State<_LabTable> {
       }
     } catch (e) {
       print('❌ Save error: $e');
+      // 실패 시 로컬 저장 및 보류 큐에 추가
+      final fallback = _collectItemsForSave();
+      await _saveToLocal(fallback, enqueuePending: true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('저장 실패: $e')),
@@ -1584,6 +1597,134 @@ class _LabTableState extends State<_LabTable> {
           SnackBar(content: Text('저장 실패: $e')),
         );
       }
+    }
+  }
+
+  // ===== Offline-first helpers =====
+  Map<String, dynamic> _collectItemsForSave() {
+    final Map<String, dynamic> items = {};
+    for (final k in _valueCtrls.keys) {
+      final val = _valueCtrls[k]?.text ?? '';
+      items[k] = {
+        'value': val,
+        'unit': _units[k] ?? '',
+        'reference': _refDog[k] ?? _refCat[k] ?? '',
+      };
+    }
+    items['체중'] = {'value': _weight, 'unit': 'kg', 'reference': ''};
+    items['병원명'] = {'value': _hospitalName, 'unit': '', 'reference': ''};
+    items['비용'] = {'value': _cost, 'unit': '', 'reference': ''};
+    return items;
+  }
+
+  String _scopeId() => Supabase.instance.client.auth.currentUser?.id ?? 'local-user';
+
+  Future<void> _saveToLocal(Map<String, dynamic> items, {bool enqueuePending = false}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final scope = _scopeId();
+      final key = 'labs_${scope}_${widget.petId}_${_dateKey()}';
+      await prefs.setString(key, jsonEncode(items));
+      final datesKey = 'labs_dates_${scope}_${widget.petId}';
+      final dates = (prefs.getStringList(datesKey) ?? <String>[]).toSet();
+      dates.add(_dateKey());
+      await prefs.setStringList(datesKey, dates.toList());
+      if (enqueuePending) {
+        final pendingKey = 'labs_pending_${scope}';
+        final pending = (prefs.getStringList(pendingKey) ?? <String>[]).toSet();
+        pending.add('${widget.petId}|${_dateKey()}');
+        await prefs.setStringList(pendingKey, pending.toList());
+      }
+      print('💾 로컬 저장 완료: key=$key');
+    } catch (e) {
+      print('❌ 로컬 저장 실패: $e');
+    }
+  }
+
+  Future<void> _loadFromLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final scope = _scopeId();
+      final key = 'labs_${scope}_${widget.petId}_${_dateKey()}';
+      final jsonStr = prefs.getString(key);
+      if (jsonStr == null) {
+        print('ℹ️ 로컬 데이터 없음: $key');
+        return;
+      }
+      final Map<String, dynamic> items = jsonDecode(jsonStr) as Map<String, dynamic>;
+      for (final entry in items.entries) {
+        final k = entry.key;
+        final v = entry.value;
+        if (!_valueCtrls.containsKey(k)) {
+          _valueCtrls[k] = TextEditingController();
+          _valueCtrls[k]!.addListener(_onChanged);
+        }
+        if (v is Map) {
+          if (v['unit'] is String) _units[k] = v['unit'] as String;
+          if (v['reference'] is String) {
+            if (widget.species.toLowerCase() == 'cat') {
+              _refCat[k] = v['reference'] as String;
+            } else {
+              _refDog[k] = v['reference'] as String;
+            }
+          }
+          final value = v['value'] is String ? v['value'] as String : '';
+          _valueCtrls[k]?.text = value;
+        }
+      }
+      _weight = (items['체중'] is Map && items['체중']['value'] is String) ? items['체중']['value'] as String : _weight;
+      _hospitalName = (items['병원명'] is Map && items['병원명']['value'] is String) ? items['병원명']['value'] as String : _hospitalName;
+      _cost = (items['비용'] is Map && items['비용']['value'] is String) ? items['비용']['value'] as String : _cost;
+      print('📥 로컬 캐시에서 로드 완료: key=$key');
+      final datesKey = 'labs_dates_${scope}_${widget.petId}';
+      final dates = (prefs.getStringList(datesKey) ?? <String>[]);
+      setState(() {
+        _recordDates = dates.map((d) {
+          final parts = d.split('-');
+          return DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+        }).toSet();
+      });
+    } catch (e) {
+      print('❌ 로컬 로드 실패: $e');
+    }
+  }
+
+  Future<void> _syncPendingIfOnline() async {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    if (uid == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final pendingKey = 'labs_pending_${uid}';
+      final list = prefs.getStringList(pendingKey) ?? <String>[];
+      if (list.isEmpty) return;
+      print('⏫ 보류된 업로드 ${list.length}건 동기화 시도');
+      for (final entry in List<String>.from(list)) {
+        final parts = entry.split('|');
+        if (parts.length != 2) continue;
+        final petId = parts[0];
+        final date = parts[1];
+        final key = 'labs_${uid}_${petId}_${date}';
+        final jsonStr = prefs.getString(key);
+        if (jsonStr == null) continue;
+        final items = jsonDecode(jsonStr) as Map<String, dynamic>;
+        try {
+          await Supabase.instance.client.from('labs').upsert({
+            'user_id': uid,
+            'pet_id': petId,
+            'date': date,
+            'panel': 'BloodTest',
+            'items': items,
+          }, onConflict: 'user_id,pet_id,date');
+          final set = (prefs.getStringList(pendingKey) ?? <String>[]).toSet();
+          set.remove(entry);
+          await prefs.setStringList(pendingKey, set.toList());
+          print('✅ 보류 업로드 성공: $petId@$date');
+        } catch (e) {
+          print('⚠️ 보류 업로드 실패(유지): $petId@$date → $e');
+        }
+      }
+    } catch (e) {
+      print('❌ 보류 동기화 실패: $e');
     }
   }
 

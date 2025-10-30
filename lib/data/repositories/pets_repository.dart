@@ -110,12 +110,22 @@ class PetsRepository {
             await localDb.savePet(pet);
           }
 
+          // Debug: dump all pet scopes/keys before migration
+          await localDb.debugDumpAllPetScopes();
+
+          // 자동 마이그레이션: 로컬에 guest/local-user 소유 펫이 있으면 현재 사용자로 승격 후 클라우드 업로드
+          await _migrateLocalGuestPets(user.id);
+
           final localPets = await localDb.getAllPets();
+          print('🧭 로컬 전체 펫 목록 (${localPets.length}) → ' + localPets.map((p) => '[${p.ownerId}] ${p.name}').take(10).join(', '));
           final filteredPets = localPets.where((pet) {
             if (pet.ownerId == user.id) return true;
+            // 마이그레이션 직후 반영 지연 대비: 임시로 local-user/guest도 포함
             if (pet.ownerId == 'local-user') return true;
+            if (pet.ownerId == 'guest') return true;
             return false;
           }).toList();
+          print('🧭 필터 후 펫 목록 (${filteredPets.length}) → ' + filteredPets.map((p) => '[${p.ownerId}] ${p.name}').take(10).join(', '));
           
           print('✅ 총 ${filteredPets.length}개 펫 반환 (Supabase: ${pets.length}, 로컬: ${localPets.length})');
           return filteredPets;
@@ -139,6 +149,61 @@ class PetsRepository {
     }).toList();
     print('📱 로컬에서 ${filtered.length}개 펫 로드 (필터링 적용)');
     return filtered;
+  }
+
+  /// 로컬의 guest/local-user 펫을 현재 사용자 소유로 승격하고 Supabase에 업로드
+  Future<void> _migrateLocalGuestPets(String currentUserId) async {
+    try {
+      // 게스트/로컬유저 스코프에 저장된 펫을 직접 읽어와서 마이그레이션
+      print('🔎 스코프 점검 시작 (guest/local-user)');
+      final guestPets = await localDb.getAllPetsForScope('guest');
+      final localUserPets = await localDb.getAllPetsForScope('local-user');
+      print('📦 guest 스코프: ${guestPets.length}개 → ' + guestPets.map((p) => p.name).take(10).join(', '));
+      print('📦 local-user 스코프: ${localUserPets.length}개 → ' + localUserPets.map((p) => p.name).take(10).join(', '));
+      final needsMigration = [...guestPets, ...localUserPets];
+      if (needsMigration.isEmpty) {
+        print('ℹ️ 마이그레이션 대상 없음');
+        return;
+      }
+
+      print('🔄 자동 마이그레이션 시작: 대상 ${needsMigration.length}개');
+
+      for (final pet in needsMigration) {
+        try {
+          // 현재 사용자 소유로 변경
+          final migratedPet = pet.copyWith(
+            ownerId: currentUserId,
+            updatedAt: DateTime.now(),
+          );
+
+          print('⬆️ 업로드 시도: ${pet.name} (oldOwner=${pet.ownerId}) → newOwner=$currentUserId');
+          // Supabase에 업로드 (id는 DB에서 생성) → 응답으로 받은 id로 로컬 업데이트
+          final insertRow = _toSupabaseRow(migratedPet, currentUserId);
+          final response = await supabase
+              .from('pets')
+              .insert(insertRow)
+              .select()
+              .single();
+
+          final savedPet = _fromSupabaseRow(response as Map<String, dynamic>);
+
+          // 로컬 저장소에 새 ID로 저장 (이전 guest/local-user 항목 대체)
+          await localDb.savePet(savedPet);
+
+          print('✅ 마이그레이션 완료: ${savedPet.name} (신규 ID: ${savedPet.id})');
+        } catch (e) {
+          print('❌ 펫 마이그레이션 실패: ${pet.name} - $e');
+          // 실패 시에도 다른 항목 진행
+        }
+      }
+
+      // 마이그레이션 완료 후, 이전 스코프 데이터 정리
+      await localDb.removeScopedKeyFor('pets', 'guest');
+      await localDb.removeScopedKeyFor('pets', 'local-user');
+      print('🧹 스코프 정리 완료 (guest/local-user)');
+    } catch (e) {
+      print('❌ 자동 마이그레이션 전체 실패: $e');
+    }
   }
 
   /// Get pet by ID

@@ -43,6 +43,14 @@ class LocalDatabase {
     return legacyValue;
   }
 
+  // 특정 사용자 스코프의 값을 직접 읽기 (게스트/로컬 유저 마이그레이션용)
+  String? _getScopedStringFor(String baseKey, String scopeUserId) {
+    final prefs = _prefs;
+    if (prefs == null) return null;
+    final scopedKey = '${baseKey}_$scopeUserId';
+    return prefs.getString(scopedKey);
+  }
+
   Future<void> _setScopedString(String baseKey, String value) async {
     final prefs = _prefs;
     if (prefs == null) return;
@@ -61,6 +69,16 @@ class LocalDatabase {
     await prefs.remove(_userScopedKey(baseKey));
     if (prefs.containsKey(baseKey)) {
       await prefs.remove(baseKey);
+    }
+  }
+
+  // 특정 사용자 스코프 키 제거 (게스트/로컬 유저 정리용)
+  Future<void> removeScopedKeyFor(String baseKey, String scopeUserId) async {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    final scopedKey = '${baseKey}_$scopeUserId';
+    if (prefs.containsKey(scopedKey)) {
+      await prefs.remove(scopedKey);
     }
   }
   
@@ -100,6 +118,21 @@ class LocalDatabase {
       return pets;
     } catch (e) {
       print('❌ 펫 데이터 로드 실패: $e');
+      return [];
+    }
+  }
+
+  // 특정 사용자 스코프의 펫 목록 읽기 (게스트/로컬 유저 마이그레이션용)
+  Future<List<Pet>> getAllPetsForScope(String scopeUserId) async {
+    try {
+      final petsJson = _getScopedStringFor(_petsKey, scopeUserId);
+      if (petsJson == null) return [];
+      final List<dynamic> petsList = json.decode(petsJson);
+      final pets = petsList.map((json) => Pet.fromJson(json as Map<String, dynamic>)).toList();
+      print('📱 [$scopeUserId] 스코프에서 ${pets.length}개 펫 로드');
+      return pets;
+    } catch (e) {
+      print('❌ [$scopeUserId] 스코프 펫 로드 실패: $e');
       return [];
     }
   }
@@ -243,6 +276,63 @@ class LocalDatabase {
       await _setScopedString(_remindersKey, remindersJson);
     } catch (e) {
       print('❌ 리마인더 삭제 실패: $e');
+    }
+  }
+
+  // Debug: dump all SharedPreferences keys and pet scopes
+  Future<void> debugDumpAllPetScopes() async {
+    try {
+      final prefs = _prefs;
+      if (prefs == null) {
+        print('❌ debugDumpAllPetScopes: prefs is null');
+        return;
+      }
+
+      final keys = prefs.getKeys();
+      print('🗝️ SharedPreferences 키 개수: ${keys.length}');
+
+      // Pets-related keys
+      final petsKeys = keys.where((k) => k.startsWith('pets')).toList()..sort();
+      print('🐾 Pets 관련 키 (${petsKeys.length}): ${petsKeys.join(', ')}');
+
+      // 각 스코프별 펫 개수 덤프
+      Future<void> dumpScope(String scope) async {
+        final val = prefs.getString('pets_$scope');
+        if (val == null) {
+          print('📦 스코프 "$scope": 0개');
+          return;
+        }
+        try {
+          final list = (json.decode(val) as List<dynamic>)
+              .map((e) => Pet.fromJson(e as Map<String, dynamic>))
+              .toList();
+          print('📦 스코프 "$scope": ${list.length}개 → ' + list.map((p) => p.name).take(10).join(', '));
+        } catch (e) {
+          print('⚠️ 스코프 "$scope" 디코딩 실패: $e');
+        }
+      }
+
+      // 표준 스코프들 덤프
+      await dumpScope('guest');
+      await dumpScope('local-user');
+
+      final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+      if (currentUserId != null) {
+        await dumpScope(currentUserId);
+      }
+
+      // 기타 알 수 없는 스코프들도 탐색
+      for (final key in petsKeys) {
+        if (key == 'pets') continue;
+        if (!key.startsWith('pets_')) continue;
+        final scope = key.substring('pets_'.length);
+        if (scope == 'guest' || scope == 'local-user' || scope == (currentUserId ?? '')) {
+          continue;
+        }
+        await dumpScope(scope);
+      }
+    } catch (e) {
+      print('❌ debugDumpAllPetScopes 실패: $e');
     }
   }
 }
