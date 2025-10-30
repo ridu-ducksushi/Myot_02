@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -16,6 +17,29 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
   String? _currentPetId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastSelectedPetId();
+  }
+
+  Future<void> _loadLastSelectedPetId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString('last_selected_pet_id');
+      if (mounted && saved != null && saved.isNotEmpty) {
+        setState(() => _currentPetId = saved);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveLastSelectedPetId(String petId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_selected_pet_id', petId);
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +57,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final parts = location.split('/');
         if (parts.length >= 3) {
           _currentPetId = parts[2];
+          _saveLastSelectedPetId(_currentPetId!);
         }
       } else if (_currentPetId == null) {
-        // 설정 화면에서 진입했거나 이전 펫 선택이 없는 경우 첫 번째 펫 사용 (단일 진실 원천 유지)
+        // 설정 화면에서 재구성된 경우 마지막 선택 펫 복원 → 없으면 첫 번째 펫
+        // _loadLastSelectedPetId() 비동기 복원을 기다리는 동안 일시 폴백
         if (petsState.pets.isNotEmpty) {
           _currentPetId = petsState.pets.first.id;
         }
@@ -64,12 +90,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (_currentPetId != null) {
             switch (index) {
               case 0:
+                _saveLastSelectedPetId(_currentPetId!);
                 context.go('/pets/$_currentPetId');
                 break;
               case 1:
+                _saveLastSelectedPetId(_currentPetId!);
                 context.go('/pets/$_currentPetId/records');
                 break;
               case 2:
+                _saveLastSelectedPetId(_currentPetId!);
                 context.go('/pets/$_currentPetId/health');
                 break;
               case 3:

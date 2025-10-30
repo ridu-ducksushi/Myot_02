@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/data/models/pet_supplies.dart';
@@ -107,6 +108,13 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
         title: Text('pets.profile'.tr()),
         backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.95),
         elevation: 2,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // 프로필 → 펫 카드 목록으로 일관되게 이동
+            context.go('/');
+          },
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(

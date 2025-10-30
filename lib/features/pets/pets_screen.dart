@@ -12,6 +12,7 @@ import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/widgets/profile_image_picker.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:petcare/data/local/database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PetsScreen extends ConsumerStatefulWidget {
   const PetsScreen({super.key});
@@ -99,12 +100,35 @@ class _PetsScreenState extends ConsumerState<PetsScreen> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 80), // Space for FAB
-      itemCount: state.pets.length,
-      itemBuilder: (context, index) {
-        final pet = state.pets[index];
-        return _PetCard(pet: pet);
+    Future<List<Pet>> _reorderedPets() async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final preferredId = prefs.getString('last_selected_pet_id');
+        if (preferredId == null || preferredId.isEmpty) return state.pets;
+        final list = List<Pet>.from(state.pets);
+        final idx = list.indexWhere((p) => p.id == preferredId);
+        if (idx > 0) {
+          final selected = list.removeAt(idx);
+          list.insert(0, selected);
+        }
+        return list;
+      } catch (_) {
+        return state.pets;
+      }
+    }
+
+    return FutureBuilder<List<Pet>>(
+      future: _reorderedPets(),
+      builder: (context, snapshot) {
+        final pets = snapshot.data ?? state.pets;
+        return ListView.builder(
+          padding: const EdgeInsets.only(bottom: 80), // Space for FAB
+          itemCount: pets.length,
+          itemBuilder: (context, index) {
+            final pet = pets[index];
+            return _PetCard(pet: pet);
+          },
+        );
       },
     );
   }
@@ -201,7 +225,13 @@ class _PetCard extends ConsumerWidget {
     final speciesColor = AppColors.getSpeciesColor(pet.species);
 
     return AppCard(
-      onTap: () => _showPetDetails(context, pet),
+      onTap: () async {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('last_selected_pet_id', pet.id);
+        } catch (_) {}
+        _showPetDetails(context, pet);
+      },
       onLongPress: () => _showPetOptions(context, ref, pet),
       child: Padding(
         padding: const EdgeInsets.all(16),

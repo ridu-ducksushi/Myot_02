@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -325,6 +326,15 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         currentPetId = parts[2];
       }
     }
+    // 설정 화면에서 진입 시에는 라우트에 펫 ID가 없으므로 마지막 선택 펫을 복원
+    Future<String?> loadLastSelectedPetId() async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        return prefs.getString('last_selected_pet_id');
+      } catch (_) {
+        return null;
+      }
+    }
     
     final currentPet = currentPetId != null 
         ? petsState.pets.where((pet) => pet.id == currentPetId).firstOrNull
@@ -348,14 +358,27 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
           // 가로 스크롤 가능한 펫 카드들
           SizedBox(
             height: 240, // 카드 높이
-            child: ListView.builder(
+            child: FutureBuilder<String?>(
+              future: currentPetId != null ? Future.value(currentPetId) : loadLastSelectedPetId(),
+              builder: (context, snapshot) {
+                final preferredId = currentPetId ?? snapshot.data;
+                // 선호 펫 ID를 첫 번째로 배치한 리스트 구성
+                final pets = List<Pet>.from(petsState.pets);
+                if (preferredId != null) {
+                  final idx = pets.indexWhere((p) => p.id == preferredId);
+                  if (idx > 0) {
+                    final selected = pets.removeAt(idx);
+                    pets.insert(0, selected);
+                  }
+                }
+                return ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: petsState.pets.length + 1, // 펫들 + 새 펫 추가 카드
+              itemCount: pets.length + 1, // 펫들 + 새 펫 추가 카드
               itemBuilder: (context, index) {
-                if (index < petsState.pets.length) {
+                if (index < pets.length) {
                   // 기존 펫 카드
-                  final pet = petsState.pets[index];
+                  final pet = pets[index];
                   return Container(
                     width: 200, // 카드 너비
                     child: _buildHorizontalPetCard(context, ref, pet),
@@ -367,6 +390,8 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                     child: _buildAddPetCard(context),
                   );
                 }
+              },
+            );
               },
             ),
           ),
