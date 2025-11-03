@@ -374,12 +374,20 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                                               ),
                                             ),
                                             const SizedBox(width: 8),
-                                            GestureDetector(
+                                            InkWell(
                         onTap: () => _showWeightChart(context, pet),
-                                              child: Icon(
-                                                Icons.bar_chart,
-                                                size: 18,
-                                                color: Theme.of(context).colorScheme.primary,
+                                              borderRadius: BorderRadius.circular(10),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(8),
+                                                decoration: BoxDecoration(
+                                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                                child: Icon(
+                                                  Icons.bar_chart,
+                                                  size: 24,
+                                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                                ),
                                               ),
                                             ),
                                           ],

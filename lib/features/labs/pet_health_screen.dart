@@ -1423,19 +1423,23 @@ class _LabTableState extends State<_LabTable> {
             ),
             // 모든 행에 동일한 너비의 공간 확보 (체중 항목만 아이콘 표시)
             SizedBox(
-              width: 44, // 아이콘 영역 고정 너비
+              width: 48, // 아이콘 영역 고정 너비
               child: label == '체중'
                   ? Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: InkWell(
                         onTap: () => _showWeightChartDialog(widget.petId, widget.petName),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(10),
                         child: Container(
-                          padding: const EdgeInsets.all(4),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           child: Icon(
-                            Icons.monitor_weight,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
+                            Icons.bar_chart,
+                            size: 24,
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
                           ),
                         ),
                       ),
