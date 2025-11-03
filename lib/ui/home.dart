@@ -18,10 +18,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
   String? _currentPetId;
 
+  // In-memory route history for tab navigation
+  final List<String> _routeHistory = <String>[];
+  String? _currentTrackedLocation;
+
   @override
   void initState() {
     super.initState();
     _loadLastSelectedPetId();
+  }
+
+  void _recordRouteIfChanged(String newLocation) {
+    // Track only main app routes (tabs and pet detail)
+    final isTrackable = newLocation == '/settings' || newLocation == '/' || newLocation.startsWith('/pets/');
+    if (!isTrackable) {
+      _currentTrackedLocation = newLocation;
+      return;
+    }
+
+    if (_currentTrackedLocation == null) {
+      _currentTrackedLocation = newLocation;
+      return;
+    }
+
+    if (_currentTrackedLocation != newLocation) {
+      // Push previous trackable location into history as a back target
+      if (_routeHistory.isEmpty || _routeHistory.last != _currentTrackedLocation) {
+        _routeHistory.add(_currentTrackedLocation!);
+        if (_routeHistory.length > 30) {
+          _routeHistory.removeAt(0);
+        }
+      }
+      _currentTrackedLocation = newLocation;
+    }
   }
 
   Future<void> _loadLastSelectedPetId() async {
@@ -41,10 +70,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (_) {}
   }
 
+  Future<void> _saveLastRoute(String route) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_route', route);
+    } catch (_) {}
+  }
+
+  Future<bool> _onWillPop() async {
+    // Pop to last recorded tab route if present
+    if (_routeHistory.isNotEmpty) {
+      final target = _routeHistory.removeLast();
+      context.go(target);
+      return false;
+    }
+
+    // If on settings and no history, go to a safe pet route or root
+    final location = GoRouterState.of(context).matchedLocation;
+    if (location == '/settings' || location.startsWith('/settings')) {
+      try {
+        String? petId = _currentPetId;
+        if (petId == null || petId.isEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          petId = prefs.getString('last_selected_pet_id');
+        }
+        if (petId != null && petId.isNotEmpty) {
+          context.go('/pets/$petId');
+        } else {
+          context.go('/');
+        }
+        return false;
+      } catch (_) {
+        context.go('/');
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final petsState = ref.watch(petsProvider);
+
+    // Record route transitions globally
+    _recordRouteIfChanged(location);
     
     // 펫 상세 화면과 설정 화면에서 하단 탭 표시
     final isPetDetailRoute = location.startsWith('/pets/') && location.split('/').length >= 3;
@@ -79,53 +150,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     }
 
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: shouldShowBottomNav ? BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-          
-          if (_currentPetId != null) {
-            switch (index) {
-              case 0:
-                _saveLastSelectedPetId(_currentPetId!);
-                context.go('/pets/$_currentPetId');
-                break;
-              case 1:
-                _saveLastSelectedPetId(_currentPetId!);
-                context.go('/pets/$_currentPetId/records');
-                break;
-              case 2:
-                _saveLastSelectedPetId(_currentPetId!);
-                context.go('/pets/$_currentPetId/health');
-                break;
-              case 3:
-                context.go('/settings');
-                break;
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        body: widget.child,
+        bottomNavigationBar: shouldShowBottomNav ? BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() => _currentIndex = index);
+            
+            if (_currentPetId != null) {
+              switch (index) {
+                case 0:
+                  _saveLastSelectedPetId(_currentPetId!);
+                  context.go('/pets/$_currentPetId');
+                  break;
+                case 1:
+                  _saveLastSelectedPetId(_currentPetId!);
+                  context.go('/pets/$_currentPetId/records');
+                  break;
+                case 2:
+                  _saveLastSelectedPetId(_currentPetId!);
+                  context.go('/pets/$_currentPetId/health');
+                  break;
+                case 3:
+                  context.go('/settings');
+                  break;
+              }
             }
-          }
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.pets),
-            label: 'tabs.profile'.tr(),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.list_alt),
-            label: 'tabs.records'.tr(),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.favorite),
-            label: 'tabs.health'.tr(),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.settings),
-            label: 'tabs.settings'.tr(),
-          ),
-        ],
-      ) : null,
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.pets),
+              label: 'tabs.profile'.tr(),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.list_alt),
+              label: 'tabs.records'.tr(),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.favorite),
+              label: 'tabs.health'.tr(),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.settings),
+              label: 'tabs.settings'.tr(),
+            ),
+          ],
+        ) : null,
+      ),
     );
   }
 }
