@@ -18,39 +18,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
   String? _currentPetId;
 
-  // In-memory route history for tab navigation
+  // In-memory route history for tab navigation (stores previous locations)
   final List<String> _routeHistory = <String>[];
-  String? _currentTrackedLocation;
 
   @override
   void initState() {
     super.initState();
     _loadLastSelectedPetId();
-  }
-
-  void _recordRouteIfChanged(String newLocation) {
-    // Track only main app routes (tabs and pet detail)
-    final isTrackable = newLocation == '/settings' || newLocation == '/' || newLocation.startsWith('/pets/');
-    if (!isTrackable) {
-      _currentTrackedLocation = newLocation;
-      return;
-    }
-
-    if (_currentTrackedLocation == null) {
-      _currentTrackedLocation = newLocation;
-      return;
-    }
-
-    if (_currentTrackedLocation != newLocation) {
-      // Push previous trackable location into history as a back target
-      if (_routeHistory.isEmpty || _routeHistory.last != _currentTrackedLocation) {
-        _routeHistory.add(_currentTrackedLocation!);
-        if (_routeHistory.length > 30) {
-          _routeHistory.removeAt(0);
-        }
-      }
-      _currentTrackedLocation = newLocation;
-    }
+    _loadRouteHistory();
   }
 
   Future<void> _loadLastSelectedPetId() async {
@@ -63,6 +38,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (_) {}
   }
 
+  Future<void> _loadRouteHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getStringList('route_history');
+      if (saved != null && saved.isNotEmpty) {
+        _routeHistory.addAll(saved);
+        print('📖 Loaded history: $_routeHistory');
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveRouteHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('route_history', _routeHistory);
+    } catch (_) {}
+  }
+
   Future<void> _saveLastSelectedPetId(String petId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -70,23 +63,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (_) {}
   }
 
-  Future<void> _saveLastRoute(String route) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('last_route', route);
-    } catch (_) {}
-  }
-
   Future<bool> _onWillPop() async {
-    // Pop to last recorded tab route if present
+    final location = GoRouterState.of(context).matchedLocation;
+    print('🔙 Back pressed from: $location');
+    print('📚 History: $_routeHistory');
+    
+    // If we have history, go back to the last location
     if (_routeHistory.isNotEmpty) {
       final target = _routeHistory.removeLast();
+      await _saveRouteHistory(); // Save after removing
+      print('✅ Navigating to: $target');
       context.go(target);
       return false;
     }
 
+    print('⚠️ No history available');
+    
+    // Check if we're on a pet detail page (profile tab)
+    final isPetDetailPage = location.startsWith('/pets/') && 
+                            !location.endsWith('/records') && 
+                            !location.endsWith('/health') &&
+                            location.split('/').length == 3;
+    
+    if (isPetDetailPage) {
+      print('➡️ From pet detail to pet list: /');
+      context.go('/');
+      return false;
+    }
+    
     // If on settings and no history, go to a safe pet route or root
-    final location = GoRouterState.of(context).matchedLocation;
     if (location == '/settings' || location.startsWith('/settings')) {
       try {
         String? petId = _currentPetId;
@@ -95,8 +100,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           petId = prefs.getString('last_selected_pet_id');
         }
         if (petId != null && petId.isNotEmpty) {
+          print('➡️ Fallback to pet detail: /pets/$petId');
           context.go('/pets/$petId');
         } else {
+          print('➡️ Fallback to root: /');
           context.go('/');
         }
         return false;
@@ -106,6 +113,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     }
 
+    print('⬅️ Allowing system back');
     return true;
   }
 
@@ -113,9 +121,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final petsState = ref.watch(petsProvider);
-
-    // Record route transitions globally
-    _recordRouteIfChanged(location);
     
     // 펫 상세 화면과 설정 화면에서 하단 탭 표시
     final isPetDetailRoute = location.startsWith('/pets/') && location.split('/').length >= 3;
@@ -158,6 +163,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
           onTap: (index) {
+            // Skip if already on this tab
+            if (_currentIndex == index) return;
+
+            // Save current location to history before navigating
+            final currentLocation = GoRouterState.of(context).matchedLocation;
+            print('📍 Tab tapped: $index, Current location: $currentLocation');
+            if (_routeHistory.isEmpty || _routeHistory.last != currentLocation) {
+              _routeHistory.add(currentLocation);
+              _saveRouteHistory(); // Save immediately
+              print('💾 Added to history: $currentLocation');
+              print('📚 History now: $_routeHistory');
+              // Limit history size
+              if (_routeHistory.length > 20) {
+                _routeHistory.removeAt(0);
+              }
+            } else {
+              print('⏭️ Skipped duplicate: $currentLocation');
+            }
+
             setState(() => _currentIndex = index);
             
             if (_currentPetId != null) {

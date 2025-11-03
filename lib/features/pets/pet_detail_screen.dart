@@ -141,7 +141,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
             // 프로필 → 펫 카드 목록으로 일관되게 이동
             context.go('/');
           },
-        ),
+          ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -173,7 +173,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
           padding: const EdgeInsets.all(20),
           child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+            children: [
                 // 왼쪽: 프로필 이미지와 편집 아이콘 + 종족/품종
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -181,110 +181,110 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                     GestureDetector(
                       onTap: () {}, // 빈 핸들러로 상위 InkWell 이벤트 차단
                       child: ProfileImagePicker(
-                    imagePath: pet.avatarUrl,
-                    selectedDefaultIcon: pet.defaultIcon,
+                imagePath: pet.avatarUrl,
+                selectedDefaultIcon: pet.defaultIcon,
                     selectedBgColor: pet.profileBgColor,
-                    species: pet.species, // 동물 종류 전달
-                    onImageSelected: (image) async {
-                      if (image != null) {
-                        // ProfileImagePicker에서 이미 저장된 파일을 받음
-                        final updatedPet = pet.copyWith(
-                          avatarUrl: image.path, // 이미 저장된 경로를 사용
-                          defaultIcon: null, // 이미지 선택 시 기본 아이콘 제거
-                          updatedAt: DateTime.now(),
+                species: pet.species, // 동물 종류 전달
+                onImageSelected: (image) async {
+                  if (image != null) {
+                    // ProfileImagePicker에서 이미 저장된 파일을 받음
+                    final updatedPet = pet.copyWith(
+                      avatarUrl: image.path, // 이미 저장된 경로를 사용
+                      defaultIcon: null, // 이미지 선택 시 기본 아이콘 제거
+                      updatedAt: DateTime.now(),
+                    );
+                    
+                    try {
+                      await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                      
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('pets.image_updated'.tr()),
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                          ),
                         );
-                        
-                        try {
-                          await ref.read(petsProvider.notifier).updatePet(updatedPet);
-                          
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('pets.image_updated'.tr()),
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('pets.image_update_error'.tr(args: [pet.name])),
-                                backgroundColor: Theme.of(context).colorScheme.error,
-                              ),
-                            );
-                          }
-                        }
-                      } else {
-                        // 이미지 삭제 및 기본 아이콘으로 설정
-                        final updatedPet = pet.copyWith(
-                          avatarUrl: null,
-                          defaultIcon: 'dog1', // 기본 아이콘 설정
-                          updatedAt: DateTime.now(),
-                        );
-
-                        try {
-                          await ref.read(petsProvider.notifier).updatePet(updatedPet);
-
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('프로필 이미지가 기본 아이콘으로 변경되었습니다.'),
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('이미지 삭제에 실패했습니다.'),
-                                backgroundColor: Theme.of(context).colorScheme.error,
-                              ),
-                            );
-                          }
-                        }
                       }
-                    },
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('pets.image_update_error'.tr(args: [pet.name])),
+                            backgroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                        );
+                      }
+                    }
+                  } else {
+                    // 이미지 삭제 및 기본 아이콘으로 설정
+                    final updatedPet = pet.copyWith(
+                      avatarUrl: null,
+                      defaultIcon: 'dog1', // 기본 아이콘 설정
+                      updatedAt: DateTime.now(),
+                    );
+
+                    try {
+                      await ref.read(petsProvider.notifier).updatePet(updatedPet);
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('프로필 이미지가 기본 아이콘으로 변경되었습니다.'),
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('이미지 삭제에 실패했습니다.'),
+                            backgroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
                     onDefaultIconSelected: (iconName, bgColor) async {
                       // 기본 아이콘과 배경색을 함께 업데이트
-                      final updatedPet = pet.copyWith(
-                        defaultIcon: iconName,
+                  final updatedPet = pet.copyWith(
+                    defaultIcon: iconName,
                         profileBgColor: bgColor,
-                        avatarUrl: null, // 기본 아이콘 선택 시 이미지 제거
-                        updatedAt: DateTime.now(),
-                      );
-                      
-                      try {
-                        await ref.read(petsProvider.notifier).updatePet(updatedPet);
-                        
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                    avatarUrl: null, // 기본 아이콘 선택 시 이미지 제거
+                    updatedAt: DateTime.now(),
+                  );
+                  
+                  try {
+                    await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                    
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
                               content: Text('프로필이 설정되었습니다'),
-                              backgroundColor: Theme.of(context).colorScheme.primary,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
                               content: Text('프로필 설정에 실패했습니다'),
-                              backgroundColor: Theme.of(context).colorScheme.error,
-                            ),
-                          );
-                        }
-                      }
-                    },
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
+                    }
+                  }
+                },
                     size: 136.5,
-                    showEditIcon: true,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                showEditIcon: true,
+                ),
+              ),
+              const SizedBox(height: 8),
                     // 종족과 품종
                     Column(
-                      children: [
+                children: [
                         Transform.scale(
                           scale: 0.85,
                           child: PetSpeciesChip(species: pet.species),
@@ -299,14 +299,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                           Transform.scale(
                             scale: 0.85,
                             child: Chip(
-                              label: Text(pet.breed!),
-                              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                      label: Text(pet.breed!),
+                      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
                               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               visualDensity: VisualDensity.compact,
                             ),
-                          ),
-                        ],
-                      ],
+                    ),
+                  ],
+                ],
                     ),
                   ],
                 ),
@@ -324,23 +324,23 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      
+              ),
+              
                       const SizedBox(height: 12),
-                      
+              
                       // 상세 정보들
                       Column(
-                        children: [
-                          if (age != null)
+                children: [
+                  if (age != null)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
-                              child: _InfoCard(
-                                icon: Icons.cake,
-                                label: 'pets.age'.tr(),
-                                value: age,
-                              ),
-                            ),
-                          if (pet.weightKg != null)
+                      child: _InfoCard(
+                        icon: Icons.cake,
+                        label: 'pets.age'.tr(),
+                        value: age,
+                      ),
+                    ),
+                  if (pet.weightKg != null)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                           child: Container(
@@ -362,7 +362,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       ),
                                       const SizedBox(width: 8),
-                                      Expanded(
+                    Expanded(
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
@@ -375,7 +375,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                                             ),
                                             const SizedBox(width: 8),
                                             GestureDetector(
-                                              onTap: () => _showWeightChart(context, pet),
+                        onTap: () => _showWeightChart(context, pet),
                                               child: Icon(
                                                 Icons.bar_chart,
                                                 size: 18,
@@ -388,37 +388,37 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                                     ],
                                   ),
                                 ),
-                              ),
-                            ),
-                          if (pet.sex != null)
+                      ),
+                    ),
+                  if (pet.sex != null)
                             _InfoCard(
                               icon: pet.sex!.toLowerCase() == 'male' || pet.sex == '남아' ? Icons.male : Icons.female,
-                              label: 'pets.sex'.tr(),
+                        label: 'pets.sex'.tr(),
                               value: _getSexWithNeuteredText(pet),
-                            ),
-                        ],
-                      ),
-                      
+                    ),
+                ],
+              ),
+              
                       // 메모 섹션 (기록이 없어도 영역 유지)
                       const SizedBox(height: 12),
-                      Container(
-                        width: double.infinity,
+                Container(
+                  width: double.infinity,
                         padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
+                  ),
+                  child: Text(
                           pet.note ?? '',
                           textAlign: TextAlign.right,
                           style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ],
-        ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -431,7 +431,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
         borderRadius: BorderRadius.zero,
         margin: EdgeInsets.zero,
         elevation: 0,
-        child: Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 날짜 헤더 영역 (배경색 추가)
@@ -447,8 +447,8 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   ),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
                     // 좌측 화살표 - 이전 기록으로 이동
                     InkWell(
                       onTap: () => _moveToPreviousSuppliesRecord(pet),
@@ -471,10 +471,10 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                           Text(
                             DateFormat('yyyy년 MM월 dd일').format(_currentSuppliesDate),
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                            overflow: TextOverflow.ellipsis,
+                            fontWeight: FontWeight.bold,
                           ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                           const SizedBox(width: 4),
                           Icon(
                             Icons.calendar_today,
@@ -529,18 +529,18 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                           '선택한 날짜의 기록이 없습니다',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
                       ),
-                    ],
+                        ),
                   ),
+                ],
+              ),
                 ),
               InkWell(
                 onTap: () => _editSupplies(context, pet),
                 borderRadius: BorderRadius.circular(8),
                 child: _buildSupplyItem(
-                  context,
-                  icon: Icons.restaurant,
+                context,
+                icon: Icons.restaurant,
                   label: '건사료',
                   value: _currentSupplies?.dryFood,
                 ),
@@ -561,9 +561,9 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                 onTap: () => _editSupplies(context, pet),
                 borderRadius: BorderRadius.circular(8),
                 child: _buildSupplyItem(
-                  context,
-                  icon: Icons.medication,
-                  label: '영양제',
+                context,
+                icon: Icons.medication,
+                label: '영양제',
                   value: _currentSupplies?.supplement,
                 ),
               ),
@@ -572,9 +572,9 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                 onTap: () => _editSupplies(context, pet),
                 borderRadius: BorderRadius.circular(8),
                 child: _buildSupplyItem(
-                  context,
-                  icon: Icons.cookie,
-                  label: '간식',
+                context,
+                icon: Icons.cookie,
+                label: '간식',
                   value: _currentSupplies?.snack,
                 ),
               ),
@@ -583,14 +583,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                 onTap: () => _editSupplies(context, pet),
                 borderRadius: BorderRadius.circular(8),
                 child: _buildSupplyItem(
-                  context,
-                  icon: Icons.cleaning_services,
-                  label: '모래',
+                context,
+                icon: Icons.cleaning_services,
+                label: '모래',
                   value: _currentSupplies?.litter,
                 ),
               ),
-                  ],
-                ),
+            ],
+          ),
               ),
             ],
         ),
@@ -898,9 +898,9 @@ class _InfoCard extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                value,
+              value,
                 textAlign: TextAlign.right,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -1340,7 +1340,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
           return SafeArea(
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-              child: Form(
+            child: Form(
               key: _formKey,
               child: Column(
                 children: [
@@ -1440,7 +1440,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                   const SizedBox(height: 40),
                 ],
               ),
-            ),
+              ),
             ),
           );
         },
@@ -1464,8 +1464,8 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
         recordedAt: widget.selectedDate,
         createdAt: widget.existingSupplies?.createdAt ?? now,
         updatedAt: now,
-      );
-      
+    );
+    
       print('🔄 저장 시작: ${supplies.dryFood}, ${supplies.wetFood}, ${supplies.supplement}, ${supplies.snack}, ${supplies.litter}');
       final savedSupplies = await _suppliesRepository.saveSupplies(supplies);
       print('✅ 저장 완료: ${savedSupplies?.dryFood}, ${savedSupplies?.wetFood}, ${savedSupplies?.supplement}');
