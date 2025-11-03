@@ -1429,16 +1429,16 @@ class _LabTableState extends State<_LabTable> {
                       padding: const EdgeInsets.only(left: 8),
                       child: InkWell(
                         onTap: () => _showWeightChartDialog(widget.petId, widget.petName),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
                             Icons.bar_chart,
-                            size: 24,
+                            size: 18,
                             color: Theme.of(context).colorScheme.onPrimaryContainer,
                           ),
                         ),

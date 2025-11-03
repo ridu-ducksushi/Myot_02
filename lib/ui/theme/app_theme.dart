@@ -129,7 +129,11 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.error),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        // Add a bit more top padding and stabilize label line-height to avoid clipping
+        isDense: false,
+        labelStyle: const TextStyle(height: 1.2),
+        floatingLabelStyle: const TextStyle(height: 1.2),
+        contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
       ),
 
       // Dialog Theme
@@ -282,7 +286,11 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.error),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        // Mirror light theme adjustments
+        isDense: false,
+        labelStyle: const TextStyle(height: 1.2),
+        floatingLabelStyle: const TextStyle(height: 1.2),
+        contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
       ),
 
       // Dialog Theme

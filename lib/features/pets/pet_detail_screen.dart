@@ -385,7 +385,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                                                 ),
                                                 child: Icon(
                                                   Icons.bar_chart,
-                                                  size: 24,
+                                                  size: 18,
                                                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                                                 ),
                                               ),
@@ -989,8 +989,9 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
         minChildSize: 0.5,
         expand: false,
         builder: (context, scrollController) {
-          return Container(
-            padding: const EdgeInsets.all(24),
+          return SafeArea(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
             child: Form(
               key: _formKey,
               child: Column(
@@ -1017,6 +1018,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                   Expanded(
                     child: ListView(
                       controller: scrollController,
+                      padding: const EdgeInsets.only(top: 8),
                       children: [
                         AppTextField(
                           controller: _nameController,
@@ -1132,7 +1134,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                   ),
                   
                   // Buttons
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 40),
                   Row(
                     children: [
                       Expanded(
@@ -1150,9 +1152,11 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
+          ),
           );
         },
       ),
