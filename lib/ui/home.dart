@@ -117,6 +117,101 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return true;
   }
 
+  Widget _buildTabIcon(IconData icon, int index) {
+    final isSelected = _currentIndex == index;
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Icon(
+      icon,
+      size: 28,
+      color: isSelected 
+          ? colorScheme.onPrimaryContainer 
+          : colorScheme.onSurfaceVariant.withOpacity(0.6),
+    );
+  }
+  
+  Widget _buildTabItem(IconData icon, String label, int index) {
+    final isSelected = _currentIndex == index;
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isSelected 
+            ? colorScheme.primaryContainer 
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 24,
+            color: isSelected 
+                ? colorScheme.onPrimaryContainer 
+                : colorScheme.onSurfaceVariant.withOpacity(0.6),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: isSelected ? 12 : 11,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected 
+                  ? colorScheme.onPrimaryContainer 
+                  : colorScheme.onSurfaceVariant.withOpacity(0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onTabTap(int index) {
+    // Skip if already on this tab
+    if (_currentIndex == index) return;
+
+    // Save current location to history before navigating
+    final currentLocation = GoRouterState.of(context).matchedLocation;
+    print('📍 Tab tapped: $index, Current location: $currentLocation');
+    if (_routeHistory.isEmpty || _routeHistory.last != currentLocation) {
+      _routeHistory.add(currentLocation);
+      _saveRouteHistory(); // Save immediately
+      print('💾 Added to history: $currentLocation');
+      print('📚 History now: $_routeHistory');
+      // Limit history size
+      if (_routeHistory.length > 20) {
+        _routeHistory.removeAt(0);
+      }
+    } else {
+      print('⏭️ Skipped duplicate: $currentLocation');
+    }
+
+    setState(() => _currentIndex = index);
+    
+    if (_currentPetId != null) {
+      switch (index) {
+        case 0:
+          _saveLastSelectedPetId(_currentPetId!);
+          context.go('/pets/$_currentPetId');
+          break;
+        case 1:
+          _saveLastSelectedPetId(_currentPetId!);
+          context.go('/pets/$_currentPetId/records');
+          break;
+        case 2:
+          _saveLastSelectedPetId(_currentPetId!);
+          context.go('/pets/$_currentPetId/health');
+          break;
+        case 3:
+          context.go('/settings');
+          break;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
@@ -159,69 +254,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         body: widget.child,
-        bottomNavigationBar: shouldShowBottomNav ? BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            // Skip if already on this tab
-            if (_currentIndex == index) return;
-
-            // Save current location to history before navigating
-            final currentLocation = GoRouterState.of(context).matchedLocation;
-            print('📍 Tab tapped: $index, Current location: $currentLocation');
-            if (_routeHistory.isEmpty || _routeHistory.last != currentLocation) {
-              _routeHistory.add(currentLocation);
-              _saveRouteHistory(); // Save immediately
-              print('💾 Added to history: $currentLocation');
-              print('📚 History now: $_routeHistory');
-              // Limit history size
-              if (_routeHistory.length > 20) {
-                _routeHistory.removeAt(0);
-              }
-            } else {
-              print('⏭️ Skipped duplicate: $currentLocation');
-            }
-
-            setState(() => _currentIndex = index);
-            
-            if (_currentPetId != null) {
-              switch (index) {
-                case 0:
-                  _saveLastSelectedPetId(_currentPetId!);
-                  context.go('/pets/$_currentPetId');
-                  break;
-                case 1:
-                  _saveLastSelectedPetId(_currentPetId!);
-                  context.go('/pets/$_currentPetId/records');
-                  break;
-                case 2:
-                  _saveLastSelectedPetId(_currentPetId!);
-                  context.go('/pets/$_currentPetId/health');
-                  break;
-                case 3:
-                  context.go('/settings');
-                  break;
-              }
-            }
-          },
-          items: [
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.pets),
-              label: 'tabs.profile'.tr(),
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.list_alt),
-              label: 'tabs.records'.tr(),
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.favorite),
-              label: 'tabs.health'.tr(),
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.settings),
-              label: 'tabs.settings'.tr(),
-            ),
-          ],
+        bottomNavigationBar: shouldShowBottomNav ? Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => _onTabTap(0),
+                  child: _buildTabItem(Icons.pets, 'tabs.profile'.tr(), 0),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _onTabTap(1),
+                  child: _buildTabItem(Icons.list_alt, 'tabs.records'.tr(), 1),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _onTabTap(2),
+                  child: _buildTabItem(Icons.favorite, 'tabs.health'.tr(), 2),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _onTabTap(3),
+                  child: _buildTabItem(Icons.settings, 'tabs.settings'.tr(), 3),
+                ),
+              ),
+            ],
+          ),
         ) : null,
       ),
     );
