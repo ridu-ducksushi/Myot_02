@@ -136,7 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
         color: isSelected 
             ? colorScheme.primaryContainer 
