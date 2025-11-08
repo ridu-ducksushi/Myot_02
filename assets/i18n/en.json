@@ -28,6 +28,21 @@
     "select_birth_date": "Select birth date",
     "notes": "Notes",
     "age": "Age",
+      "age_units": {
+        "year": {
+          "one": "{} year",
+          "other": "{} years"
+        },
+        "month": {
+          "one": "{} month",
+          "other": "{} months"
+        },
+        "day": {
+          "one": "{} day",
+          "other": "{} days"
+        },
+        "separator": " "
+      },
     "weight": "Weight",
     "not_found": "Pet not found",
     "not_found_message": "The requested pet information could not be found",

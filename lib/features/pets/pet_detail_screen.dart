@@ -43,7 +43,8 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
   }
 
   String _buildBirthDateDisplay(DateTime birthDate) {
-    final dateLabel = DateFormat.yMMMd().format(birthDate);
+    final locale = context.locale.toString();
+    final dateLabel = DateFormat.yMMMd(locale).format(birthDate);
     final ageLabel = _formatAge(birthDate);
     if (ageLabel == null) {
       return dateLabel;
@@ -71,19 +72,29 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
 
     final parts = <String>[];
     if (years > 0) {
-      parts.add('${years}년');
+      parts.add('pets.age_units.year'.plural(
+        years,
+        args: [years.toString()],
+      ));
     }
     if (months > 0) {
-      parts.add('${months}개월');
+      parts.add('pets.age_units.month'.plural(
+        months,
+        args: [months.toString()],
+      ));
     }
-    if (years <= 0 && months <= 0) {
-      parts.add('${days}일');
+    if (years <= 0 && months <= 0 && days > 0) {
+      parts.add('pets.age_units.day'.plural(
+        days,
+        args: [days.toString()],
+      ));
     }
 
     if (parts.isEmpty) {
       return null;
     }
-    return parts.join(' ');
+    final separator = 'pets.age_units.separator'.tr();
+    return parts.join(separator);
   }
 
   void _initialize(Pet pet) {

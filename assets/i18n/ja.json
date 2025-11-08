@@ -28,6 +28,18 @@
     "select_birth_date": "生年月日を選択",
     "notes": "メモ",
     "age": "年齢",
+      "age_units": {
+        "year": {
+          "other": "{}年"
+        },
+        "month": {
+          "other": "{}か月"
+        },
+        "day": {
+          "other": "{}日"
+        },
+        "separator": ""
+      },
     "weight": "体重",
     "not_found": "ペットが見つかりません",
     "not_found_message": "リクエストされたペット情報が見つかりません",

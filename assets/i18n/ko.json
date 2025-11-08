@@ -28,6 +28,18 @@
     "select_birth_date": "생년월일 선택",
     "notes": "메모",
     "age": "나이",
+      "age_units": {
+        "year": {
+          "other": "{}년"
+        },
+        "month": {
+          "other": "{}개월"
+        },
+        "day": {
+          "other": "{}일"
+        },
+        "separator": " "
+      },
     "weight": "체중",
     "not_found": "펫을 찾을 수 없습니다",
     "not_found_message": "요청한 펫 정보를 찾을 수 없습니다",
