@@ -254,47 +254,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         body: widget.child,
-        bottomNavigationBar: shouldShowBottomNav ? Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () => _onTabTap(0),
-                  child: _buildTabItem(Icons.pets, 'tabs.profile'.tr(), 0),
+        bottomNavigationBar: shouldShowBottomNav
+            ? SafeArea(
+                top: false,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _onTabTap(0),
+                          child: _buildTabItem(Icons.pets, 'tabs.profile'.tr(), 0),
+                        ),
+                      ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _onTabTap(1),
+                          child: _buildTabItem(Icons.list_alt, 'tabs.records'.tr(), 1),
+                        ),
+                      ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _onTabTap(2),
+                          child: _buildTabItem(Icons.favorite, 'tabs.health'.tr(), 2),
+                        ),
+                      ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _onTabTap(3),
+                          child: _buildTabItem(Icons.settings, 'tabs.settings'.tr(), 3),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Expanded(
-                child: InkWell(
-                  onTap: () => _onTabTap(1),
-                  child: _buildTabItem(Icons.list_alt, 'tabs.records'.tr(), 1),
-                ),
-              ),
-              Expanded(
-                child: InkWell(
-                  onTap: () => _onTabTap(2),
-                  child: _buildTabItem(Icons.favorite, 'tabs.health'.tr(), 2),
-                ),
-              ),
-              Expanded(
-                child: InkWell(
-                  onTap: () => _onTabTap(3),
-                  child: _buildTabItem(Icons.settings, 'tabs.settings'.tr(), 3),
-                ),
-              ),
-            ],
-          ),
-        ) : null,
+              )
+            : null,
       ),
     );
   }
