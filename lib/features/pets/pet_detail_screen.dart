@@ -537,12 +537,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                         borderRadius: BorderRadius.circular(8),
                         onTap: () => _moveToPreviousSuppliesRecord(pet),
                         child: SizedBox(
-                          width: 44,
-                          height: 32,
-                          child: Icon(
-                            Icons.chevron_left,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 24,
+                          width: 56,
+                          height: 36,
+                          child: Center(
+                            child: Icon(
+                              Icons.chevron_left,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 24,
+                            ),
                           ),
                         ),
                       ),
@@ -580,12 +582,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                         borderRadius: BorderRadius.circular(8),
                         onTap: () => _moveToNextSuppliesRecord(pet),
                         child: SizedBox(
-                          width: 44,
-                          height: 32,
-                          child: Icon(
-                            Icons.chevron_right,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 24,
+                          width: 56,
+                          height: 36,
+                          child: Center(
+                            child: Icon(
+                              Icons.chevron_right,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 24,
+                            ),
                           ),
                         ),
                       ),

@@ -346,19 +346,26 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // 이전 날짜 버튼
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedDate = _selectedDate.subtract(const Duration(days: 1));
-                      });
-                      _saveSelectedDate(_selectedDate);
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.chevron_left,
-                        color: Theme.of(context).colorScheme.primary,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        setState(() {
+                          _selectedDate = _selectedDate.subtract(const Duration(days: 1));
+                        });
+                        _saveSelectedDate(_selectedDate);
+                      },
+                    child: SizedBox(
+                      width: 56,
+                      height: 36,
+                      child: Center(
+                        child: Icon(
+                          Icons.chevron_left,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 24,
+                        ),
+                      ),
                       ),
                     ),
                   ),
@@ -433,22 +440,29 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                   ),
                   
                   // 다음 날짜 버튼
-                  InkWell(
-                    onTap: () {
-                      final tomorrow = _selectedDate.add(const Duration(days: 1));
-                      if (tomorrow.isBefore(DateTime.now().add(const Duration(days: 1)))) {
-                        setState(() {
-                          _selectedDate = tomorrow;
-                        });
-                        _saveSelectedDate(_selectedDate);
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.chevron_right,
-                        color: Theme.of(context).colorScheme.primary,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        final tomorrow = _selectedDate.add(const Duration(days: 1));
+                        if (tomorrow.isBefore(DateTime.now().add(const Duration(days: 1)))) {
+                          setState(() {
+                            _selectedDate = tomorrow;
+                          });
+                          _saveSelectedDate(_selectedDate);
+                        }
+                      },
+                    child: SizedBox(
+                      width: 56,
+                      height: 36,
+                      child: Center(
+                        child: Icon(
+                          Icons.chevron_right,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 24,
+                        ),
+                      ),
                       ),
                     ),
                   ),
