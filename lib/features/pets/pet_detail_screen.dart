@@ -42,6 +42,50 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     // Repository 초기화는 build에서 수행
   }
 
+  String _buildBirthDateDisplay(DateTime birthDate) {
+    final dateLabel = DateFormat.yMMMd().format(birthDate);
+    final ageLabel = _formatAge(birthDate);
+    if (ageLabel == null) {
+      return dateLabel;
+    }
+    return '$dateLabel\n$ageLabel';
+  }
+
+  String? _formatAge(DateTime? birthDate) {
+    if (birthDate == null) return null;
+
+    final now = DateTime.now();
+    int years = now.year - birthDate.year;
+    int months = now.month - birthDate.month;
+    int days = now.day - birthDate.day;
+
+    if (days < 0) {
+      final previousMonth = DateTime(now.year, now.month, 0);
+      days += previousMonth.day;
+      months -= 1;
+    }
+    if (months < 0) {
+      months += 12;
+      years -= 1;
+    }
+
+    final parts = <String>[];
+    if (years > 0) {
+      parts.add('${years}년');
+    }
+    if (months > 0) {
+      parts.add('${months}개월');
+    }
+    if (years <= 0 && months <= 0) {
+      parts.add('${days}일');
+    }
+
+    if (parts.isEmpty) {
+      return null;
+    }
+    return parts.join(' ');
+  }
+
   void _initialize(Pet pet) {
     if (_isInitialized) return;
     
@@ -160,11 +204,12 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
   }
 
   Widget _buildPetHeader(BuildContext context, Pet pet) {
-    final speciesColor = AppColors.getSpeciesColor(pet.species);
-    final age = _calculateAge(pet.birthDate);
+    final birthDateLabel = pet.birthDate != null
+        ? _buildBirthDateDisplay(pet.birthDate!)
+        : 'pets.select_birth_date'.tr();
 
     return InkWell(
-      onTap: () => _editPet(context, pet),
+      onTap: () => _editPet(context, pet, focusField: 'name'),
       borderRadius: BorderRadius.circular(0),
       child: AppCard(
         borderRadius: BorderRadius.zero,
@@ -285,10 +330,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                     // 종족과 품종
                     Column(
                 children: [
-                        Transform.scale(
-                          scale: 0.85,
+                      Transform.scale(
+                        scale: 0.85,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => _editPet(context, pet, focusField: 'species'),
                           child: PetSpeciesChip(species: pet.species),
                         ),
+                      ),
                         // 디버그: 품종 정보 로그
                         Builder(builder: (context) {
                           print('🔍 품종 정보: breed="${pet.breed}", isNull=${pet.breed == null}, isEmpty=${pet.breed?.isEmpty ?? true}');
@@ -298,13 +347,17 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                           const SizedBox(height: 4),
                           Transform.scale(
                             scale: 0.85,
-                            child: Chip(
-                      label: Text(pet.breed!),
-                      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              visualDensity: VisualDensity.compact,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () => _editPet(context, pet, focusField: 'breed'),
+                              child: Chip(
+                                label: Text(pet.breed!),
+                                backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                              ),
                             ),
-                    ),
+                          ),
                   ],
                 ],
                     ),
@@ -329,99 +382,106 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                       const SizedBox(height: 12),
               
                       // 상세 정보들
-                      Column(
-                children: [
-                  if (age != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                      child: _InfoCard(
-                        icon: Icons.cake,
-                        label: 'pets.age'.tr(),
-                        value: age,
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _InfoCard(
+                          icon: Icons.cake_outlined,
+                          label: 'pets.birth_date'.tr(),
+                          value: birthDateLabel,
+                          onTap: () => _editPet(context, pet, focusField: 'birthDate'),
+                        ),
                       ),
-                    ),
-                  if (pet.weightKg != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                      if (pet.weightKg != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.symmetric(horizontal: 2),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: InkWell(
-                                  onTap: () => _editPet(context, pet),
-                                  borderRadius: BorderRadius.circular(6),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.monitor_weight,
-                                        size: 18,
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                      ),
-                                      const SizedBox(width: 8),
-                    Expanded(
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            Text(
-                                              '${pet.weightKg}kg',
-                                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            width: double.infinity,
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: InkWell(
+                              onTap: () => _editPet(context, pet, focusField: 'weight'),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.monitor_weight,
+                                    size: 18,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '${pet.weightKg}kg',
+                                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 14,
                                               ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            InkWell(
-                        onTap: () => _showWeightChart(context, pet),
-                                              borderRadius: BorderRadius.circular(10),
-                                              child: Container(
-                                                padding: const EdgeInsets.all(8),
-                                                decoration: BoxDecoration(
-                                                  color: Theme.of(context).colorScheme.primaryContainer,
-                                                  borderRadius: BorderRadius.circular(10),
-                                                ),
-                                                child: Icon(
-                                                  Icons.bar_chart,
-                                                  size: 18,
-                                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(width: 8),
+                                        InkWell(
+                                          onTap: () => _showWeightChart(context, pet),
+                                          borderRadius: BorderRadius.circular(10),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context).colorScheme.primaryContainer,
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Icon(
+                                              Icons.bar_chart,
+                                              size: 18,
+                                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                      ),
-                    ),
-                  if (pet.sex != null)
-                            _InfoCard(
-                              icon: pet.sex!.toLowerCase() == 'male' || pet.sex == '남아' ? Icons.male : Icons.female,
-                        label: 'pets.sex'.tr(),
-                              value: _getSexWithNeuteredText(pet),
-                    ),
-                ],
-              ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (pet.sex != null)
+                        _InfoCard(
+                          icon: pet.sex!.toLowerCase() == 'male' || pet.sex == '남아'
+                              ? Icons.male
+                              : Icons.female,
+                          label: 'pets.sex'.tr(),
+                          value: _getSexWithNeuteredText(pet),
+                          onTap: () => _editPet(context, pet, focusField: 'sex'),
+                        ),
+                    ],
+                  ),
               
                       // 메모 섹션 (기록이 없어도 영역 유지)
                       const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                        padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                          pet.note ?? '',
-                          textAlign: TextAlign.right,
-                          style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
+                      InkWell(
+                        onTap: () => _editPet(context, pet, focusField: 'note'),
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            pet.note ?? '',
+                            textAlign: TextAlign.right,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ),
               ],
                   ),
                 ),
@@ -544,7 +604,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               ),
                 ),
               InkWell(
-                onTap: () => _editSupplies(context, pet),
+                onTap: () => _editSupplies(context, pet, focusField: 'dryFood'),
                 borderRadius: BorderRadius.circular(8),
                 child: _buildSupplyItem(
                 context,
@@ -555,7 +615,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               ),
               const SizedBox(height: 12),
               InkWell(
-                onTap: () => _editSupplies(context, pet),
+                onTap: () => _editSupplies(context, pet, focusField: 'wetFood'),
                 borderRadius: BorderRadius.circular(8),
                 child: _buildSupplyItem(
                   context,
@@ -566,7 +626,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               ),
               const SizedBox(height: 12),
               InkWell(
-                onTap: () => _editSupplies(context, pet),
+                onTap: () => _editSupplies(context, pet, focusField: 'supplement'),
                 borderRadius: BorderRadius.circular(8),
                 child: _buildSupplyItem(
                 context,
@@ -577,7 +637,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               ),
               const SizedBox(height: 12),
               InkWell(
-                onTap: () => _editSupplies(context, pet),
+                onTap: () => _editSupplies(context, pet, focusField: 'snack'),
                 borderRadius: BorderRadius.circular(8),
                 child: _buildSupplyItem(
                 context,
@@ -588,7 +648,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
               ),
               const SizedBox(height: 12),
               InkWell(
-                onTap: () => _editSupplies(context, pet),
+                onTap: () => _editSupplies(context, pet, focusField: 'litter'),
                 borderRadius: BorderRadius.circular(8),
                 child: _buildSupplyItem(
                 context,
@@ -655,24 +715,6 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     );
   }
 
-  String? _calculateAge(DateTime? birthDate) {
-    if (birthDate == null) return null;
-    
-    final now = DateTime.now();
-    final difference = now.difference(birthDate);
-    final years = difference.inDays ~/ 365;
-    final months = (difference.inDays % 365) ~/ 30;
-    
-    // 생년월일 형식: yyyy.mm.dd
-    final birthDateStr = '${birthDate.year}.${birthDate.month.toString().padLeft(2, '0')}.${birthDate.day.toString().padLeft(2, '0')}';
-    
-    // 나이 형식: yy년 mm개월
-    final ageStr = '${years}년 ${months}개월';
-    
-    // 줄바꿈으로 생년월일과 나이를 분리 표기
-    return '$birthDateStr\n($ageStr)';
-  }
-
   String _getSexWithNeuteredText(Pet pet) {
     // 성별 텍스트
     String sexText = pet.sex == 'Male' ? '남아' : (pet.sex == 'Female' ? '여아' : pet.sex ?? '');
@@ -688,7 +730,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     return sexText + neuteredText;
   }
 
-  void _editSupplies(BuildContext context, Pet pet) {
+  void _editSupplies(BuildContext context, Pet pet, {String? focusField}) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -696,6 +738,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
         pet: pet, 
         selectedDate: _currentSuppliesDate,
         existingSupplies: _currentSupplies,
+        initialFocusField: focusField,
         onSaved: (savedSupplies, dates) {
           // 부모 상태 즉시 업데이트
           setState(() {
@@ -708,11 +751,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
     );
   }
 
-  void _editPet(BuildContext context, Pet pet) {
+  void _editPet(BuildContext context, Pet pet, {String? focusField}) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => _EditPetSheet(pet: pet),
+      builder: (context) => _EditPetSheet(
+        pet: pet,
+        initialFocusField: focusField,
+      ),
     );
   }
 
@@ -922,9 +968,13 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _EditPetSheet extends ConsumerStatefulWidget {
-  const _EditPetSheet({required this.pet});
+  const _EditPetSheet({
+    required this.pet,
+    this.initialFocusField,
+  });
 
   final Pet pet;
+  final String? initialFocusField;
 
   @override
   ConsumerState<_EditPetSheet> createState() => _EditPetSheetState();
@@ -936,6 +986,14 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   final _breedController = TextEditingController();
   final _weightController = TextEditingController();
   final _noteController = TextEditingController();
+  final FocusNode _nameFocusNode = FocusNode();
+  final FocusNode _speciesFocusNode = FocusNode();
+  final FocusNode _breedFocusNode = FocusNode();
+  final FocusNode _sexFocusNode = FocusNode();
+  final FocusNode _weightFocusNode = FocusNode();
+  final FocusNode _noteFocusNode = FocusNode();
+  final FocusNode _birthDateFocusNode = FocusNode();
+  final GlobalKey _birthDateTileKey = GlobalKey();
   
   String _selectedSpecies = 'Dog';
   String? _selectedSex;
@@ -952,6 +1010,44 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   void initState() {
     super.initState();
     _initializeForm();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = widget.initialFocusField;
+      debugPrint('🧭 EditPet initial focus target: $target');
+      if (target == 'birthDate') {
+        _birthDateFocusNode.requestFocus();
+        _selectBirthDate(auto: true);
+        Future.microtask(() {
+          final context = _birthDateTileKey.currentContext;
+          if (context != null) {
+            Scrollable.ensureVisible(
+              context,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+        return;
+      }
+      switch (target) {
+        case 'species':
+          _speciesFocusNode.requestFocus();
+          break;
+        case 'breed':
+          _breedFocusNode.requestFocus();
+          break;
+        case 'weight':
+          _weightFocusNode.requestFocus();
+          break;
+        case 'note':
+          _noteFocusNode.requestFocus();
+          break;
+        case 'sex':
+          _sexFocusNode.requestFocus();
+          break;
+        default:
+          _nameFocusNode.requestFocus();
+      }
+    });
   }
 
   void _initializeForm() {
@@ -974,6 +1070,13 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     _breedController.dispose();
     _weightController.dispose();
     _noteController.dispose();
+    _nameFocusNode.dispose();
+    _speciesFocusNode.dispose();
+    _breedFocusNode.dispose();
+    _sexFocusNode.dispose();
+    _weightFocusNode.dispose();
+    _noteFocusNode.dispose();
+    _birthDateFocusNode.dispose();
     super.dispose();
   }
 
@@ -1024,6 +1127,10 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                           controller: _nameController,
                           labelText: 'pets.name'.tr(),
                           prefixIcon: const Icon(Icons.pets),
+                          focusNode: _nameFocusNode,
+                          textInputAction: TextInputAction.next,
+                          onSubmitted: (_) =>
+                              FocusScope.of(context).requestFocus(_breedFocusNode),
                           validator: (value) {
                             if (value?.trim().isEmpty ?? true) {
                               return 'pets.name_required'.tr();
@@ -1035,20 +1142,27 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                         
                         DropdownButtonFormField<String>(
                           value: _selectedSpecies,
+                          focusNode: _speciesFocusNode,
                           decoration: InputDecoration(
                             labelText: 'pets.species'.tr(),
                             prefixIcon: const Icon(Icons.category),
                           ),
-                          items: _species.map((species) {
-                            return DropdownMenuItem(
-                              value: species,
-                              child: Text(species),
-                            );
-                          }).toList(),
+                          items: _species
+                              .map(
+                                (species) => DropdownMenuItem<String>(
+                                  value: species,
+                                  child: Text(species),
+                                ),
+                              )
+                              .toList(),
                           onChanged: (value) {
+                            if (value == null) {
+                              return;
+                            }
                             setState(() {
-                              _selectedSpecies = value!;
+                              _selectedSpecies = value;
                             });
+                            FocusScope.of(context).requestFocus(_breedFocusNode);
                           },
                         ),
                         const SizedBox(height: 16),
@@ -1057,6 +1171,10 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                           controller: _breedController,
                           labelText: 'pets.breed'.tr(),
                           prefixIcon: const Icon(Icons.info_outline),
+                          focusNode: _breedFocusNode,
+                          textInputAction: TextInputAction.next,
+                          onSubmitted: (_) =>
+                              FocusScope.of(context).requestFocus(_weightFocusNode),
                         ),
                         const SizedBox(height: 16),
                         
@@ -1066,6 +1184,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                             labelText: 'pets.sex'.tr(),
                             prefixIcon: const Icon(Icons.wc),
                           ),
+                          focusNode: _sexFocusNode,
                           items: _sexOptions.map((sex) {
                             return DropdownMenuItem(
                               value: sex,
@@ -1098,6 +1217,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                           labelText: 'pets.weight_kg'.tr(),
                           prefixIcon: const Icon(Icons.monitor_weight),
                           keyboardType: TextInputType.number,
+                          focusNode: _weightFocusNode,
                           validator: (value) {
                             if (value?.isNotEmpty == true) {
                               final weight = double.tryParse(value!);
@@ -1110,16 +1230,23 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                         ),
                         const SizedBox(height: 16),
                         
-                        ListTile(
-                          leading: const Icon(Icons.cake),
-                          title: Text('pets.birth_date'.tr()),
-                          subtitle: Text(
-                            _birthDate != null
-                                ? DateFormat.yMMMd().format(_birthDate!)
-                                : 'pets.select_birth_date'.tr(),
+                        Focus(
+                          focusNode: _birthDateFocusNode,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => _selectBirthDate(),
+                            child: ListTile(
+                              key: _birthDateTileKey,
+                              leading: const Icon(Icons.cake),
+                              title: Text('pets.birth_date'.tr()),
+                              subtitle: Text(
+                                _birthDate != null
+                                    ? DateFormat.yMMMd().format(_birthDate!)
+                                    : 'pets.select_birth_date'.tr(),
+                              ),
+                              contentPadding: EdgeInsets.zero,
+                            ),
                           ),
-                          onTap: _selectBirthDate,
-                          contentPadding: EdgeInsets.zero,
                         ),
                         const SizedBox(height: 16),
                         
@@ -1128,6 +1255,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                           labelText: 'pets.notes'.tr(),
                           prefixIcon: const Icon(Icons.note),
                           maxLines: 3,
+                          focusNode: _noteFocusNode,
                         ),
                       ],
                     ),
@@ -1163,7 +1291,10 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     );
   }
 
-  Future<void> _selectBirthDate() async {
+  Future<void> _selectBirthDate({bool auto = false}) async {
+    if (!auto) {
+      FocusScope.of(context).requestFocus(_birthDateFocusNode);
+    }
     final date = await showDatePicker(
       context: context,
       initialDate: _birthDate ?? DateTime.now().subtract(const Duration(days: 365)),
@@ -1171,10 +1302,19 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
       lastDate: DateTime.now(),
     );
     
+    if (!mounted) return;
+
     if (date != null) {
       setState(() {
         _birthDate = date;
       });
+    }
+
+    if (auto) {
+      FocusScope.of(context).requestFocus(_birthDateFocusNode);
+    } else {
+      _birthDateFocusNode.unfocus();
+      FocusScope.of(context).requestFocus(_noteFocusNode);
     }
   }
 
@@ -1278,12 +1418,14 @@ class _EditSuppliesSheet extends ConsumerStatefulWidget {
     required this.selectedDate,
     this.existingSupplies,
     required this.onSaved,
+    this.initialFocusField,
   });
 
   final Pet pet;
   final DateTime selectedDate;
   final PetSupplies? existingSupplies;
   final Function(PetSupplies, List<DateTime>) onSaved;
+  final String? initialFocusField;
 
   @override
   ConsumerState<_EditSuppliesSheet> createState() => _EditSuppliesSheetState();
@@ -1296,15 +1438,29 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
   final _supplementController = TextEditingController();
   final _snackController = TextEditingController();
   final _litterController = TextEditingController();
+  late final Map<String, FocusNode> _focusNodes;
   late PetSuppliesRepository _suppliesRepository;
 
   @override
   void initState() {
     super.initState();
+    _focusNodes = {
+      'dryFood': FocusNode(),
+      'wetFood': FocusNode(),
+      'supplement': FocusNode(),
+      'snack': FocusNode(),
+      'litter': FocusNode(),
+    };
     _suppliesRepository = PetSuppliesRepository(
       Supabase.instance.client,
     );
     _initializeForm();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = widget.initialFocusField;
+      if (target != null) {
+        _focusNodes[target]?.requestFocus();
+      }
+    });
   }
 
   void _initializeForm() {
@@ -1334,6 +1490,9 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
     _supplementController.dispose();
     _snackController.dispose();
     _litterController.dispose();
+    for (final node in _focusNodes.values) {
+      node.dispose();
+    }
     super.dispose();
   }
 
@@ -1393,6 +1552,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                           labelText: 'supplies.dry_food'.tr(),
                           prefixIcon: const Icon(Icons.restaurant),
                           hintText: 'supplies.dry_food_hint'.tr(),
+                          focusNode: _focusNodes['dryFood'],
                         ),
                         const SizedBox(height: 16),
 
@@ -1401,6 +1561,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                           labelText: 'supplies.wet_food'.tr(),
                           prefixIcon: const Icon(Icons.rice_bowl),
                           hintText: 'supplies.wet_food_hint'.tr(),
+                          focusNode: _focusNodes['wetFood'],
                         ),
                         const SizedBox(height: 16),
                         
@@ -1409,6 +1570,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                           labelText: 'supplies.supplement'.tr(),
                           prefixIcon: const Icon(Icons.medication),
                           hintText: 'supplies.supplement_hint'.tr(),
+                          focusNode: _focusNodes['supplement'],
                         ),
                         const SizedBox(height: 16),
                         
@@ -1417,6 +1579,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                           labelText: 'supplies.snack'.tr(),
                           prefixIcon: const Icon(Icons.cookie),
                           hintText: 'supplies.snack_hint'.tr(),
+                          focusNode: _focusNodes['snack'],
                         ),
                         const SizedBox(height: 16),
                         
@@ -1425,6 +1588,7 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                           labelText: 'supplies.litter'.tr(),
                           prefixIcon: const Icon(Icons.cleaning_services),
                           hintText: 'supplies.litter_hint'.tr(),
+                          focusNode: _focusNodes['litter'],
                         ),
                       ],
                     ),

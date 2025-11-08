@@ -381,6 +381,8 @@ class AppTextField extends StatelessWidget {
     this.enabled = true,
     this.readOnly = false,
     this.onTap,
+    this.autofocus = false,
+    this.focusNode,
   });
 
   final TextEditingController? controller;
@@ -398,6 +400,8 @@ class AppTextField extends StatelessWidget {
   final bool enabled;
   final bool readOnly;
   final VoidCallback? onTap;
+  final bool autofocus;
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context) {
@@ -413,6 +417,8 @@ class AppTextField extends StatelessWidget {
       enabled: enabled,
       readOnly: readOnly,
       onTap: onTap,
+      autofocus: autofocus,
+      focusNode: focusNode,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,

@@ -264,6 +264,8 @@ class _AddRecordSheetState extends ConsumerState<_AddRecordSheet> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
+  final FocusNode _titleFocusNode = FocusNode();
+  final FocusNode _contentFocusNode = FocusNode();
   
   String _selectedType = 'meal';
   String? _selectedPetId;
@@ -277,6 +279,8 @@ class _AddRecordSheetState extends ConsumerState<_AddRecordSheet> {
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
+    _titleFocusNode.dispose();
+    _contentFocusNode.dispose();
     super.dispose();
   }
 
@@ -377,6 +381,7 @@ class _AddRecordSheetState extends ConsumerState<_AddRecordSheet> {
                             setState(() {
                               _selectedType = value!;
                             });
+                            FocusScope.of(context).requestFocus(_contentFocusNode);
                           },
                         ),
                         const SizedBox(height: 16),
@@ -385,6 +390,11 @@ class _AddRecordSheetState extends ConsumerState<_AddRecordSheet> {
                           controller: _titleController,
                           labelText: 'records.title'.tr(),
                           prefixIcon: const Icon(Icons.title),
+                          textInputAction: TextInputAction.next,
+                          autofocus: true,
+                          focusNode: _titleFocusNode,
+                          onSubmitted: (_) =>
+                              FocusScope.of(context).requestFocus(_contentFocusNode),
                           validator: (value) {
                             if (value?.trim().isEmpty ?? true) {
                               return 'records.title_required'.tr();
@@ -399,6 +409,7 @@ class _AddRecordSheetState extends ConsumerState<_AddRecordSheet> {
                           labelText: 'records.content'.tr(),
                           prefixIcon: const Icon(Icons.note),
                           maxLines: 3,
+                          focusNode: _contentFocusNode,
                         ),
                         const SizedBox(height: 16),
                         

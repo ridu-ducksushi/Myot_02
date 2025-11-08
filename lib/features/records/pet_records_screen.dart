@@ -810,6 +810,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                     TextField(
                       controller: contentController,
                       maxLines: 3,
+                      autofocus: true,
                       decoration: InputDecoration(
                         hintText: '메모를 입력하세요',
                         border: OutlineInputBorder(
