@@ -145,6 +145,38 @@ class AppColors {
     }
   }
 
+  /// Pastel background colors for record categories (FAB/submenu)
+  static Color getRecordCategorySoftColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'food':
+        return const Color(0xFFFFE4EC); // light pink
+      case 'activity':
+        return const Color(0xFFE3F5E5); // light green
+      case 'poop':
+        return const Color(0xFFFFF2DE); // light orange
+      case 'health':
+        return const Color(0xFFDFECFF); // light blue
+      default:
+        return Colors.grey.shade200;
+    }
+  }
+
+  /// Darker accent colors for record categories (icons/text)
+  static Color getRecordCategoryDarkColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'food':
+        return const Color(0xFFD81B60); // dark pink
+      case 'activity':
+        return const Color(0xFF2E7D32); // dark green
+      case 'poop':
+        return const Color(0xFFEF6C00); // dark orange
+      case 'health':
+        return const Color(0xFF1565C0); // dark blue
+      default:
+        return Colors.grey.shade700;
+    }
+  }
+
   /// Get color for reminder priority
   static Color getPriorityColor(String priority) {
     switch (priority.toLowerCase()) {
