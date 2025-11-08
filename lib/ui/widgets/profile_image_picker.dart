@@ -461,106 +461,12 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.6,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.outline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '기본 프로필 아이콘 선택',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text('Species: ${widget.species}, Loading: $_isLoadingIcons, Icons: ${_defaultIconUrls.length}'),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _isLoadingIcons
-                  ? const Center(child: CircularProgressIndicator())
-                  : _defaultIconUrls.isEmpty
-                      ? const Center(child: Text('아이콘을 찾을 수 없습니다.'))
-                      : GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1,
-                ),
-                itemCount: _isLoadingIcons ? 0 : _defaultIconUrls.length,
-                itemBuilder: (context, index) {
-                  final iconUrl = _defaultIconUrls[index];
-                  final iconName = iconUrl.split('/').last.split('.').first; // 파일명에서 확장자 제거
-                  final isSelected = widget.selectedDefaultIcon == iconName;
-                  
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                      // 아이콘 선택 후 배경색 선택 다이얼로그 표시
-                      _showBgColorDialog(context, iconName);
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isSelected 
-                            ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
-                            : Theme.of(context).colorScheme.surfaceVariant,
-                        border: Border.all(
-                          color: isSelected 
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          iconUrl,
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            // Assets 이미지 로드 실패 시 기본 아이콘으로 폴백
-                            return Icon(
-                              Icons.pets,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              size: 32,
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  );
-                },
-                  ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 배경색 선택 다이얼로그
-  void _showBgColorDialog(BuildContext context, String selectedIcon) {
-    final bgColors = ['Color_1', 'Color_2', 'Color_3', 'Color_4', 'Color_5', 'Color_6', 'Color_7', 'Color_8'];
-    String? previewBgColor; // 상태를 builder 밖으로 이동
-    
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.7,
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          minimum: const EdgeInsets.only(bottom: 24),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.6,
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
@@ -574,124 +480,219 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '배경색 선택',
+                  '기본 프로필 아이콘 선택',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 24),
-                
-                // 프리뷰 영역
-                Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline,
-                      width: 2,
-                    ),
-                  ),
-                  child: ClipOval(
-                    child: Stack(
-                      children: [
-                        // 배경색
-                        if (previewBgColor != null)
-                          Image.asset(
-                            'assets/images/profile_bg/$previewBgColor.png',
-                            width: 150,
-                            height: 150,
-                            fit: BoxFit.cover,
-                          ),
-                        // 선택된 아이콘
-                        Center(
-                          child: Image.asset(
-                            ImageService.getDefaultIconUrl(widget.species!, selectedIcon),
-                            width: 150,
-                            height: 150,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 24),
-                
+                const SizedBox(height: 16),
+                Text('Species: ${widget.species}, Loading: $_isLoadingIcons, Icons: ${_defaultIconUrls.length}'),
+                const SizedBox(height: 16),
                 Expanded(
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1,
-                    ),
-                    itemCount: bgColors.length,
-                    itemBuilder: (context, index) {
-                      final colorName = bgColors[index];
-                      final isSelected = previewBgColor == colorName;
-                      
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            previewBgColor = colorName;
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isSelected 
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Colors.transparent,
-                              width: 3,
-                            ),
-                          ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/profile_bg/$colorName.png',
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Theme.of(context).colorScheme.surfaceVariant,
-                                  child: Icon(
-                                    Icons.palette,
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                    size: 32,
+                  child: _isLoadingIcons
+                      ? const Center(child: CircularProgressIndicator())
+                      : _defaultIconUrls.isEmpty
+                          ? const Center(child: Text('아이콘을 찾을 수 없습니다.'))
+                          : GridView.builder(
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 5,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 1,
+                              ),
+                              itemCount: _isLoadingIcons ? 0 : _defaultIconUrls.length,
+                              itemBuilder: (context, index) {
+                                final iconUrl = _defaultIconUrls[index];
+                                final iconName = iconUrl.split('/').last.split('.').first;
+                                final isSelected = widget.selectedDefaultIcon == iconName;
+
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _showBgColorDialog(context, iconName);
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isSelected
+                                          ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                                          : Theme.of(context).colorScheme.surfaceVariant,
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? Theme.of(context).colorScheme.primary
+                                            : Colors.transparent,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: ClipOval(
+                                      child: Image.asset(
+                                        iconUrl,
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Icon(
+                                            Icons.pets,
+                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                            size: 32,
+                                          );
+                                        },
+                                      ),
+                                    ),
                                   ),
                                 );
                               },
                             ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
                 ),
-                
                 const SizedBox(height: 16),
-                
-                // 확인 버튼
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: previewBgColor == null ? null : () {
-                      Navigator.pop(context);
-                      // 아이콘과 배경색을 함께 전달
-                      if (widget.onDefaultIconSelected != null && previewBgColor != null) {
-                        widget.onDefaultIconSelected!(selectedIcon, previewBgColor!);
-                      }
-                    },
-                    child: const Text('선택 완료'),
-                  ),
-                ),
               ],
             ),
-          );
-        },
+          ),
+        );
+      },
+    );
+  }
+
+  // 배경색 선택 다이얼로그
+  void _showBgColorDialog(BuildContext context, String selectedIcon) {
+    final bgColors = ['Color_1', 'Color_2', 'Color_3', 'Color_4', 'Color_5', 'Color_6', 'Color_7', 'Color_8'];
+    String? previewBgColor; // 상태를 builder 밖으로 이동
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: 24),
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.outline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '배경색 선택',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline,
+                        width: 2,
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: Stack(
+                        children: [
+                          if (previewBgColor != null)
+                            Image.asset(
+                              'assets/images/profile_bg/$previewBgColor.png',
+                              width: 150,
+                              height: 150,
+                              fit: BoxFit.cover,
+                            ),
+                          Center(
+                            child: Image.asset(
+                              ImageService.getDefaultIconUrl(widget.species!, selectedIcon),
+                              width: 150,
+                              height: 150,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 1,
+                      ),
+                      itemCount: bgColors.length,
+                      itemBuilder: (context, index) {
+                        final colorName = bgColors[index];
+                        final isSelected = previewBgColor == colorName;
+
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              previewBgColor = colorName;
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.transparent,
+                                width: 3,
+                              ),
+                            ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/profile_bg/$colorName.png',
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Theme.of(context).colorScheme.surfaceVariant,
+                                    child: Icon(
+                                      Icons.palette,
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      size: 32,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: previewBgColor == null
+                          ? null
+                          : () {
+                              Navigator.pop(context);
+                              if (widget.onDefaultIconSelected != null && previewBgColor != null) {
+                                widget.onDefaultIconSelected!(selectedIcon, previewBgColor!);
+                              }
+                            },
+                      child: const Text('선택 완료'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
