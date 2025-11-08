@@ -242,63 +242,66 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                     selectedBgColor: pet.profileBgColor,
                 species: pet.species, // 동물 종류 전달
                 onImageSelected: (image) async {
-                  if (image != null) {
-                    // ProfileImagePicker에서 이미 저장된 파일을 받음
-                    final updatedPet = pet.copyWith(
-                      avatarUrl: image.path, // 이미 저장된 경로를 사용
-                      defaultIcon: null, // 이미지 선택 시 기본 아이콘 제거
-                      updatedAt: DateTime.now(),
-                    );
+                  if (image == null) {
+                    return;
+                  }
+                  // ProfileImagePicker에서 이미 저장된 파일을 받음
+                  final updatedPet = pet.copyWith(
+                    avatarUrl: image.path, // 이미 저장된 경로를 사용
+                    defaultIcon: null, // 이미지 선택 시 기본 아이콘 제거
+                    profileBgColor: null, // 배경색 초기화
+                    updatedAt: DateTime.now(),
+                  );
+                  
+                  try {
+                    await ref.read(petsProvider.notifier).updatePet(updatedPet);
                     
-                    try {
-                      await ref.read(petsProvider.notifier).updatePet(updatedPet);
-                      
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('pets.image_updated'.tr()),
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('pets.image_update_error'.tr(args: [pet.name])),
-                            backgroundColor: Theme.of(context).colorScheme.error,
-                          ),
-                        );
-                      }
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('pets.image_updated'.tr()),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                        ),
+                      );
                     }
-                  } else {
-                    // 이미지 삭제 및 기본 아이콘으로 설정
-                    final updatedPet = pet.copyWith(
-                      avatarUrl: null,
-                      defaultIcon: 'dog1', // 기본 아이콘 설정
-                      updatedAt: DateTime.now(),
-                    );
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('pets.image_update_error'.tr(args: [pet.name])),
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
+                    }
+                  }
+                },
+                onClearSelection: () async {
+                  final updatedPet = pet.copyWith(
+                    avatarUrl: null,
+                    defaultIcon: null,
+                    profileBgColor: null,
+                    updatedAt: DateTime.now(),
+                  );
 
-                    try {
-                      await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                  try {
+                    await ref.read(petsProvider.notifier).updatePet(updatedPet);
 
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('프로필 이미지가 기본 아이콘으로 변경되었습니다.'),
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('이미지 삭제에 실패했습니다.'),
-                            backgroundColor: Theme.of(context).colorScheme.error,
-                          ),
-                        );
-                      }
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('pets.image_deleted'.tr()),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('pets.image_delete_error'.tr()),
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
                     }
                   }
                 },

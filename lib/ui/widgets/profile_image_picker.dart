@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,6 +14,7 @@ class ProfileImagePicker extends StatefulWidget {
   final String? selectedDefaultIcon;
   final String? selectedBgColor; // 선택된 배경색 추가
   final String? species; // 동물 종류 (dog, cat 등)
+  final Future<void> Function()? onClearSelection;
 
   const ProfileImagePicker({
     super.key,
@@ -24,6 +26,7 @@ class ProfileImagePicker extends StatefulWidget {
     this.selectedDefaultIcon,
     this.selectedBgColor,
     this.species,
+    this.onClearSelection,
   });
 
   @override
@@ -286,16 +289,18 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                     _showDefaultIconsDialog(context);
                   },
                 ),
-                if (widget.imagePath != null && widget.imagePath!.isNotEmpty)
-                  _buildSourceOption(
-                    context,
-                    icon: Icons.delete,
-                    label: '삭제',
-                    onTap: () async {
-                      Navigator.pop(context);
-                      widget.onImageSelected(null);
-                    },
-                  ),
+                _buildSourceOption(
+                  context,
+                  icon: Icons.delete,
+                  label: '삭제',
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (widget.onClearSelection != null) {
+                      await widget.onClearSelection!();
+                    }
+                    await Future.sync(() => widget.onImageSelected(null));
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -309,10 +314,10 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
     BuildContext context, {
     required IconData icon,
     required String label,
-    required VoidCallback onTap,
+    required Future<void> Function() onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => onTap(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

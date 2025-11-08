@@ -719,11 +719,16 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                     child: ProfileImagePicker(
                       imagePath: _selectedImage?.path,
                       selectedDefaultIcon: _selectedDefaultIcon,
+                      selectedBgColor: _selectedBgColor,
                       species: _selectedSpecies, // 동물 종류 전달
                       onImageSelected: (image) {
+                        if (image == null) {
+                          return;
+                        }
                         setState(() {
                           _selectedImage = image;
                           _selectedDefaultIcon = null; // 이미지 선택 시 기본 아이콘 제거
+                          _selectedBgColor = null;
                         });
                       },
                       onDefaultIconSelected: (iconName, bgColor) {
@@ -731,6 +736,13 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                           _selectedDefaultIcon = iconName;
                           _selectedBgColor = bgColor;
                           _selectedImage = null; // 기본 아이콘 선택 시 이미지 제거
+                        });
+                      },
+                      onClearSelection: () async {
+                        setState(() {
+                          _selectedImage = null;
+                          _selectedDefaultIcon = null;
+                          _selectedBgColor = null;
                         });
                       },
                       size: 120,
@@ -1050,9 +1062,13 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                     selectedBgColor: _selectedBgColor,
                     species: _selectedSpecies, // 동물 종류 전달
                     onImageSelected: (image) {
+                      if (image == null) {
+                        return;
+                      }
                       setState(() {
                         _selectedImage = image;
                         _selectedDefaultIcon = null; // 이미지 선택 시 기본 아이콘 제거
+                        _selectedBgColor = null;
                       });
                     },
                     onDefaultIconSelected: (iconName, bgColor) {
@@ -1060,6 +1076,13 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                         _selectedDefaultIcon = iconName;
                         _selectedBgColor = bgColor;
                         _selectedImage = null; // 기본 아이콘 선택 시 이미지 제거
+                      });
+                    },
+                    onClearSelection: () async {
+                      setState(() {
+                        _selectedImage = null;
+                        _selectedDefaultIcon = null;
+                        _selectedBgColor = null;
                       });
                     },
                     size: 120,
