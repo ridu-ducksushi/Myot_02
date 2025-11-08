@@ -177,14 +177,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentLocation = GoRouterState.of(context).matchedLocation;
     print('📍 Tab tapped: $index, Current location: $currentLocation');
     if (_routeHistory.isEmpty || _routeHistory.last != currentLocation) {
-      _routeHistory.add(currentLocation);
+      _routeHistory
+        ..clear()
+        ..add(currentLocation);
       _saveRouteHistory(); // Save immediately
       print('💾 Added to history: $currentLocation');
       print('📚 History now: $_routeHistory');
-      // Limit history size
-      if (_routeHistory.length > 20) {
-        _routeHistory.removeAt(0);
-      }
     } else {
       print('⏭️ Skipped duplicate: $currentLocation');
     }
