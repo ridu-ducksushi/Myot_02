@@ -529,53 +529,64 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   ),
                 ),
                 child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+                  children: [
                     // 좌측 화살표 - 이전 기록으로 이동
-                    InkWell(
-                      onTap: () => _moveToPreviousSuppliesRecord(pet),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.chevron_left,
-                          color: Theme.of(context).colorScheme.primary,
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => _moveToPreviousSuppliesRecord(pet),
+                        child: SizedBox(
+                          width: 44,
+                          height: 32,
+                          child: Icon(
+                            Icons.chevron_left,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 24,
+                          ),
                         ),
                       ),
                     ),
-                    
-                    // 중앙 영역 - 날짜 + 달력 아이콘
-                    InkWell(
-                      onTap: () => _showSuppliesCalendarDialog(pet),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            DateFormat('yyyy년 MM월 dd일').format(_currentSuppliesDate),
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.calendar_today,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ],
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _showSuppliesCalendarDialog(pet),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                DateFormat('yyyy년 MM월 dd일').format(_currentSuppliesDate),
+                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.calendar_today,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    
                     // 우측 화살표 - 다음 기록 또는 오늘 날짜로 이동
-                    InkWell(
-                      onTap: () => _moveToNextSuppliesRecord(pet),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.chevron_right,
-                          color: Theme.of(context).colorScheme.primary,
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => _moveToNextSuppliesRecord(pet),
+                        child: SizedBox(
+                          width: 44,
+                          height: 32,
+                          child: Icon(
+                            Icons.chevron_right,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 24,
+                          ),
                         ),
                       ),
                     ),
