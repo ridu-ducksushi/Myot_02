@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:petcare/core/providers/records_provider.dart';
-import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/data/models/record.dart';
+import 'package:petcare/core/providers/records_provider.dart';
+import 'package:petcare/ui/theme/app_colors.dart';
 
 class RecordsChartScreen extends ConsumerStatefulWidget {
   final String petId;
@@ -319,10 +319,11 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
             ),
           ),
           // 차트 영역
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildChart(),
+      Flexible(
+        fit: FlexFit.loose,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _buildChart(),
           ),
         ],
       ),
@@ -411,7 +412,7 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
     final spots = _chartData.asMap().entries.map((entry) {
       final index = entry.key;
       final data = entry.value;
-      return FlSpot(index.toDouble(), data['count'].toDouble());
+      return FlSpot(index.toDouble(), (data['count'] as int).toDouble());
     }).toList();
     
     // Y축 범위 자동 계산 (몸무게 차트와 동일한 방식)
@@ -436,143 +437,86 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
       maxY = ((maxValue + 1) / 5).ceil() * 5;
     }
     
+    final categoryKey = _selectedRecordType ?? 'food';
+    final primaryColor = AppColors.getRecordCategoryDarkColor(categoryKey);
+    final softColor = AppColors.getRecordCategorySoftColor(categoryKey);
+    final totalCount = values.fold<int>(0, (a, b) => a + b);
+
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 차트 제목
-          Text(
-            '${_getRecordTypeDisplayName(_selectedRecordType!)} 레코드 수',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: softColor.withOpacity(0.35)),
+          boxShadow: [
+            BoxShadow(
+              color: softColor.withOpacity(0.35),
+              blurRadius: 28,
+              offset: const Offset(0, 14),
+              spreadRadius: -18,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '총 ${values.fold(0, (a, b) => a + b)}개 기록',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // 차트
-          Expanded(
-            child: LineChart(
-              LineChartData(
-                minY: minY,
-                maxY: maxY,
-                gridData: FlGridData(show: true),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40,
-                      getTitlesWidget: (value, meta) {
-                        return Text(
-                          '${value.toInt()}',
-                          style: const TextStyle(fontSize: 12),
-                        );
-                      },
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: softColor.withOpacity(0.55),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _getRecordCategoryIcon(categoryKey),
+                      color: primaryColor,
+                      size: 24,
                     ),
                   ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40, // 텍스트 겹침 방지를 위해 높이 증가
-                      interval: _calculateBottomInterval(), // 간격 조정
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index >= 0 && index < _chartData.length) {
-                          final label = _chartData[index]['label'] as String?;
-                          if (label != null) {
-                            String displayText;
-                            if (_viewMode == 'day') {
-                              final date = DateTime.parse(label);
-                              displayText = DateFormat('MM/dd').format(date);
-                            } else if (_viewMode == 'week') {
-                              displayText = label; // 이미 "MM/dd~MM/dd" 형식
-                            } else { // month
-                              displayText = DateFormat('MM월').format(DateTime.parse('${label}-01'));
-                            }
-                            
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                displayText,
-                                style: const TextStyle(fontSize: 11),
-                                textAlign: TextAlign.center,
-                              ),
-                            );
-                          }
-                        }
-                        return const Text('');
-                      },
-                    ),
-                  ),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                ),
-                borderData: FlBorderData(show: true),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: false,
-                    color: Theme.of(context).colorScheme.primary,
-                    barWidth: 3,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: Theme.of(context).colorScheme.primary,
-                          strokeWidth: 2,
-                          strokeColor: Theme.of(context).colorScheme.surface,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${_getRecordTypeDisplayName(_selectedRecordType!)} 레코드',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: primaryColor,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '총 $totalCount개 기록',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                      ),
+                    ],
                   ),
                 ],
-                lineTouchData: LineTouchData(
-                  enabled: true,
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipItems: (touchedSpots) {
-                      return touchedSpots.map((spot) {
-                        final dataIndex = spot.x.toInt();
-                        if (dataIndex >= 0 && dataIndex < _chartData.length) {
-                          final data = _chartData[dataIndex];
-                          final label = data['label'] as String? ?? data['date'] as String;
-                          String labelText;
-                          if (_viewMode == 'day') {
-                            final date = DateTime.parse(label);
-                            labelText = DateFormat('yyyy-MM-dd').format(date);
-                          } else if (_viewMode == 'week') {
-                            labelText = label; // 이미 "MM/dd~MM/dd" 형식
-                          } else { // month
-                            labelText = DateFormat('yyyy년 MM월').format(DateTime.parse('${label}-01'));
-                          }
-                          return LineTooltipItem(
-                            '$labelText\n${data['count']}개',
-                            TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          );
-                        }
-                        return null;
-                      }).toList();
-                    },
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 260,
+                child: LineChart(
+                  _createLineChartData(
+                    context: context,
+                    spots: spots,
+                    minY: minY,
+                    maxY: maxY,
+                    primaryColor: primaryColor,
+                    softColor: softColor,
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -588,6 +532,194 @@ class _RecordsChartScreenState extends ConsumerState<RecordsChartScreen> {
       return 3.0; // 30개 이하면 3개마다 표시
     } else {
       return (dataLength / 10).ceil().toDouble(); // 10개 정도만 표시
+    }
+  }
+
+  LineChartData _createLineChartData({
+    required BuildContext context,
+    required List<FlSpot> spots,
+    required double minY,
+    required double maxY,
+    required Color primaryColor,
+    required Color softColor,
+  }) {
+    final labelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+        );
+    final double bottomInterval = _calculateBottomInterval();
+
+    return LineChartData(
+      minY: minY,
+      maxY: maxY,
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: true,
+        drawHorizontalLine: true,
+        horizontalInterval: _computeHorizontalInterval(maxY),
+        verticalInterval: bottomInterval,
+        getDrawingHorizontalLine: (value) => FlLine(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.4),
+          strokeWidth: 1.2,
+        ),
+        getDrawingVerticalLine: (value) => FlLine(
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.25),
+          strokeWidth: 1,
+        ),
+      ),
+      titlesData: FlTitlesData(
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 40,
+            getTitlesWidget: (value, __) => Text(
+              '${value.toInt()}',
+              style: labelStyle,
+            ),
+          ),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 44,
+            interval: bottomInterval,
+            getTitlesWidget: (value, __) {
+              final index = value.toInt();
+              if (index >= 0 && index < _chartData.length) {
+                final label = _chartData[index]['label'] as String?;
+                if (label != null) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      _formatBottomLabel(label),
+                      style: labelStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                }
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      ),
+      borderData: FlBorderData(
+        show: true,
+        border: Border(
+          bottom: BorderSide(color: softColor.withOpacity(0.4)),
+          left: BorderSide(color: softColor.withOpacity(0.4)),
+          right: const BorderSide(color: Colors.transparent),
+          top: const BorderSide(color: Colors.transparent),
+        ),
+      ),
+      lineBarsData: [
+        LineChartBarData(
+          spots: spots,
+          isCurved: true,
+          curveSmoothness: 0.35,
+          color: primaryColor,
+          barWidth: 4,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: true,
+            getDotPainter: (spot, __, ___, ____) {
+              return FlDotCirclePainter(
+                radius: 6,
+                color: primaryColor,
+                strokeWidth: 4,
+                strokeColor: Colors.white,
+              );
+            },
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            gradient: LinearGradient(
+              colors: [
+                primaryColor.withOpacity(0.35),
+                softColor.withOpacity(0.15),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ],
+      lineTouchData: LineTouchData(
+        enabled: true,
+        touchTooltipData: LineTouchTooltipData(
+          tooltipRoundedRadius: 16,
+          tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          tooltipBorder: BorderSide(color: primaryColor.withOpacity(0.2)),
+          getTooltipColor: (_) => Colors.white,
+          getTooltipItems: (touchedSpots) {
+            final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: primaryColor,
+                ) ??
+                TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: primaryColor,
+                );
+            return touchedSpots.map((spot) {
+              final dataIndex = spot.x.toInt();
+              if (dataIndex >= 0 && dataIndex < _chartData.length) {
+                final data = _chartData[dataIndex];
+                final label = data['label'] as String? ?? data['date'] as String;
+                return LineTooltipItem(
+                  '${_formatTooltipLabel(label)}\n${data['count']}개',
+                  textStyle,
+                );
+              }
+              return null;
+            }).toList();
+          },
+        ),
+      ),
+    );
+  }
+
+  double _computeHorizontalInterval(double maxY) {
+    if (maxY <= 5) return 1;
+    if (maxY <= 10) return 2;
+    if (maxY <= 20) return 5;
+    return (maxY / 4).ceilToDouble();
+  }
+
+  String _formatBottomLabel(String label) {
+    if (_viewMode == 'day') {
+      final date = DateTime.parse(label);
+      return DateFormat('MM/dd').format(date);
+    }
+    if (_viewMode == 'week') {
+      return label;
+    }
+    final monthDate = DateTime.parse('$label-01');
+    return DateFormat('MM월').format(monthDate);
+  }
+
+  String _formatTooltipLabel(String label) {
+    if (_viewMode == 'day') {
+      return DateFormat('yyyy-MM-dd').format(DateTime.parse(label));
+    }
+    if (_viewMode == 'week') {
+      return label;
+    }
+    return DateFormat('yyyy년 MM월').format(DateTime.parse('$label-01'));
+  }
+
+  IconData _getRecordCategoryIcon(String category) {
+    switch (category) {
+      case 'food':
+        return Icons.dinner_dining;
+      case 'activity':
+        return Icons.sports_esports_rounded;
+      case 'poop':
+        return Icons.pets;
+      case 'health':
+        return Icons.healing;
+      default:
+        return Icons.analytics;
     }
   }
 }
