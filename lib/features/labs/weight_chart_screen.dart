@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+import 'package:petcare/ui/theme/app_colors.dart';
+
 class WeightChartScreen extends ConsumerStatefulWidget {
   const WeightChartScreen({
     super.key,
@@ -289,176 +291,453 @@ class _WeightChartScreenState extends ConsumerState<WeightChartScreen> {
 
   Widget _buildChart() {
     if (_displayWeightData.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.monitor_weight, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              '체중 데이터가 없습니다',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
-        ),
-      );
+      return _buildEmptyChartState();
     }
 
-    // Y축 범위 자동 계산
-    final values = _displayWeightData.map((data) => data['weight'] as double).toList();
-    final minValue = values.reduce((a, b) => a < b ? a : b);
-    final maxValue = values.reduce((a, b) => a > b ? a : b);
-    final range = maxValue - minValue;
-    
-    // 체중 범위에 따른 적응형 Y축 설정
-    double minY, maxY;
-    if (range < 1.0) {
-      // 체중 변화가 1kg 미만일 때: 0.2kg 단위
-      final minYBase = (minValue * 5).floor() / 5; // 0.2kg 단위로 내림
-      final maxYBase = (maxValue * 5).ceil() / 5;   // 0.2kg 단위로 올림
-      minY = minYBase - 0.2;
-      maxY = maxYBase + 0.2;
-    } else if (range < 3.0) {
-      // 체중 변화가 1-3kg일 때: 0.5kg 단위
-      final minYBase = (minValue * 2).floor() / 2; // 0.5kg 단위로 내림
-      final maxYBase = (maxValue * 2).ceil() / 2;   // 0.5kg 단위로 올림
-      minY = minYBase - 0.5;
-      maxY = maxYBase + 0.5;
-    } else {
-      // 체중 변화가 3kg 이상일 때: 1kg 단위
-      final minYBase = minValue.floor().toDouble(); // 1kg 단위로 내림
-      final maxYBase = maxValue.ceil().toDouble();   // 1kg 단위로 올림
-      minY = minYBase - 1.0;
-      maxY = maxYBase + 1.0;
-    }
+    final metrics = _computeChartMetrics();
+    final bottomInterval = _calculateBottomInterval();
+    final colorScheme = Theme.of(context).colorScheme;
+    const categoryKey = 'health';
+    final primaryColor = AppColors.getRecordTypeColor('health_weight');
+    final softColor = AppColors.getRecordCategorySoftColor(categoryKey);
+    final darkColor = AppColors.getRecordCategoryDarkColor(categoryKey);
+    final outlineColor = colorScheme.outlineVariant.withOpacity(0.35);
 
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: LineChart(
-        LineChartData(
-          minY: minY,
-          maxY: maxY,
-          gridData: FlGridData(show: true),
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 40,
-                getTitlesWidget: (value, meta) {
-                  // 체중 범위에 따른 소수점 자리수 결정
-                  String formattedValue;
-                  if (range < 1.0) {
-                    formattedValue = '${value.toStringAsFixed(1)}kg'; // 0.2kg 단위: 소수점 1자리
-                  } else if (range < 3.0) {
-                    formattedValue = '${value.toStringAsFixed(1)}kg'; // 0.5kg 단위: 소수점 1자리
-                  } else {
-                    formattedValue = '${value.toStringAsFixed(0)}kg'; // 1kg 단위: 정수
-                  }
-                  return Text(
-                    formattedValue,
-                    style: const TextStyle(fontSize: 12),
-                  );
-                },
-              ),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 30,
-                getTitlesWidget: (value, meta) {
-                  if (value.toInt() >= 0 && value.toInt() < _displayWeightData.length) {
-                    final dateStr = _displayWeightData[value.toInt()]['date'] as String;
-                    switch (_viewMode) {
-                      case 'day':
-                        return Text(
-                          DateFormat('MM/dd').format(DateTime.parse(dateStr)),
-                          style: const TextStyle(fontSize: 12),
-                        );
-                      case 'week':
-                        return Text(
-                          DateFormat('MM/dd').format(DateTime.parse(dateStr)),
-                          style: const TextStyle(fontSize: 12),
-                        );
-                      case 'month':
-                        return Text(
-                          DateFormat('MM월').format(DateTime.parse('${dateStr}-01')),
-                          style: const TextStyle(fontSize: 12),
-                        );
-                    }
-                  }
-                  return const Text('');
-                },
-              ),
-            ),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          ),
-          borderData: FlBorderData(show: true),
-          lineBarsData: [
-            LineChartBarData(
-              spots: _displayWeightData.asMap().entries.map((entry) {
-                return FlSpot(entry.key.toDouble(), entry.value['weight'] as double);
-              }).toList(),
-              isCurved: false,
-              color: Theme.of(context).colorScheme.primary,
-              barWidth: 3,
-              dotData: FlDotData(
-                show: true,
-                getDotPainter: (spot, percent, barData, index) {
-                  return FlDotCirclePainter(
-                    radius: 4,
-                    color: Theme.of(context).colorScheme.primary,
-                    strokeWidth: 2,
-                    strokeColor: Theme.of(context).colorScheme.surface,
-                  );
-                },
-              ),
-              belowBarData: BarAreaData(
-                show: true,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: softColor.withOpacity(0.4)),
+          boxShadow: [
+            BoxShadow(
+              color: softColor.withOpacity(0.35),
+              blurRadius: 28,
+              offset: const Offset(0, 14),
+              spreadRadius: -18,
             ),
           ],
-          lineTouchData: LineTouchData(
-            enabled: true,
-            touchTooltipData: LineTouchTooltipData(
-              getTooltipItems: (touchedSpots) {
-                return touchedSpots.map((touchedSpot) {
-                  final dataIndex = touchedSpot.x.toInt();
-                  if (dataIndex >= 0 && dataIndex < _displayWeightData.length) {
-                    final dateStr = _displayWeightData[dataIndex]['date'] as String;
-                    final weight = _displayWeightData[dataIndex]['weight'] as double;
-                    
-                    String displayDate;
-                    switch (_viewMode) {
-                      case 'day':
-                        displayDate = DateFormat('MM/dd').format(DateTime.parse(dateStr));
-                        break;
-                      case 'week':
-                        displayDate = '${DateFormat('MM/dd').format(DateTime.parse(dateStr))}주';
-                        break;
-                      case 'month':
-                        displayDate = DateFormat('yyyy년 MM월').format(DateTime.parse('${dateStr}-01'));
-                        break;
-                      default:
-                        displayDate = dateStr;
-                    }
-                    
-                    return LineTooltipItem(
-                      '$displayDate\n${weight.toStringAsFixed(1)}kg',
-                      TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  }
-                  return null;
-                }).toList();
-              },
-            ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildChartHeader(
+                primaryColor: primaryColor,
+                softColor: softColor,
+                darkColor: darkColor,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 260,
+                child: LineChart(
+                  _createChartData(
+                    context: context,
+                    metrics: metrics,
+                    bottomInterval: bottomInterval,
+                    primaryColor: primaryColor,
+                    softColor: softColor,
+                    outlineColor: outlineColor,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildEmptyChartState() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withOpacity(0.65),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.monitor_weight_rounded,
+                  color: colorScheme.primary,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '체중 데이터가 없습니다',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.7),
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '체중을 기록하면 귀여운 그래프가 표시됩니다.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChartHeader({
+    required Color primaryColor,
+    required Color softColor,
+    required Color darkColor,
+  }) {
+    final theme = Theme.of(context);
+    final summaryText = _buildLatestSummaryText();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: softColor,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.monitor_weight_rounded,
+            color: darkColor,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '체중 변화',
+                style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: primaryColor,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                summaryText,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _buildLatestSummaryText() {
+    if (_displayWeightData.isEmpty) {
+      return '최근 기록 없음';
+    }
+
+    final latest = _displayWeightData.last;
+    final dateKey = latest['date'] as String;
+    final weight = latest['weight'] as double;
+    final dateLabel = _formatDateForMode(dateKey, includeYear: false, includeSuffix: true);
+    return '최근 $dateLabel · ${weight.toStringAsFixed(1)}kg';
+  }
+
+  LineChartData _createChartData({
+    required BuildContext context,
+    required _WeightChartMetrics metrics,
+    required double bottomInterval,
+    required Color primaryColor,
+    required Color softColor,
+    required Color outlineColor,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
+    return LineChartData(
+      minY: metrics.minY,
+      maxY: metrics.maxY,
+      minX: 0,
+      maxX: metrics.spots.isEmpty ? 0 : metrics.spots.length - 1,
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: true,
+        drawHorizontalLine: true,
+        horizontalInterval: metrics.leftInterval,
+        verticalInterval: bottomInterval,
+        getDrawingHorizontalLine: (value) => FlLine(
+          color: outlineColor,
+          strokeWidth: 1.1,
+          dashArray: const [4, 4],
+        ),
+        getDrawingVerticalLine: (value) => FlLine(
+          color: outlineColor.withOpacity(0.6),
+          strokeWidth: 1,
+          dashArray: const [4, 4],
+        ),
+      ),
+      titlesData: FlTitlesData(
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 56,
+            interval: metrics.leftInterval,
+            getTitlesWidget: (value, meta) => SideTitleWidget(
+              axisSide: meta.axisSide,
+              space: 8,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  _formatLeftLabel(value, metrics.range),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 44,
+            interval: bottomInterval,
+            getTitlesWidget: (value, meta) => _buildBottomTitle(
+              context,
+              value: value,
+              interval: bottomInterval,
+            ),
+          ),
+        ),
+      ),
+      borderData: FlBorderData(
+        show: true,
+        border: Border(
+          bottom: BorderSide(color: outlineColor),
+          left: BorderSide(color: outlineColor),
+          right: const BorderSide(color: Colors.transparent),
+          top: const BorderSide(color: Colors.transparent),
+        ),
+      ),
+      lineBarsData: [
+        LineChartBarData(
+          spots: metrics.spots,
+          isCurved: true,
+          curveSmoothness: 0.35,
+          color: primaryColor,
+          barWidth: 4,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: true,
+            getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
+              radius: 6,
+              color: primaryColor,
+              strokeWidth: 4,
+              strokeColor: Colors.white,
+            ),
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            gradient: LinearGradient(
+              colors: [
+                primaryColor.withOpacity(0.32),
+                softColor.withOpacity(0.18),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ],
+      lineTouchData: LineTouchData(
+        enabled: true,
+        touchTooltipData: LineTouchTooltipData(
+          tooltipRoundedRadius: 12,
+          tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          tooltipBorder: BorderSide(color: outlineColor.withOpacity(0.6)),
+          getTooltipColor: (_) => Colors.white,
+          getTooltipItems: (touchedSpots) {
+            return touchedSpots.map((spot) {
+              final index = spot.x.round();
+              if (index < 0 || index >= _displayWeightData.length) {
+                return null;
+              }
+              final data = _displayWeightData[index];
+              final dateLabel = _formatDateForMode(
+                data['date'] as String,
+                includeYear: true,
+                includeSuffix: true,
+              );
+              final weight = (data['weight'] as double).toStringAsFixed(1);
+              final textStyle = theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ) ??
+                  TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  );
+              return LineTooltipItem(
+                '$dateLabel\n$weight kg',
+                textStyle,
+              );
+            }).toList();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomTitle(
+    BuildContext context, {
+    required double value,
+    required double interval,
+  }) {
+    final index = value.round();
+    if (index < 0 || index >= _displayWeightData.length) {
+      return const SizedBox.shrink();
+    }
+    if (index % interval.round() != 0) {
+      return const SizedBox.shrink();
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final label = _formatDateForMode(
+      _displayWeightData[index]['date'] as String,
+      includeYear: false,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.7),
+            ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  _WeightChartMetrics _computeChartMetrics() {
+    final values = _displayWeightData.map((data) => data['weight'] as double).toList();
+    double minValue = values.reduce((a, b) => a < b ? a : b);
+    double maxValue = values.reduce((a, b) => a > b ? a : b);
+    final range = (maxValue - minValue).abs();
+
+    double interval;
+    if (range < 1.0) {
+      interval = 0.2;
+    } else if (range < 3.0) {
+      interval = 0.5;
+    } else {
+      interval = 1.0;
+    }
+
+    double minY = (minValue / interval).floor() * interval;
+    double maxY = (maxValue / interval).ceil() * interval;
+
+    if (minY == maxY) {
+      minY -= interval;
+      maxY += interval;
+    } else {
+      minY -= interval;
+      maxY += interval;
+    }
+
+    final spots = _displayWeightData.asMap().entries.map((entry) {
+      final index = entry.key.toDouble();
+      final weight = entry.value['weight'] as double;
+      return FlSpot(index, weight);
+    }).toList();
+
+    return _WeightChartMetrics(
+      spots: spots,
+      minY: minY,
+      maxY: maxY,
+      leftInterval: interval,
+      range: range,
+    );
+  }
+
+  double _calculateBottomInterval() {
+    final length = _displayWeightData.length;
+    if (length <= 6) {
+      return 1;
+    }
+    if (length <= 12) {
+      return 2;
+    }
+    return (length / 6).ceilToDouble();
+  }
+
+  String _formatLeftLabel(double value, double range) {
+    final precision = range < 3.0 ? 1 : 0;
+    return '${value.toStringAsFixed(precision)} kg';
+  }
+
+  String _formatDateForMode(
+    String rawDate, {
+    bool includeYear = false,
+    bool includeSuffix = false,
+  }) {
+    DateTime date;
+    if (_viewMode == 'month') {
+      date = DateTime.parse('$rawDate-01');
+    } else {
+      date = DateTime.parse(rawDate);
+    }
+
+    if (_viewMode == 'month') {
+      final pattern = includeYear ? 'yyyy.MM' : 'MM월';
+      return DateFormat(pattern).format(date);
+    }
+
+    final pattern = includeYear ? 'yyyy.MM.dd' : 'MM/dd';
+    final formatted = DateFormat(pattern).format(date);
+
+    if (_viewMode == 'week' && includeSuffix) {
+      return '$formatted 주';
+    }
+
+    return formatted;
+  }
+}
+
+class _WeightChartMetrics {
+  const _WeightChartMetrics({
+    required this.spots,
+    required this.minY,
+    required this.maxY,
+    required this.leftInterval,
+    required this.range,
+  });
+
+  final List<FlSpot> spots;
+  final double minY;
+  final double maxY;
+  final double leftInterval;
+  final double range;
 }
