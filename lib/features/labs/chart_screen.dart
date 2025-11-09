@@ -520,152 +520,270 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     
     final spots = _chartData.asMap().entries.map((entry) {
       final index = entry.key;
-      final data = entry.value;
-      return FlSpot(index.toDouble(), data['value']);
+      final data = entry.value as Map<String, dynamic>;
+      return FlSpot(index.toDouble(), (data['value'] as num).toDouble());
     }).toList();
     
-    final unit = _chartData.isNotEmpty ? _chartData.first['unit'] : '';
-    final reference = _chartData.isNotEmpty ? _chartData.first['reference'] : '';
+    final firstEntry =
+        _chartData.isNotEmpty ? _chartData.first as Map<String, dynamic> : null;
+    final unit = firstEntry?['unit'] as String? ?? '';
+    final reference = firstEntry?['reference'] as String? ?? '';
     
-    // Y축 범위 자동 계산
-    final values = _chartData.map((data) => data['value'] as double).toList();
-    final minValue = values.reduce((a, b) => a < b ? a : b);
-    final maxValue = values.reduce((a, b) => a > b ? a : b);
-    final range = maxValue - minValue;
-    final padding = range * 0.1; // 10% 패딩 추가
-    
+    final values = _chartData
+        .map((data) => (data as Map<String, dynamic>)['value'] as double)
+        .toList();
+    var minValue = values.reduce((a, b) => a < b ? a : b);
+    var maxValue = values.reduce((a, b) => a > b ? a : b);
+    final range = (maxValue - minValue).abs();
+    final padding = range == 0 ? (maxValue.abs() * 0.1 + 1) : range * 0.1;
+    minValue -= padding;
+    maxValue += padding;
+    if (minValue == maxValue) {
+      minValue -= 1;
+      maxValue += 1;
+    }
+
+    final leftInterval = _getLeftTitleInterval(minValue, maxValue);
+    minValue = (minValue / leftInterval).floor() * leftInterval;
+    maxValue = (maxValue / leftInterval).ceil() * leftInterval;
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = colorScheme.primary;
+    final softColor = colorScheme.primaryContainer.withOpacity(0.6);
+    final outlineColor = colorScheme.outlineVariant.withOpacity(0.35);
+
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '$_selectedTestItem ${unit.isNotEmpty ? '($unit)' : ''}',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          if (reference.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              'labs.reference_range'.tr() + ': $reference',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: softColor.withOpacity(0.4)),
+          boxShadow: [
+            BoxShadow(
+              color: softColor.withOpacity(0.35),
+              blurRadius: 28,
+              offset: const Offset(0, 14),
+              spreadRadius: -18,
             ),
           ],
-          const SizedBox(height: 16),
-          Expanded(
-            child: LineChart(
-              LineChartData(
-                minY: minValue - padding,
-                maxY: maxValue + padding,
-                gridData: FlGridData(show: true),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 60,
-                      interval: _getLeftTitleInterval(minValue, maxValue),
-                      getTitlesWidget: (value, meta) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: Text(
-                            _formatYAxisValue(value),
-                            style: const TextStyle(fontSize: 10),
-                            textAlign: TextAlign.right,
-                          ),
-                        );
-                      },
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: softColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.monitor_heart_rounded,
+                      color: primaryColor,
+                      size: 24,
                     ),
                   ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40,
-                      interval: _getBottomTitleInterval(),
-                      getTitlesWidget: (value, meta) {
-                        if (value.toInt() < _chartData.length) {
-                          final label = _chartData[value.toInt()]['label'] as String?;
-                          if (label != null) {
-                            String displayText;
-                            // For day mode, label is yyyy-MM-dd
-                            if (_viewMode == 'day') {
-                              final date = DateTime.parse(label);
-                              displayText = DateFormat('MM/dd').format(date);
-                            } else {
-                              // For week/month, label is already human-readable
-                              displayText = label;
-                            }
-                            
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                displayText,
-                                style: const TextStyle(fontSize: 10),
-                                textAlign: TextAlign.center,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$_selectedTestItem ${unit.isNotEmpty ? '($unit)' : ''}',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: primaryColor,
                               ),
-                            );
-                          }
-                        }
-                        return const Text('');
-                      },
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: true),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: false,
-                    color: Theme.of(context).colorScheme.primary,
-                    barWidth: 2,
-                    dotData: FlDotData(show: true),
-                    belowBarData: BarAreaData(
-                      show: false,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (reference.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '${'labs.reference_range'.tr()}: $reference',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ],
-                lineTouchData: LineTouchData(
-                  enabled: true,
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipItems: (touchedSpots) {
-                      return touchedSpots.map((spot) {
-                        final dataIndex = spot.x.toInt();
-                        if (dataIndex < _chartData.length) {
-                          final data = _chartData[dataIndex];
-                          final label = data['label'] as String? ?? data['date'] as String;
-                          String labelText;
-                          if (_viewMode == 'day') {
-                            final date = DateTime.parse(label);
-                            labelText = DateFormat('yyyy-MM-dd').format(date);
-                          } else {
-                            labelText = label; // already formatted for week/month
-                          }
-                          return LineTooltipItem(
-                            '$labelText\n${(data['value'] as double).toStringAsFixed(2)}${data['unit']}',
-                            TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          );
-                        }
-                        return null;
-                      }).toList();
-                    },
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 260,
+                child: Transform.translate(
+                  offset: const Offset(-20, 0),
+                  child: LineChart(
+                  LineChartData(
+                    minY: minValue,
+                    maxY: maxValue,
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: true,
+                      drawHorizontalLine: true,
+                      horizontalInterval: leftInterval,
+                      verticalInterval: _getBottomTitleInterval(),
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: outlineColor,
+                        strokeWidth: 1.1,
+                      ),
+                      getDrawingVerticalLine: (value) => FlLine(
+                        color: outlineColor.withOpacity(0.6),
+                        strokeWidth: 1,
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 60,
+                          interval: leftInterval,
+                          getTitlesWidget: (value, meta) {
+                            final label = _formatYAxisValue(value);
+                            return SideTitleWidget(
+                              axisSide: meta.axisSide,
+                              space: 6,
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  label,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: colorScheme.onSurface.withOpacity(0.7),
+                                      ),
+                                  softWrap: false,
+                                  overflow: TextOverflow.fade,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 44,
+                          interval: _getBottomTitleInterval(),
+                          getTitlesWidget: (value, _) {
+                            final index = value.toInt();
+                            if (index >= 0 && index < _chartData.length) {
+                              final item = _chartData[index] as Map<String, dynamic>;
+                              final label = item['label'] as String?;
+                              if (label != null) {
+                                final displayText = _viewMode == 'day'
+                                    ? DateFormat('MM/dd').format(DateTime.parse(label))
+                                    : label;
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 10),
+                                  child: Text(
+                                    displayText,
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: colorScheme.onSurface.withOpacity(0.7),
+                                        ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                );
+                              }
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ),
+                    ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border(
+                        bottom: BorderSide(color: outlineColor),
+                        left: BorderSide(color: outlineColor),
+                        right: const BorderSide(color: Colors.transparent),
+                        top: const BorderSide(color: Colors.transparent),
+                      ),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: spots,
+                        isCurved: true,
+                        curveSmoothness: 0.3,
+                        color: primaryColor,
+                        barWidth: 4,
+                        isStrokeCapRound: true,
+                        dotData: FlDotData(
+                          show: true,
+                          getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
+                            radius: 6,
+                            color: primaryColor,
+                            strokeWidth: 4,
+                            strokeColor: Colors.white,
+                          ),
+                        ),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          gradient: LinearGradient(
+                            colors: [
+                              primaryColor.withOpacity(0.35),
+                              softColor.withOpacity(0.2),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                      ),
+                    ],
+                    lineTouchData: LineTouchData(
+                      enabled: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        tooltipRoundedRadius: 16,
+                        tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        tooltipBorder: BorderSide(color: primaryColor.withOpacity(0.2)),
+                        getTooltipColor: (_) => Colors.white,
+                        getTooltipItems: (touchedSpots) {
+                          return touchedSpots.map((spot) {
+                            final dataIndex = spot.x.toInt();
+                            if (dataIndex >= 0 && dataIndex < _chartData.length) {
+                              final data = _chartData[dataIndex] as Map<String, dynamic>;
+                              final label = data['label'] as String? ?? data['date'] as String;
+                              final labelText = _viewMode == 'day'
+                                  ? DateFormat('yyyy-MM-dd').format(DateTime.parse(label))
+                                  : label;
+                              return LineTooltipItem(
+                                '$labelText\n${(data['value'] as double).toStringAsFixed(2)}${data['unit']}',
+                                Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: primaryColor,
+                                    ) ??
+                                    TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: primaryColor,
+                                    ),
+                              );
+                            }
+                            return null;
+                          }).toList();
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
