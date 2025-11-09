@@ -13,6 +13,44 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:petcare/features/records/records_chart_screen.dart';
 
+class _RecordCategoryAction {
+  const _RecordCategoryAction({
+    required this.icon,
+    required this.type,
+  });
+
+  final IconData icon;
+  final String type;
+}
+
+const Map<String, List<_RecordCategoryAction>> _recordCategoryActions = {
+  'food': [
+    _RecordCategoryAction(icon: Icons.dinner_dining, type: 'food_meal'),
+    _RecordCategoryAction(icon: Icons.cookie, type: 'food_snack'),
+    _RecordCategoryAction(icon: Icons.water_drop, type: 'food_water'),
+    _RecordCategoryAction(icon: Icons.medical_services, type: 'food_med'),
+    _RecordCategoryAction(icon: Icons.medication, type: 'food_supplement'),
+  ],
+  'activity': [
+    _RecordCategoryAction(icon: Icons.gamepad_outlined, type: 'activity_play'),
+    _RecordCategoryAction(icon: Icons.explore_outlined, type: 'activity_explore'),
+    _RecordCategoryAction(icon: Icons.directions_walk, type: 'activity_outing'),
+    _RecordCategoryAction(icon: Icons.hotel_outlined, type: 'activity_rest'),
+    _RecordCategoryAction(icon: Icons.more_horiz, type: 'activity_other'),
+  ],
+  'health': [
+    _RecordCategoryAction(icon: Icons.vaccines, type: 'health_vaccine'),
+    _RecordCategoryAction(icon: Icons.local_hospital, type: 'health_visit'),
+    _RecordCategoryAction(icon: Icons.more_horiz, type: 'health_weight'),
+  ],
+  'poop': [
+    _RecordCategoryAction(icon: Icons.opacity, type: 'poop_urine'),
+    _RecordCategoryAction(icon: Icons.pets, type: 'poop_feces'),
+    _RecordCategoryAction(icon: Icons.brush, type: 'hygiene_brush'),
+    _RecordCategoryAction(icon: Icons.more_horiz, type: 'poop_other'),
+  ],
+};
+
 // 전역 헬퍼 함수들
 IconData getIconForType(String type) {
   switch (type) {
@@ -38,28 +76,53 @@ IconData getIconForType(String type) {
   }
 }
 
-String getLabelForType(String type) {
-  switch (type) {
-    case 'food_meal': return '사료';
-    case 'food_snack': return '간식';
-    case 'food_water': return '음수';
-    case 'food_med': return '투약';
-    case 'food_supplement': return '보조제';
-    case 'health_supplement': return '보조제';
-    case 'health_vaccine': return '백신';
-    case 'health_visit': return '병원';
-    case 'health_weight': return '건강:기타';
-    case 'activity_play': return '놀이';
-    case 'activity_explore': return '탐색';
-    case 'activity_outing': return '산책';
-    case 'activity_rest': return '휴식';
-    case 'activity_other': return '활동:기타';
-    case 'poop_urine': return '소변';
-    case 'poop_feces': return '대변';
-    case 'hygiene_brush': return '양치';
-    case 'poop_other': return '배변:기타';
-    default: return type;
+String getLabelForType(BuildContext context, String type) {
+  final key = 'records.items.$type';
+  final translated = tr(key, context: context);
+  if (translated != key) {
+    return translated;
   }
+  final category = _categoryForRecordType(type);
+  final fallbackKey = 'records.type.${_translationCategoryKey(category)}';
+  final fallback = tr(fallbackKey, context: context);
+  return fallback != fallbackKey ? fallback : type;
+}
+
+String _categoryForRecordType(String type) {
+  switch (type.toLowerCase()) {
+    case 'food_meal':
+    case 'food_snack':
+    case 'food_water':
+    case 'food_med':
+    case 'food_supplement':
+      return 'food';
+    case 'health_med':
+    case 'health_supplement':
+    case 'health_vaccine':
+    case 'health_visit':
+    case 'health_weight':
+      return 'health';
+    case 'poop_feces':
+    case 'poop_urine':
+    case 'poop_other':
+    case 'hygiene_brush':
+      return 'poop';
+    case 'activity_play':
+    case 'activity_explore':
+    case 'activity_outing':
+    case 'activity_rest':
+    case 'activity_other':
+      return 'activity';
+    default:
+      return 'food';
+  }
+}
+
+String _translationCategoryKey(String category) {
+  if (category == 'activity') {
+    return 'play';
+  }
+  return category;
 }
 
 class PetRecordsScreen extends ConsumerStatefulWidget {
@@ -122,22 +185,21 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
-    required Color backgroundColor,
-    required Color foregroundColor,
+    required Color color,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: foregroundColor, size: 20),
+            Icon(icon, color: color, size: 20),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: foregroundColor,
+                color: color,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -148,215 +210,68 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     );
   }
 
-  Widget _buildFoodSubMenu(Pet pet) {
-    final background = AppColors.getRecordCategorySoftColor('food');
-    final foreground = AppColors.getRecordCategoryDarkColor('food');
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: background.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: foreground.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildSubMenuItem(
-            icon: Icons.dinner_dining,
-            label: '사료',
-            onTap: () => _addRecord(context, pet, 'food_meal'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.cookie,
-            label: '간식',
-            onTap: () => _addRecord(context, pet, 'food_snack'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.water_drop,
-            label: '음수',
-            onTap: () => _addRecord(context, pet, 'food_water'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.medical_services,
-            label: '투약',
-            onTap: () => _addRecord(context, pet, 'food_med'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.medication,
-            label: '보조제',
-            onTap: () => _addRecord(context, pet, 'food_supplement'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActivitySubMenu(Pet pet) {
-    final background = AppColors.getRecordCategorySoftColor('activity');
-    final foreground = AppColors.getRecordCategoryDarkColor('activity');
+  Widget _buildCategorySubMenu(BuildContext context, Pet pet, String categoryKey) {
+    final actions = _recordCategoryActions[categoryKey] ?? const <_RecordCategoryAction>[];
+    if (actions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final background = AppColors.getRecordCategorySoftColor(categoryKey);
+    final color = AppColors.getRecordCategoryDarkColor(categoryKey);
     return Container(
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: background.withOpacity(0.95),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: foreground.withOpacity(0.2)),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildSubMenuItem(
-            icon: Icons.gamepad_outlined,
-            label: '놀이',
-            onTap: () => _addRecord(context, pet, 'activity_play'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.explore_outlined,
-            label: '탐색',
-            onTap: () => _addRecord(context, pet, 'activity_explore'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.directions_walk,
-            label: '산책',
-            onTap: () => _addRecord(context, pet, 'activity_outing'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.hotel_outlined,
-            label: '휴식',
-            onTap: () => _addRecord(context, pet, 'activity_rest'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.more_horiz,
-            label: '기타',
-            onTap: () => _addRecord(context, pet, 'activity_other'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
+          for (int i = 0; i < actions.length; i++) ...[
+            _buildSubMenuItem(
+              icon: actions[i].icon,
+              label: getLabelForType(context, actions[i].type),
+              onTap: () => _addRecord(context, pet, actions[i].type),
+              color: color,
+            ),
+            if (i != actions.length - 1) const SizedBox(width: 6),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildHealthSubMenu(Pet pet) {
-    final background = AppColors.getRecordCategorySoftColor('health');
-    final foreground = AppColors.getRecordCategoryDarkColor('health');
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: background.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: foreground.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildSubMenuItem(
-            icon: Icons.vaccines,
-            label: '백신',
-            onTap: () => _addRecord(context, pet, 'health_vaccine'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.local_hospital,
-            label: '병원',
-            onTap: () => _addRecord(context, pet, 'health_visit'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.more_horiz,
-            label: '기타',
-            onTap: () => _addRecord(context, pet, 'health_weight'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPoopSubMenu(Pet pet) {
-    final background = AppColors.getRecordCategorySoftColor('poop');
-    final foreground = AppColors.getRecordCategoryDarkColor('poop');
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: background.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: foreground.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildSubMenuItem(
-            icon: Icons.opacity,
-            label: '소변',
-            onTap: () => _addRecord(context, pet, 'poop_urine'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.pets,
-            label: '대변',
-            onTap: () => _addRecord(context, pet, 'poop_feces'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.brush,
-            label: '양치',
-            onTap: () => _addRecord(context, pet, 'hygiene_brush'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-          const SizedBox(width: 8),
-          _buildSubMenuItem(
-            icon: Icons.more_horiz,
-            label: '기타',
-            onTap: () => _addRecord(context, pet, 'poop_other'),
-            backgroundColor: background,
-            foregroundColor: foreground,
-          ),
-        ],
-      ),
+  Widget _buildCategorySection({
+    required BuildContext context,
+    required Pet pet,
+    required bool isMenuVisible,
+    required VoidCallback onToggle,
+    required String categoryKey,
+    required IconData fabIcon,
+    required String heroTag,
+    required String tooltipKey,
+  }) {
+    final background = AppColors.getRecordCategorySoftColor(categoryKey);
+    final foreground = AppColors.getRecordCategoryDarkColor(categoryKey);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (isMenuVisible)
+          _buildCategorySubMenu(context, pet, categoryKey),
+        if (isMenuVisible)
+          const SizedBox(width: 12),
+        FloatingActionButton(
+          heroTag: heroTag,
+          tooltip: tr(tooltipKey, context: context),
+          backgroundColor: background,
+          foregroundColor: foreground,
+          onPressed: onToggle,
+          child: Icon(fabIcon),
+        ),
+      ],
     );
   }
 
@@ -537,108 +452,76 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (_isFoodMenuVisible)
-                _buildFoodSubMenu(pet),
-              if (_isFoodMenuVisible)
-                const SizedBox(width: 12),
-               FloatingActionButton(
-                 heroTag: "record-food",
-                 tooltip: 'records.type.food'.tr(),
-                 backgroundColor: AppColors.getRecordCategorySoftColor('food'),
-                 foregroundColor: AppColors.getRecordCategoryDarkColor('food'),
-                 onPressed: () {
-                  setState(() {
-                    _isFoodMenuVisible = !_isFoodMenuVisible;
-                    _isActivityMenuVisible = false;
-                    _isPoopMenuVisible = false;
-                    _isHealthMenuVisible = false;
-                  });
-                },
-                child: const Icon(Icons.restaurant),
-              ),
-            ],
+          _buildCategorySection(
+            context: context,
+            pet: pet,
+            isMenuVisible: _isFoodMenuVisible,
+            onToggle: () {
+              setState(() {
+                _isFoodMenuVisible = !_isFoodMenuVisible;
+                _isActivityMenuVisible = false;
+                _isPoopMenuVisible = false;
+                _isHealthMenuVisible = false;
+              });
+            },
+            categoryKey: 'food',
+            fabIcon: Icons.restaurant,
+            heroTag: 'record-food',
+            tooltipKey: 'records.type.food',
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (_isActivityMenuVisible)
-                _buildActivitySubMenu(pet),
-              if (_isActivityMenuVisible)
-                const SizedBox(width: 12),
-               FloatingActionButton(
-                 heroTag: "record-play",
-                 tooltip: 'records.type.play'.tr(),
-                 backgroundColor: AppColors.getRecordCategorySoftColor('activity'),
-                 foregroundColor: AppColors.getRecordCategoryDarkColor('activity'),
-                 onPressed: () {
-                  setState(() {
-                    _isActivityMenuVisible = !_isActivityMenuVisible;
-                    _isFoodMenuVisible = false;
-                    _isPoopMenuVisible = false;
-                    _isHealthMenuVisible = false;
-                  });
-                },
-                child: const Icon(Icons.sports_tennis),
-              ),
-            ],
+          _buildCategorySection(
+            context: context,
+            pet: pet,
+            isMenuVisible: _isActivityMenuVisible,
+            onToggle: () {
+              setState(() {
+                _isActivityMenuVisible = !_isActivityMenuVisible;
+                _isFoodMenuVisible = false;
+                _isPoopMenuVisible = false;
+                _isHealthMenuVisible = false;
+              });
+            },
+            categoryKey: 'activity',
+            fabIcon: Icons.sports_tennis,
+            heroTag: 'record-play',
+            tooltipKey: 'records.type.play',
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (_isPoopMenuVisible)
-                _buildPoopSubMenu(pet),
-              if (_isPoopMenuVisible)
-                const SizedBox(width: 12),
-               FloatingActionButton(
-                 heroTag: "record-poop",
-                 tooltip: 'records.type.poop'.tr(),
-                 backgroundColor: AppColors.getRecordCategorySoftColor('poop'),
-                 foregroundColor: AppColors.getRecordCategoryDarkColor('poop'),
-                 onPressed: () {
-                  setState(() {
-                    _isPoopMenuVisible = !_isPoopMenuVisible;
-                    _isFoodMenuVisible = false;
-                    _isActivityMenuVisible = false;
-                    _isHealthMenuVisible = false;
-                  });
-                },
-                child: const Icon(Icons.cleaning_services),
-              ),
-            ],
+          _buildCategorySection(
+            context: context,
+            pet: pet,
+            isMenuVisible: _isPoopMenuVisible,
+            onToggle: () {
+              setState(() {
+                _isPoopMenuVisible = !_isPoopMenuVisible;
+                _isFoodMenuVisible = false;
+                _isActivityMenuVisible = false;
+                _isHealthMenuVisible = false;
+              });
+            },
+            categoryKey: 'poop',
+            fabIcon: Icons.cleaning_services,
+            heroTag: 'record-poop',
+            tooltipKey: 'records.type.poop',
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (_isHealthMenuVisible)
-                _buildHealthSubMenu(pet),
-              if (_isHealthMenuVisible)
-                const SizedBox(width: 12),
-               FloatingActionButton(
-                 heroTag: "record-health",
-                 tooltip: 'records.type.health'.tr(),
-                 backgroundColor: AppColors.getRecordCategorySoftColor('health'),
-                 foregroundColor: AppColors.getRecordCategoryDarkColor('health'),
-                 onPressed: () {
-                  setState(() {
-                    _isHealthMenuVisible = !_isHealthMenuVisible;
-                    _isFoodMenuVisible = false;
-                    _isActivityMenuVisible = false;
-                    _isPoopMenuVisible = false;
-                  });
-                },
-                child: const Icon(Icons.favorite),
-              ),
-            ],
+          _buildCategorySection(
+            context: context,
+            pet: pet,
+            isMenuVisible: _isHealthMenuVisible,
+            onToggle: () {
+              setState(() {
+                _isHealthMenuVisible = !_isHealthMenuVisible;
+                _isFoodMenuVisible = false;
+                _isActivityMenuVisible = false;
+                _isPoopMenuVisible = false;
+              });
+            },
+            categoryKey: 'health',
+            fabIcon: Icons.favorite,
+            heroTag: 'record-health',
+            tooltipKey: 'records.type.health',
           ),
         ],
       ),
@@ -791,7 +674,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                           Icon(getIconForType(record.type), size: 20, color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 8),
                           Text(
-                            getLabelForType(record.type),
+                            getLabelForType(context, record.type),
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
@@ -954,7 +837,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           title: Text('기록 삭제'),
           content: SizedBox(
             width: double.maxFinite,
-            child: Text('이 기록을 삭제하시겠습니까?\n"${getLabelForType(record.type)}"'),
+            child: Text('이 기록을 삭제하시겠습니까?\n"${getLabelForType(context, record.type)}"'),
           ),
           actions: <Widget>[
             TextButton(
@@ -1089,7 +972,7 @@ class _Time24Table extends StatelessWidget {
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
-                    '${getLabelForType(record.type)}${record.content != null && record.content!.isNotEmpty ? ': ${record.content}' : ''}',
+                    '${getLabelForType(context, record.type)}${record.content != null && record.content!.isNotEmpty ? ': ${record.content}' : ''}',
                     style: TextStyle(
                       fontSize: 14,
                       color: typeColor,
@@ -1175,7 +1058,7 @@ class _RecordCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        getLabelForType(record.type),
+                        getLabelForType(context, record.type),
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),

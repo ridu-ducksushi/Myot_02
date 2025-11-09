@@ -18,17 +18,6 @@ class AppColors {
   static const Color reptileColor = Color(0xFF795548);  // Brown
   static const Color otherColor = Color(0xFF9C27B0);    // Purple
 
-  // Record type colors
-  static const Color mealColor = Color(0xFF4CAF50);     // Green
-  static const Color snackColor = Color(0xFF8BC34A);    // Light Green
-  static const Color medicineColor = Color(0xFFF44336); // Red
-  static const Color vaccineColor = Color(0xFF3F51B5);  // Indigo
-  static const Color visitColor = Color(0xFF9C27B0);    // Purple
-  static const Color weightColor = Color(0xFF00BCD4);   // Cyan
-  static const Color litterColor = Color(0xFF795548);   // Brown
-  static const Color playColor = Color(0xFFFF9800);     // Orange
-  static const Color groomeColor = Color(0xFFE91E63);   // Pink
-
   // Reminder priority colors
   static const Color highPriority = Color(0xFFF44336);    // Red
   static const Color mediumPriority = Color(0xFFFF9800);  // Orange
@@ -59,6 +48,29 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
+  static const Map<String, _RecordCategoryPalette> _recordCategoryPalettes = {
+    'food': _RecordCategoryPalette(
+      primary: Color(0xFFE91E63),
+      soft: Color(0xFFFFE4EC),
+      dark: Color(0xFFD81B60),
+    ),
+    'activity': _RecordCategoryPalette(
+      primary: Color(0xFF4CAF50),
+      soft: Color(0xFFE3F5E5),
+      dark: Color(0xFF2E7D32),
+    ),
+    'poop': _RecordCategoryPalette(
+      primary: Color(0xFFFF9800),
+      soft: Color(0xFFFFF2DE),
+      dark: Color(0xFFEF6C00),
+    ),
+    'health': _RecordCategoryPalette(
+      primary: Color(0xFF2196F3),
+      soft: Color(0xFFDFECFF),
+      dark: Color(0xFF1565C0),
+    ),
+  };
+
   // Shadow colors
   static const Color lightShadow = Color(0x1A000000);
   static const Color mediumShadow = Color(0x33000000);
@@ -87,16 +99,48 @@ class AppColors {
 
   /// Get color for record type based on main category
   static Color getRecordTypeColor(String type) {
-    // 대분류별 색상 정의
-    const foodColor = Color(0xFFE91E63);      // Pink - 식사 관련
-    const healthColor = Color(0xFF2196F3);    // Blue - 건강 관련
-    const poopColor = Color(0xFFFF9800);      // Orange - 배변 관련
-    const activityColor = Color(0xFF4CAF50);  // Green - 활동 관련
+    final category = _categoryKeyForRecordType(type);
+    final palette = _paletteForCategory(category);
+    if (palette == null) {
+      return Colors.pink;
+    }
+    return palette.primary;
+  }
 
-    print('🎨 getRecordTypeColor called with type: "$type"');
-    
+  /// Pastel background colors for record categories (FAB/submenu)
+  static Color getRecordCategorySoftColor(String category) {
+    final palette = _paletteForCategory(category) ?? _paletteForCategory('food')!;
+    return palette.soft;
+  }
+
+  /// Darker accent colors for record categories (icons/text)
+  static Color getRecordCategoryDarkColor(String category) {
+    final palette = _paletteForCategory(category) ?? _paletteForCategory('food')!;
+    return palette.dark;
+  }
+
+  static _RecordCategoryPalette? _paletteForCategory(String category) {
+    final key = _normalizeCategoryKey(category);
+    return _recordCategoryPalettes[key];
+  }
+
+  static String _normalizeCategoryKey(String category) {
+    switch (category.toLowerCase()) {
+      case 'activity':
+      case 'play':
+        return 'activity';
+      case 'health':
+        return 'health';
+      case 'poop':
+        return 'poop';
+      case 'food':
+      default:
+        return 'food';
+    }
+  }
+
+  static String _categoryKeyForRecordType(String type) {
     switch (type.toLowerCase()) {
-      // Food category - Pink
       case 'food_meal':
       case 'food_snack':
       case 'food_water':
@@ -105,10 +149,9 @@ class AppColors {
       case 'food_supplement':
       case 'meal':
       case 'snack':
-        return foodColor;
-      
-      // Health category - Blue
+        return 'food';
       case 'health_med':
+      case 'health_supplement':
       case 'health_vaccine':
       case 'health_visit':
       case 'health_weight':
@@ -117,17 +160,13 @@ class AppColors {
       case 'vaccine':
       case 'visit':
       case 'weight':
-        return healthColor;
-      
-      // Poop category - Orange
+        return 'health';
       case 'poop_feces':
       case 'poop_urine':
       case 'poop_other':
       case 'hygiene_brush':
       case 'litter':
-        return poopColor;
-      
-      // Activity category - Green
+        return 'poop';
       case 'activity_play':
       case 'activity_explore':
       case 'activity_outing':
@@ -137,43 +176,9 @@ class AppColors {
       case 'activity_walk':
       case 'play':
       case 'groom':
-        return activityColor;
-      
+        return 'activity';
       default:
-        print('⚠️ Unknown record type: "$type" - returning foodColor (pink)');
-        return foodColor; // 기본값을 food 색상으로 설정
-    }
-  }
-
-  /// Pastel background colors for record categories (FAB/submenu)
-  static Color getRecordCategorySoftColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'food':
-        return const Color(0xFFFFE4EC); // light pink
-      case 'activity':
-        return const Color(0xFFE3F5E5); // light green
-      case 'poop':
-        return const Color(0xFFFFF2DE); // light orange
-      case 'health':
-        return const Color(0xFFDFECFF); // light blue
-      default:
-        return Colors.grey.shade200;
-    }
-  }
-
-  /// Darker accent colors for record categories (icons/text)
-  static Color getRecordCategoryDarkColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'food':
-        return const Color(0xFFD81B60); // dark pink
-      case 'activity':
-        return const Color(0xFF2E7D32); // dark green
-      case 'poop':
-        return const Color(0xFFEF6C00); // dark orange
-      case 'health':
-        return const Color(0xFF1565C0); // dark blue
-      default:
-        return Colors.grey.shade700;
+        return 'food';
     }
   }
 
@@ -226,4 +231,16 @@ class AppColors {
   static const double opacity70 = 0.7;
   static const double opacity80 = 0.8;
   static const double opacity90 = 0.9;
+}
+
+class _RecordCategoryPalette {
+  const _RecordCategoryPalette({
+    required this.primary,
+    required this.soft,
+    required this.dark,
+  });
+
+  final Color primary;
+  final Color soft;
+  final Color dark;
 }

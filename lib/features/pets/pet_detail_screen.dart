@@ -245,63 +245,63 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   if (image == null) {
                     return;
                   }
-                  // ProfileImagePicker에서 이미 저장된 파일을 받음
-                  final updatedPet = pet.copyWith(
-                    avatarUrl: image.path, // 이미 저장된 경로를 사용
-                    defaultIcon: null, // 이미지 선택 시 기본 아이콘 제거
+                    // ProfileImagePicker에서 이미 저장된 파일을 받음
+                    final updatedPet = pet.copyWith(
+                      avatarUrl: image.path, // 이미 저장된 경로를 사용
+                      defaultIcon: null, // 이미지 선택 시 기본 아이콘 제거
                     profileBgColor: null, // 배경색 초기화
-                    updatedAt: DateTime.now(),
-                  );
-                  
-                  try {
-                    await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                      updatedAt: DateTime.now(),
+                    );
                     
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('pets.image_updated'.tr()),
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                        ),
-                      );
+                    try {
+                      await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                      
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('pets.image_updated'.tr()),
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('pets.image_update_error'.tr(args: [pet.name])),
+                            backgroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                        );
+                      }
                     }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('pets.image_update_error'.tr(args: [pet.name])),
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                        ),
-                      );
-                    }
-                  }
                 },
                 onClearSelection: () async {
-                  final updatedPet = pet.copyWith(
-                    avatarUrl: null,
+                    final updatedPet = pet.copyWith(
+                      avatarUrl: null,
                     defaultIcon: null,
                     profileBgColor: null,
-                    updatedAt: DateTime.now(),
-                  );
+                      updatedAt: DateTime.now(),
+                    );
 
-                  try {
-                    await ref.read(petsProvider.notifier).updatePet(updatedPet);
+                    try {
+                      await ref.read(petsProvider.notifier).updatePet(updatedPet);
 
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
                           content: Text('pets.image_deleted'.tr()),
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
                           content: Text('pets.image_delete_error'.tr()),
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                        ),
-                      );
+                            backgroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                        );
                     }
                   }
                 },
@@ -365,23 +365,23 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                               borderRadius: BorderRadius.circular(16),
                               onTap: () => _editPet(context, pet, focusField: 'breed'),
                               child: Chip(
-                                label: Text(pet.breed!),
-                                backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                      label: Text(pet.breed!),
+                      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
                                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 visualDensity: VisualDensity.compact,
                               ),
                             ),
-                          ),
+                    ),
                   ],
                 ],
                     ),
-                  ],
-                ),
-                
+                ],
+              ),
+              
                 const SizedBox(width: 12),
-                
+              
                 // 오른쪽: 펫 정보들
-                Expanded(
+                    Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -400,14 +400,14 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: _InfoCard(
+                      child: _InfoCard(
                           icon: Icons.cake_outlined,
                           label: 'pets.birth_date'.tr(),
                           value: birthDateLabel,
                           onTap: () => _editPet(context, pet, focusField: 'birthDate'),
-                        ),
                       ),
-                      if (pet.weightKg != null)
+                    ),
+                  if (pet.weightKg != null)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Container(
@@ -429,7 +429,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   ),
                                   const SizedBox(width: 8),
-                                  Expanded(
+                    Expanded(
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
@@ -442,7 +442,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                                         ),
                                         const SizedBox(width: 8),
                                         InkWell(
-                                          onTap: () => _showWeightChart(context, pet),
+                        onTap: () => _showWeightChart(context, pet),
                                           borderRadius: BorderRadius.circular(10),
                                           child: Container(
                                             padding: const EdgeInsets.all(8),
@@ -463,19 +463,19 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                                 ],
                               ),
                             ),
-                          ),
-                        ),
-                      if (pet.sex != null)
+                      ),
+                    ),
+                  if (pet.sex != null)
                         _InfoCard(
                           icon: pet.sex!.toLowerCase() == 'male' || pet.sex == '남아'
                               ? Icons.male
                               : Icons.female,
-                          label: 'pets.sex'.tr(),
+                        label: 'pets.sex'.tr(),
                           value: _getSexWithNeuteredText(pet),
                           onTap: () => _editPet(context, pet, focusField: 'sex'),
-                        ),
-                    ],
-                  ),
+                    ),
+                ],
+              ),
               
                       // 메모 섹션 (기록이 없어도 영역 유지)
                       const SizedBox(height: 12),
@@ -483,19 +483,19 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                         onTap: () => _editPet(context, pet, focusField: 'note'),
                         borderRadius: BorderRadius.circular(6),
                         child: Container(
-                          width: double.infinity,
+                  width: double.infinity,
                           padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
+                  ),
+                  child: Text(
                             pet.note ?? '',
                             textAlign: TextAlign.right,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
-                        ),
-                      ),
+                  ),
+                ),
               ],
                   ),
                 ),
@@ -529,7 +529,7 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                   ),
                 ),
                 child: Row(
-                  children: [
+                children: [
                     // 좌측 화살표 - 이전 기록으로 이동
                     Material(
                       color: Colors.transparent,
@@ -556,15 +556,15 @@ class _PetDetailScreenState extends ConsumerState<PetDetailScreen> {
                           mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Flexible(
-                              child: Text(
+                  Flexible(
+                    child: Text(
                                 DateFormat('yyyy년 MM월 dd일').format(_currentSuppliesDate),
                                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
+                            fontWeight: FontWeight.bold,
+                          ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                             const SizedBox(width: 4),
                             Icon(
                               Icons.calendar_today,
@@ -1179,8 +1179,8 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                           items: _species
                               .map(
                                 (species) => DropdownMenuItem<String>(
-                                  value: species,
-                                  child: Text(species),
+                              value: species,
+                              child: Text(species),
                                 ),
                               )
                               .toList(),
@@ -1266,14 +1266,14 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                             onTap: () => _selectBirthDate(),
                             child: ListTile(
                               key: _birthDateTileKey,
-                              leading: const Icon(Icons.cake),
-                              title: Text('pets.birth_date'.tr()),
-                              subtitle: Text(
-                                _birthDate != null
-                                    ? DateFormat.yMMMd().format(_birthDate!)
-                                    : 'pets.select_birth_date'.tr(),
-                              ),
-                              contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.cake),
+                          title: Text('pets.birth_date'.tr()),
+                          subtitle: Text(
+                            _birthDate != null
+                                ? DateFormat.yMMMd().format(_birthDate!)
+                                : 'pets.select_birth_date'.tr(),
+                          ),
+                          contentPadding: EdgeInsets.zero,
                             ),
                           ),
                         ),
@@ -1312,8 +1312,8 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                   const SizedBox(height: 40),
                 ],
               ),
+              ),
             ),
-          ),
           );
         },
       ),
@@ -1332,7 +1332,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     );
     
     if (!mounted) return;
-
+    
     if (date != null) {
       setState(() {
         _birthDate = date;
