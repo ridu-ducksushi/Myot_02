@@ -374,6 +374,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                 return ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
+              clipBehavior: Clip.none,
               itemCount: pets.length + 1, // 펫들 + 새 펫 추가 카드
               itemBuilder: (context, index) {
                 if (index < pets.length) {
@@ -381,6 +382,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                   final pet = pets[index];
                   return Container(
                     width: 200, // 카드 너비
+                    margin: const EdgeInsets.only(right: 26),
                     child: _buildHorizontalPetCard(context, ref, pet),
                   );
                 } else {
@@ -453,56 +455,47 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     return Container(
       margin: const EdgeInsets.all(16),
       child: AppCard(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              // 사용자 정보
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _showEditProfileDialog(context),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    email,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '내 프로필',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      email,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '내 프로필',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              
-              // 편집 아이콘
-              IconButton(
-                onPressed: () => _showEditProfileDialog(context),
-                icon: Icon(
-                  Icons.edit,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -513,11 +506,13 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     final speciesColor = AppColors.getSpeciesColor(pet.species);
     
     return AppCard(
+      margin: EdgeInsets.zero,
       onTap: () => context.go('/pets/${pet.id}'),
       onLongPress: () => _showDeletePetDialog(context, ref, pet),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // 펫 아바타
@@ -571,10 +566,12 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
 
   Widget _buildAddPetCard(BuildContext context) {
     return AppCard(
+      margin: EdgeInsets.zero,
       onTap: () => _showAddPetDialog(context),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // 추가 아이콘
@@ -866,7 +863,13 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                     },
                   ),
                   
-                  const Spacer(),
+                  // Spacer to push buttons to bottom
+                  Expanded(
+                    child: const SizedBox.shrink(),
+                  ),
+                  
+                  // Spacing between field and buttons
+                  const SizedBox(height: 230),
                   
                   // Buttons
                   Row(
@@ -892,6 +895,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
