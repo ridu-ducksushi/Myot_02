@@ -29,25 +29,34 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/pets/:petId',
-      builder: (context, state) => HomeScreen(
-        child: PetDetailScreen(
-          petId: state.pathParameters['petId']!,
+      pageBuilder: (context, state) => NoTransitionPage(
+        key: state.pageKey,
+        child: HomeScreen(
+          child: PetDetailScreen(
+            petId: state.pathParameters['petId']!,
+          ),
         ),
       ),
       routes: [
         GoRoute(
           path: 'records',
-          builder: (context, state) => HomeScreen(
-            child: PetRecordsScreen(
-              petId: state.pathParameters['petId']!,
+          pageBuilder: (context, state) => NoTransitionPage(
+            key: state.pageKey,
+            child: HomeScreen(
+              child: PetRecordsScreen(
+                petId: state.pathParameters['petId']!,
+              ),
             ),
           ),
         ),
         GoRoute(
           path: 'health',
-          builder: (context, state) => HomeScreen(
-            child: PetHealthScreen(
-              petId: state.pathParameters['petId']!,
+          pageBuilder: (context, state) => NoTransitionPage(
+            key: state.pageKey,
+            child: HomeScreen(
+              child: PetHealthScreen(
+                petId: state.pathParameters['petId']!,
+              ),
             ),
           ),
         ),
@@ -77,7 +86,10 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/settings',
-      builder: (context, state) => const HomeScreen(child: SettingsPlaceholder()),
+      pageBuilder: (context, state) => NoTransitionPage(
+        key: state.pageKey,
+        child: const HomeScreen(child: SettingsPlaceholder()),
+      ),
     ),
     GoRoute(
       path: '/login',
