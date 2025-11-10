@@ -231,8 +231,8 @@ class _LabTableState extends State<_LabTable> {
       _valueCtrls[key]!.addListener(_onChanged);
     }
     _loadCustomOrder();
-    _loadRecordDates();
-    _loadFromSupabase();
+    // 기록 날짜를 먼저 로드하고, 가장 최근 날짜를 선택
+    _loadRecordDatesAndSetLatest();
     // 온라인이면 보류된 항목 동기화
     unawaited(_syncPendingIfOnline());
   }
@@ -867,6 +867,74 @@ class _LabTableState extends State<_LabTable> {
     }
 
     return Colors.black; // 정상 또는 파싱 불가
+  }
+
+  Future<void> _loadRecordDatesAndSetLatest() async {
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) {
+        await _loadFromSupabase();
+        return;
+      }
+      
+      // Supabase에서 이 펫의 모든 기록 날짜를 가져옴
+      final resList = await Supabase.instance.client
+          .from('labs')
+          .select('date, items')
+          .eq('user_id', uid)
+          .eq('pet_id', widget.petId)
+          .order('date', ascending: false);
+      
+      final validDates = <DateTime>[];
+      
+      for (final row in resList) {
+        // Check if this row has actual data (non-empty values)
+        final items = row['items'];
+        if (items is! Map) continue;
+        
+        bool hasData = false;
+        for (final k in items.keys) {
+          final v = items[k];
+          final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+          if (value.isNotEmpty) {
+            hasData = true;
+            break;
+          }
+        }
+        
+        if (hasData) {
+          final dateStr = row['date'] as String;
+          final parts = dateStr.split('-');
+          validDates.add(DateTime(
+            int.parse(parts[0]),
+            int.parse(parts[1]),
+            int.parse(parts[2]),
+          ));
+        }
+      }
+      
+      setState(() {
+        _recordDates = validDates.toSet();
+        
+        // 가장 최근 기록 날짜를 선택 (오늘 이전의 가장 최근 날짜)
+        final today = _today();
+        final pastDates = validDates.where((d) => d.isBefore(today) || isSameDay(d, today)).toList();
+        if (pastDates.isNotEmpty) {
+          pastDates.sort((a, b) => b.compareTo(a)); // 내림차순 정렬
+          _selectedDate = pastDates.first;
+          print('📅 가장 최근 기록 날짜로 설정: ${_dateKey()}');
+        } else {
+          // 기록이 없으면 오늘 날짜 유지
+          _selectedDate = _today();
+        }
+      });
+      
+      // 날짜 설정 후 데이터 로드
+      await _loadFromSupabase();
+    } catch (e) {
+      print('❌ Error loading record dates: $e');
+      await _loadFromSupabase();
+    }
   }
 
   Future<void> _loadRecordDates() async {

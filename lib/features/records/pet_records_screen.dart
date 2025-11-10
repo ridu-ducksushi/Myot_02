@@ -191,21 +191,21 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
             Icon(icon, color: color, size: 20),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
                 color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
       ),
     );
   }
@@ -230,7 +230,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           for (int i = 0; i < actions.length; i++) ...[
-            _buildSubMenuItem(
+          _buildSubMenuItem(
               icon: actions[i].icon,
               label: getLabelForType(context, actions[i].type),
               onTap: () => _addRecord(context, pet, actions[i].type),
@@ -256,9 +256,9 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     final background = AppColors.getRecordCategorySoftColor(categoryKey);
     final foreground = AppColors.getRecordCategoryDarkColor(categoryKey);
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
+        children: [
         if (isMenuVisible)
           _buildCategorySubMenu(context, pet, categoryKey),
         if (isMenuVisible)
@@ -270,8 +270,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           foregroundColor: foreground,
           onPressed: onToggle,
           child: Icon(fabIcon),
-        ),
-      ],
+          ),
+        ],
     );
   }
 
@@ -321,20 +321,20 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
                       onTap: () {
-                        setState(() {
-                          _selectedDate = _selectedDate.subtract(const Duration(days: 1));
-                        });
+                      setState(() {
+                        _selectedDate = _selectedDate.subtract(const Duration(days: 1));
+                      });
                         _saveSelectedDate(_selectedDate);
-                      },
+                    },
                     child: SizedBox(
                       width: 56,
                       height: 36,
                       child: Center(
                         child: Icon(
-                          Icons.chevron_left,
-                          color: Theme.of(context).colorScheme.primary,
+                      Icons.chevron_left,
+                      color: Theme.of(context).colorScheme.primary,
                           size: 24,
-                        ),
+                    ),
                       ),
                       ),
                     ),
@@ -415,23 +415,23 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
                       onTap: () {
-                        final tomorrow = _selectedDate.add(const Duration(days: 1));
-                        if (tomorrow.isBefore(DateTime.now().add(const Duration(days: 1)))) {
-                          setState(() {
-                            _selectedDate = tomorrow;
-                          });
+                      final tomorrow = _selectedDate.add(const Duration(days: 1));
+                      if (tomorrow.isBefore(DateTime.now().add(const Duration(days: 1)))) {
+                        setState(() {
+                          _selectedDate = tomorrow;
+                        });
                           _saveSelectedDate(_selectedDate);
-                        }
-                      },
+                      }
+                    },
                     child: SizedBox(
                       width: 56,
                       height: 36,
                       child: Center(
                         child: Icon(
-                          Icons.chevron_right,
-                          color: Theme.of(context).colorScheme.primary,
+                      Icons.chevron_right,
+                      color: Theme.of(context).colorScheme.primary,
                           size: 24,
-                        ),
+                    ),
                       ),
                       ),
                     ),
@@ -457,13 +457,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             pet: pet,
             isMenuVisible: _isFoodMenuVisible,
             onToggle: () {
-              setState(() {
-                _isFoodMenuVisible = !_isFoodMenuVisible;
-                _isActivityMenuVisible = false;
-                _isPoopMenuVisible = false;
+                  setState(() {
+                    _isFoodMenuVisible = !_isFoodMenuVisible;
+                    _isActivityMenuVisible = false;
+                    _isPoopMenuVisible = false;
                 _isHealthMenuVisible = false;
-              });
-            },
+                  });
+                },
             categoryKey: 'food',
             fabIcon: Icons.restaurant,
             heroTag: 'record-food',
@@ -475,13 +475,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             pet: pet,
             isMenuVisible: _isActivityMenuVisible,
             onToggle: () {
-              setState(() {
-                _isActivityMenuVisible = !_isActivityMenuVisible;
-                _isFoodMenuVisible = false;
-                _isPoopMenuVisible = false;
+                  setState(() {
+                    _isActivityMenuVisible = !_isActivityMenuVisible;
+                    _isFoodMenuVisible = false;
+                    _isPoopMenuVisible = false;
                 _isHealthMenuVisible = false;
-              });
-            },
+                  });
+                },
             categoryKey: 'activity',
             fabIcon: Icons.sports_tennis,
             heroTag: 'record-play',
@@ -493,13 +493,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             pet: pet,
             isMenuVisible: _isPoopMenuVisible,
             onToggle: () {
-              setState(() {
-                _isPoopMenuVisible = !_isPoopMenuVisible;
-                _isFoodMenuVisible = false;
-                _isActivityMenuVisible = false;
+                  setState(() {
+                    _isPoopMenuVisible = !_isPoopMenuVisible;
+                    _isFoodMenuVisible = false;
+                    _isActivityMenuVisible = false;
                 _isHealthMenuVisible = false;
-              });
-            },
+                  });
+                },
             categoryKey: 'poop',
             fabIcon: Icons.cleaning_services,
             heroTag: 'record-poop',
@@ -511,13 +511,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             pet: pet,
             isMenuVisible: _isHealthMenuVisible,
             onToggle: () {
-              setState(() {
-                _isHealthMenuVisible = !_isHealthMenuVisible;
-                _isFoodMenuVisible = false;
-                _isActivityMenuVisible = false;
-                _isPoopMenuVisible = false;
-              });
-            },
+                  setState(() {
+                    _isHealthMenuVisible = !_isHealthMenuVisible;
+                    _isFoodMenuVisible = false;
+                    _isActivityMenuVisible = false;
+                    _isPoopMenuVisible = false;
+                  });
+                },
             categoryKey: 'health',
             fabIcon: Icons.favorite,
             heroTag: 'record-health',
@@ -538,8 +538,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   }
 
   void _addRecord(BuildContext context, Pet pet, String type) {
-    final TextEditingController noteController = TextEditingController();
-    TimeOfDay selectedTime = TimeOfDay.now();
+        final TextEditingController noteController = TextEditingController();
+        TimeOfDay selectedTime = TimeOfDay.now();
 
     showDialog(
       context: context,
@@ -558,26 +558,26 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
               content: SizedBox(
                 width: double.maxFinite,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: noteController,
-                      decoration: InputDecoration(hintText: 'records.content'.tr()),
-                      autofocus: true,
-                    ),
-                    const SizedBox(height: 16),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: noteController,
+                    decoration: InputDecoration(hintText: 'records.content'.tr()),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 16),
                     InkWell(
                       onTap: () async {
-                        final TimeOfDay? picked = await showTimePicker(
-                          context: context,
-                          initialTime: selectedTime,
-                        );
+                          final TimeOfDay? picked = await showTimePicker(
+                            context: context,
+                            initialTime: selectedTime,
+                          );
                             if (picked != null) {
-                              setState(() {
-                                selectedTime = picked;
-                              });
-                            }
-                      },
+                            setState(() {
+                              selectedTime = picked;
+                            });
+                          }
+                        },
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -585,12 +585,12 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                           children: [
                             Icon(Icons.access_time, color: Theme.of(context).colorScheme.primary),
                             const SizedBox(width: 8),
-                            Text('Time: ${selectedTime.format(context)}'),
-                          ],
+                      Text('Time: ${selectedTime.format(context)}'),
+                    ],
                         ),
                       ),
-                    ),
-                  ],
+                  ),
+                ],
                 ),
               ),
               actions: <Widget>[
@@ -649,17 +649,17 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
               content: SizedBox(
                 width: double.maxFinite,
                 child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 항목명 (읽기 전용)
-                      Text(
-                        '항목명',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 항목명 (읽기 전용)
+                    Text(
+                      '항목명',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
                     const SizedBox(height: 8),
                     Container(
                       width: double.infinity,
@@ -676,7 +676,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                           Text(
                             getLabelForType(context, record.type),
                             style: Theme.of(context).textTheme.bodyMedium,
-                          ),
+                        ),
                         ],
                       ),
                     ),
@@ -779,7 +779,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                     ),
-                    ],
+                  ],
                   ),
                 ),
               ),
