@@ -323,15 +323,35 @@ class _LabTableState extends State<_LabTable> {
           ),
           if (_previousDateStr != null) ...[
             const SizedBox(height: 3),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.history, size: 16, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text('직전: ${_previousDateStr!}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                )),
-              ],
+            InkWell(
+              onTap: () async {
+                // 직전 날짜로 이동
+                final parts = _previousDateStr!.split('-');
+                if (parts.length == 3) {
+                  setState(() {
+                    _selectedDate = DateTime(
+                      int.parse(parts[0]),
+                      int.parse(parts[1]),
+                      int.parse(parts[2]),
+                    );
+                  });
+                  await _loadFromSupabase();
+                }
+              },
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.history, size: 16, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text('직전: ${_previousDateStr!}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[600],
+                    )),
+                  ],
+                ),
+              ),
             ),
           ],
         ],
