@@ -167,6 +167,38 @@
     "reference_range": "기준치"
   },
   "contact": {
-    "title": "문의하기"
+    "title": "문의하기",
+    "email": "ridusoft@gmail.com",
+    "email_copied": "이메일 주소가 클립보드에 복사되었습니다.",
+    "email_subject": "Myot 문의",
+    "email_body": "안녕하세요, Myot 앱에 대해 문의드립니다."
+  },
+  "settings": {
+    "pet_info": "펫 정보",
+    "my_profile": "내 프로필",
+    "account_settings": "계정 설정",
+    "logout": "로그아웃",
+    "logout_description": "세션을 종료하고 로그인 화면으로 돌아갑니다.",
+    "logout_success": "로그아웃 완료.",
+    "logout_failed": "로그아웃 실패",
+    "delete_account": "계정 삭제",
+    "delete_account_description": "계정 및 모든 데이터가 영구 삭제됩니다.",
+    "delete_account_title": "계정 삭제",
+    "delete_account_message": "이 작업은 되돌릴 수 없습니다.\n\n• 서버에 저장된 모든 데이터(펫, 기록, 리마인더)가 삭제됩니다.\n• 인증 계정도 삭제되어 재로그인이 불가합니다.\n• 로컬 캐시 데이터도 정리됩니다.",
+    "delete_account_confirm": "완전 삭제",
+    "delete_account_require_login": "로그인이 필요합니다.",
+    "delete_account_session_expired": "세션이 만료되었습니다. 다시 로그인 후 시도해주세요.",
+    "delete_account_timeout": "서버 응답 시간 초과",
+    "delete_account_server_failed": "서버 삭제 실패",
+    "delete_account_error": "삭제 중 오류가 발생했습니다.",
+    "delete_account_inquiry": "문의",
+    "edit_profile": "프로필 편집",
+    "nickname": "닉네임",
+    "nickname_required": "닉네임을 입력해주세요.",
+    "profile_updated": "프로필이 업데이트되었습니다.",
+    "profile_update_failed": "프로필 업데이트 실패",
+    "add_pet": "새 펫 추가",
+    "sex_male": "남아",
+    "sex_female": "여아"
   }
 }

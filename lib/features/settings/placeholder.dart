@@ -13,9 +13,9 @@ import 'package:petcare/data/local/database.dart';
 import 'package:petcare/data/services/image_service.dart';
 import 'package:petcare/features/pets/pets_screen.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
-// import 'package:petcare/ui/widgets/banner_ad_widget.dart'; // AdMob 승인 전까지 비활성화
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:petcare/data/models/pet.dart';
+import 'package:petcare/utils/app_constants.dart';
 
 class SettingsPlaceholder extends ConsumerStatefulWidget {
   const SettingsPlaceholder({super.key});
@@ -41,13 +41,15 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       // 캐시는 사용자 스코프 키로 분리되어 있으므로 전역 삭제하지 않음
       await Supabase.instance.client.auth.signOut();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('로그아웃 완료.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('settings.logout_success'.tr())),
+        );
       }
       // The GoRouter redirect will handle navigation to the login screen.
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('로그아웃 실패: $e')),
+          SnackBar(content: Text('${'settings.logout_failed'.tr()}: $e')),
         );
       }
     }
@@ -55,10 +57,14 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
 
   Future<void> _sendEmail(BuildContext context) async {
     try {
+      final email = 'contact.email'.tr();
+      final subject = 'contact.email_subject'.tr();
+      final body = 'contact.email_body'.tr();
+      
       final Uri emailUri = Uri(
         scheme: 'mailto',
-        path: 'ridusoft@gmail.com',
-        query: 'subject=Myot 문의&body=안녕하세요, Myot 앱에 대해 문의드립니다.',
+        path: email,
+        query: 'subject=$subject&body=$body',
       );
       
       print('이메일 URI: $emailUri');
@@ -73,28 +79,27 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         print('이메일 앱이 성공적으로 실행되었습니다.');
       } else {
         print('이메일 앱 실행 실패, 클립보드에 복사합니다.');
-        await Clipboard.setData(const ClipboardData(text: 'ridusoft@gmail.com'));
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('이메일 주소가 클립보드에 복사되었습니다.'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
+        await _copyEmailToClipboard(context, email);
       }
     } catch (e) {
       print('이메일 발송 오류: $e');
       // 오류 발생 시에도 클립보드에 복사
-      await Clipboard.setData(const ClipboardData(text: 'ridusoft@gmail.com'));
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('이메일 주소가 클립보드에 복사되었습니다. 오류: $e'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
+      final email = 'contact.email'.tr();
+      await _copyEmailToClipboard(context, email, error: e);
+    }
+  }
+
+  Future<void> _copyEmailToClipboard(BuildContext context, String email, {Object? error}) async {
+    await Clipboard.setData(ClipboardData(text: email));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error != null 
+              ? '${'contact.email_copied'.tr()} 오류: $error'
+              : 'contact.email_copied'.tr()),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -102,21 +107,16 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('계정 삭제'),
-        content: const Text(
-          '이 작업은 되돌릴 수 없습니다.\n\n'
-          '• 서버에 저장된 모든 데이터(펫, 기록, 리마인더)가 삭제됩니다.\n'
-          '• 인증 계정도 삭제되어 재로그인이 불가합니다.\n'
-          '• 로컬 캐시 데이터도 정리됩니다.'
-        ),
+        title: Text('settings.delete_account_title'.tr()),
+        content: Text('settings.delete_account_message'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
+            child: Text('common.cancel'.tr()),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('완전 삭제'),
+            child: Text('settings.delete_account_confirm'.tr()),
           ),
         ],
       ),
@@ -145,7 +145,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         if (context.mounted) Navigator.of(context).pop();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('로그인이 필요합니다.')),
+            SnackBar(content: Text('settings.delete_account_require_login'.tr())),
           );
         }
         return;
@@ -169,7 +169,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         if (context.mounted) Navigator.of(context).pop();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('세션이 만료되었습니다. 다시 로그인 후 시도해주세요.')),
+            SnackBar(content: Text('settings.delete_account_session_expired'.tr())),
           );
         }
         return;
@@ -193,20 +193,20 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       dynamic response;
       try {
         response = await _call().timeout(
-          const Duration(seconds: 20),
+          AppConstants.edgeFunctionTimeout,
           onTimeout: () {
-            print('⏱️ Edge Function 타임아웃 (20초)');
-            throw TimeoutException('서버 응답 시간 초과');
+            print('⏱️ Edge Function 타임아웃 (${AppConstants.edgeFunctionTimeout.inSeconds}초)');
+            throw TimeoutException('settings.delete_account_timeout'.tr());
           },
         );
       } on TimeoutException catch (e) {
         print('⏱️ 첫 시도 타임아웃, 재시도 중...');
         // One-time retry for slow/older emulators or flaky network
         response = await _call().timeout(
-          const Duration(seconds: 20),
+          AppConstants.edgeFunctionTimeout,
           onTimeout: () {
-            print('⏱️ Edge Function 재시도 타임아웃 (20초)');
-            throw TimeoutException('서버 응답 시간 초과 (재시도 실패)');
+            print('⏱️ Edge Function 재시도 타임아웃 (${AppConstants.edgeFunctionTimeout.inSeconds}초)');
+            throw TimeoutException('${'settings.delete_account_timeout'.tr()} (재시도 실패)');
           },
         );
       }
@@ -223,7 +223,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
             ? (data['error']?.toString() ?? data.toString())
             : data?.toString() ?? '알 수 없는 오류';
         print('❌ Edge Function 실패: $errorDetail');
-        throw Exception('서버 삭제 실패: $errorDetail');
+        throw Exception('${'settings.delete_account_server_failed'.tr()}: $errorDetail');
       }
 
       print('✅ 서버 데이터 삭제 완료');
@@ -254,10 +254,10 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         Navigator.of(context).pop(); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('삭제 중 오류가 발생했습니다.\n오류: ${e.toString()}'),
+            content: Text('${'settings.delete_account_error'.tr()}\n오류: ${e.toString()}'),
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
-              label: '문의',
+              label: 'settings.delete_account_inquiry'.tr(),
               onPressed: () => _sendEmail(context),
             ),
           ),
@@ -353,11 +353,11 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
           const SizedBox(height: 2),
           
           // 펫 정보 섹션 (통합)
-          SectionHeader(title: '펫 정보'),
+          SectionHeader(title: 'settings.pet_info'.tr()),
           
           // 가로 스크롤 가능한 펫 카드들
           SizedBox(
-            height: 240, // 카드 높이
+            height: AppConstants.petCardHeight,
             child: FutureBuilder<String?>(
               future: currentPetId != null ? Future.value(currentPetId) : loadLastSelectedPetId(),
               builder: (context, snapshot) {
@@ -382,14 +382,14 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                   final pet = pets[index];
                   final isSelected = pet.id == preferredId;
                   return Container(
-                    width: 200, // 카드 너비
-                    margin: const EdgeInsets.only(right: 26),
+                    width: AppConstants.petCardWidth,
+                    margin: EdgeInsets.only(right: AppConstants.petCardSpacing),
                     child: _buildHorizontalPetCard(context, ref, pet, isSelected: isSelected),
                   );
                 } else {
                   // 새 펫 추가 카드
                   return Container(
-                    width: 200,
+                    width: AppConstants.petCardWidth,
                     child: _buildAddPetCard(context),
                   );
                 }
@@ -406,7 +406,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
           AppCard(
             child: ListTile(
               leading: const Icon(Icons.email, color: AppColors.primary),
-              title: Text('ridusoft@gmail.com'),
+              title: Text('contact.email'.tr()),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () => _sendEmail(context),
             ),
@@ -415,12 +415,12 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
           const SizedBox(height: 2),
           
           // 계정 설정 섹션
-          SectionHeader(title: '계정 설정'),
+          SectionHeader(title: 'settings.account_settings'.tr()),
           AppCard(
             child: ListTile(
               leading: const Icon(Icons.logout, color: AppColors.error),
-              title: Text('로그아웃'),
-              subtitle: Text('세션을 종료하고 로그인 화면으로 돌아갑니다.'),
+              title: Text('settings.logout'.tr()),
+              subtitle: Text('settings.logout_description'.tr()),
               onTap: () => _signOut(context),
             ),
           ),
@@ -428,8 +428,8 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
           AppCard(
             child: ListTile(
               leading: const Icon(Icons.delete_forever, color: AppColors.error),
-              title: const Text('계정 삭제'),
-              subtitle: const Text('계정 및 모든 데이터가 영구 삭제됩니다.'),
+              title: Text('settings.delete_account'.tr()),
+              subtitle: Text('settings.delete_account_description'.tr()),
               onTap: () => _confirmDeleteRequest(context),
             ),
           ),
@@ -487,7 +487,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '내 프로필',
+                      'settings.my_profile'.tr(),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.w500,
@@ -509,7 +509,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     
     return AppCard(
       margin: EdgeInsets.zero,
-      elevation: isSelected ? 4 : 2,
+      elevation: isSelected ? AppConstants.selectedPetElevation : AppConstants.defaultPetElevation,
       onTap: () => context.go('/pets/${pet.id}'),
       onLongPress: () => _showDeletePetDialog(context, ref, pet),
       child: Container(
@@ -517,7 +517,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
             ? BoxDecoration(
                 border: Border.all(
                   color: primaryColor,
-                  width: 2.5,
+                  width: AppConstants.selectedPetBorderWidth,
                 ),
                 borderRadius: BorderRadius.circular(16),
               )
@@ -530,11 +530,11 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
           children: [
             // 펫 아바타
             Container(
-              width: 60,
-              height: 60,
+              width: AppConstants.avatarSize,
+              height: AppConstants.avatarSize,
               decoration: BoxDecoration(
                 color: speciesColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(AppConstants.avatarSize / 2),
                 border: Border.all(
                   color: speciesColor.withOpacity(0.3),
                   width: 2,
@@ -544,7 +544,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                   ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species, bgColor: pet.profileBgColor)
                   : pet.avatarUrl != null
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(AppConstants.avatarSize / 2),
                           child: Image.file(
                             File(pet.avatarUrl!),
                             fit: BoxFit.cover,
@@ -554,20 +554,20 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                         )
                       : _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species, bgColor: pet.profileBgColor),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: AppConstants.mediumSpacing),
             
             // 펫 이름
             Text(
               pet.name,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: AppConstants.defaultPadding,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: AppConstants.smallSpacing),
             
             // 펫 종류
             Transform.scale(
@@ -593,11 +593,11 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
           children: [
             // 추가 아이콘
             Container(
-              width: 60,
-              height: 60,
+              width: AppConstants.avatarSize,
+              height: AppConstants.avatarSize,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(AppConstants.avatarSize / 2),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                   width: 2,
@@ -606,18 +606,18 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
               child: Icon(
                 Icons.add,
                 color: Theme.of(context).colorScheme.primary,
-                size: 30,
+                size: AppConstants.iconSize,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: AppConstants.mediumSpacing),
             
             // 추가 텍스트
             Text(
-              '새 펫 추가',
+              'settings.add_pet'.tr(),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
-                fontSize: 16,
+                fontSize: AppConstants.defaultPadding,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -642,38 +642,38 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       // Supabase Storage에서 이미지 URL 가져오기
       final imageUrl = ImageService.getDefaultIconUrl(species ?? 'cat', defaultIcon);
       if (imageUrl.isNotEmpty) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: Stack(
-            children: [
-              // 배경색
-              if (bgColor != null)
-                Image.asset(
-                  'assets/images/profile_bg/$bgColor.png',
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                ),
-              // 아이콘
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(AppConstants.avatarSize / 2),
+        child: Stack(
+          children: [
+            // 배경색
+            if (bgColor != null)
               Image.asset(
-                imageUrl,
-                width: 60,
-                height: 60,
+                'assets/images/profile_bg/$bgColor.png',
+                width: AppConstants.avatarSize,
+                height: AppConstants.avatarSize,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  // Assets 이미지 로드 실패 시 기존 아이콘으로 폴백
-                  final iconData = _getDefaultIconData(defaultIcon);
-                  final color = _getDefaultIconColor(defaultIcon);
-                  return Icon(
-                    iconData,
-                    size: 30,
-                    color: color,
-                  );
-                },
               ),
-            ],
-          ),
-        );
+            // 아이콘
+            Image.asset(
+              imageUrl,
+              width: AppConstants.avatarSize,
+              height: AppConstants.avatarSize,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                // Assets 이미지 로드 실패 시 기존 아이콘으로 폴백
+                final iconData = _getDefaultIconData(defaultIcon);
+                final color = _getDefaultIconColor(defaultIcon);
+                return Icon(
+                  iconData,
+                  size: AppConstants.iconSize,
+                  color: color,
+                );
+              },
+            ),
+          ],
+        ),
+      );
       }
       
       // 폴백: 기존 아이콘 방식
@@ -682,12 +682,12 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       
       return Icon(
         iconData,
-        size: 30,
+        size: AppConstants.iconSize,
         color: color,
       );
     }
     
-    return Icon(Icons.pets, color: fallbackColor, size: 30);
+    return Icon(Icons.pets, color: fallbackColor, size: AppConstants.iconSize);
   }
 
   // 기본 아이콘 데이터 매핑
@@ -812,14 +812,14 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('프로필이 업데이트되었습니다.')),
+          SnackBar(content: Text('settings.profile_updated'.tr())),
         );
       }
     } catch (e) {
       print('❌ 프로필 업데이트 오류: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('프로필 업데이트 실패: $e')),
+          SnackBar(content: Text('${'settings.profile_update_failed'.tr()}: $e')),
         );
       }
     } finally {
@@ -862,19 +862,19 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                   
                   // Title
                   Text(
-                    '프로필 편집',
+                    'settings.edit_profile'.tr(),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: AppConstants.mediumPadding),
                   
                   // Display Name
                   AppTextField(
                     controller: _displayNameController,
-                    labelText: '닉네임',
+                    labelText: 'settings.nickname'.tr(),
                     prefixIcon: const Icon(Icons.person),
                     validator: (value) {
                       if (value?.trim().isEmpty ?? true) {
-                        return '닉네임을 입력해주세요.';
+                        return 'settings.nickname_required'.tr();
                       }
                       return null;
                     },
@@ -886,7 +886,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                   ),
                   
                   // Spacing between field and buttons
-                  const SizedBox(height: 230),
+                  SizedBox(height: AppConstants.profileEditButtonSpacing),
                   
                   // Buttons
                   Row(
@@ -894,10 +894,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                          child: const Text('취소'),
+                          child: Text('common.cancel'.tr()),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: AppConstants.defaultPadding),
                       Expanded(
                         child: FilledButton(
                           onPressed: _isLoading ? null : _updateProfile,
@@ -907,12 +907,12 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                   height: 20,
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : const Text('저장'),
+                              : Text('common.save'.tr()),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: AppConstants.profileEditBottomSpacing),
                 ],
               ),
             ),
@@ -937,16 +937,14 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   final _weightController = TextEditingController();
   final _noteController = TextEditingController();
   
-  String _selectedSpecies = 'Dog';
+  String _selectedSpecies = AppConstants.petSpecies.first;
   String? _selectedSex;
   bool? _isNeutered;
   DateTime? _birthDate;
   
-  final List<String> _species = [
-    'Dog', 'Cat', 'Other'
-  ];
+  final List<String> _species = AppConstants.petSpecies;
   
-  final List<String> _sexOptions = ['남아', '여아'];
+  final List<String> _sexOptions = AppConstants.sexOptions;
 
   @override
   void dispose() {
@@ -1157,10 +1155,10 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   Future<void> _savePet() async {
     if (!_formKey.currentState!.validate()) return;
     
-    // 남아/여아를 Male/Female로 변환 (DB 저장용)
-    String? sexForDb = _selectedSex;
-    if (_selectedSex == '남아') sexForDb = 'Male';
-    if (_selectedSex == '여아') sexForDb = 'Female';
+    // 성별 변환 (표시값 -> DB 값)
+    final sexForDb = _selectedSex != null 
+        ? AppConstants.sexMapping[_selectedSex] 
+        : null;
     
     final pet = Pet(
       id: DateTime.now().millisecondsSinceEpoch.toString(),

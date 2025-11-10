@@ -173,6 +173,38 @@
     "reference_range": "Reference Range"
   },
   "contact": {
-    "title": "Contact"
+    "title": "Contact",
+    "email": "ridusoft@gmail.com",
+    "email_copied": "Email address has been copied to clipboard.",
+    "email_subject": "Myot Inquiry",
+    "email_body": "Hello, I have a question about the Myot app."
+  },
+  "settings": {
+    "pet_info": "Pet Information",
+    "my_profile": "My Profile",
+    "account_settings": "Account Settings",
+    "logout": "Logout",
+    "logout_description": "End session and return to login screen.",
+    "logout_success": "Logout completed.",
+    "logout_failed": "Logout failed",
+    "delete_account": "Delete Account",
+    "delete_account_description": "Account and all data will be permanently deleted.",
+    "delete_account_title": "Delete Account",
+    "delete_account_message": "This action cannot be undone.\n\n• All data stored on the server (pets, records, reminders) will be deleted.\n• Authentication account will also be deleted and re-login will not be possible.\n• Local cache data will also be cleared.",
+    "delete_account_confirm": "Delete Permanently",
+    "delete_account_require_login": "Login required.",
+    "delete_account_session_expired": "Session has expired. Please log in again and try.",
+    "delete_account_timeout": "Server response timeout",
+    "delete_account_server_failed": "Server deletion failed",
+    "delete_account_error": "An error occurred during deletion.",
+    "delete_account_inquiry": "Inquiry",
+    "edit_profile": "Edit Profile",
+    "nickname": "Nickname",
+    "nickname_required": "Please enter a nickname.",
+    "profile_updated": "Profile has been updated.",
+    "profile_update_failed": "Profile update failed",
+    "add_pet": "Add New Pet",
+    "sex_male": "Male",
+    "sex_female": "Female"
   }
 }

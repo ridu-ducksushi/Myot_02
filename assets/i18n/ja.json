@@ -167,6 +167,38 @@
     "reference_range": "基準値"
   },
   "contact": {
-    "title": "お問い合わせ"
+    "title": "お問い合わせ",
+    "email": "ridusoft@gmail.com",
+    "email_copied": "メールアドレスがクリップボードにコピーされました。",
+    "email_subject": "Myotお問い合わせ",
+    "email_body": "こんにちは、Myotアプリについてお問い合わせがあります。"
+  },
+  "settings": {
+    "pet_info": "ペット情報",
+    "my_profile": "マイプロフィール",
+    "account_settings": "アカウント設定",
+    "logout": "ログアウト",
+    "logout_description": "セッションを終了してログイン画面に戻ります。",
+    "logout_success": "ログアウト完了。",
+    "logout_failed": "ログアウト失敗",
+    "delete_account": "アカウント削除",
+    "delete_account_description": "アカウントおよびすべてのデータが永続的に削除されます。",
+    "delete_account_title": "アカウント削除",
+    "delete_account_message": "この操作は元に戻せません。\n\n• サーバーに保存されているすべてのデータ（ペット、記録、リマインダー）が削除されます。\n• 認証アカウントも削除され、再ログインはできません。\n• ローカルキャッシュデータもクリアされます。",
+    "delete_account_confirm": "完全削除",
+    "delete_account_require_login": "ログインが必要です。",
+    "delete_account_session_expired": "セッションが期限切れです。再度ログインしてからお試しください。",
+    "delete_account_timeout": "サーバー応答タイムアウト",
+    "delete_account_server_failed": "サーバー削除失敗",
+    "delete_account_error": "削除中にエラーが発生しました。",
+    "delete_account_inquiry": "お問い合わせ",
+    "edit_profile": "プロフィール編集",
+    "nickname": "ニックネーム",
+    "nickname_required": "ニックネームを入力してください。",
+    "profile_updated": "プロフィールが更新されました。",
+    "profile_update_failed": "プロフィール更新失敗",
+    "add_pet": "新しいペットを追加",
+    "sex_male": "オス",
+    "sex_female": "メス"
   }
 }

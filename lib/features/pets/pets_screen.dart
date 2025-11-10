@@ -13,6 +13,7 @@ import 'package:petcare/ui/widgets/profile_image_picker.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:petcare/data/local/database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:petcare/utils/app_constants.dart';
 
 class PetsScreen extends ConsumerStatefulWidget {
   const PetsScreen({super.key});
@@ -655,7 +656,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   final _weightController = TextEditingController();
   final _noteController = TextEditingController();
   
-  String _selectedSpecies = 'Dog';
+  String _selectedSpecies = AppConstants.petSpecies.first;
   String? _selectedSex;
   bool? _isNeutered;
   DateTime? _birthDate;
@@ -663,11 +664,9 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   String? _selectedDefaultIcon;
   String? _selectedBgColor;
   
-  final List<String> _species = [
-    'Dog', 'Cat', 'Other'
-  ];
+  final List<String> _species = AppConstants.petSpecies;
   
-  final List<String> _sexOptions = ['남아', '여아'];
+  final List<String> _sexOptions = AppConstants.sexOptions;
 
   @override
   void dispose() {
@@ -917,10 +916,10 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
     // _selectedImage는 이미 ProfileImagePicker에서 저장된 파일이므로 경로만 사용
     final String? avatarUrl = _selectedImage?.path;
     
-    // 남아/여아를 Male/Female로 변환 (DB 저장용)
-    String? sexForDb = _selectedSex;
-    if (_selectedSex == '남아') sexForDb = 'Male';
-    if (_selectedSex == '여아') sexForDb = 'Female';
+    // 성별 변환 (표시값 -> DB 값)
+    final sexForDb = _selectedSex != null 
+        ? AppConstants.sexMapping[_selectedSex] 
+        : null;
     
     final pet = Pet(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -964,7 +963,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   final _weightController = TextEditingController();
   final _noteController = TextEditingController();
   
-  String _selectedSpecies = 'Dog';
+  String _selectedSpecies = AppConstants.petSpecies.first;
   String? _selectedSex;
   bool? _isNeutered;
   DateTime? _birthDate;
@@ -972,11 +971,9 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   String? _selectedDefaultIcon;
   String? _selectedBgColor;
   
-  final List<String> _species = [
-    'Dog', 'Cat', 'Other'
-  ];
+  final List<String> _species = AppConstants.petSpecies;
   
-  final List<String> _sexOptions = ['남아', '여아'];
+  final List<String> _sexOptions = AppConstants.sexOptions;
 
   @override
   void initState() {
@@ -992,8 +989,16 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     _noteController.text = pet.note ?? '';
     
     _selectedSpecies = pet.species;
-    // Male/Female을 남아/여아로 변환
-    _selectedSex = pet.sex == 'Male' ? '남아' : (pet.sex == 'Female' ? '여아' : pet.sex);
+    // DB 값 -> 표시값 변환
+    _selectedSex = AppConstants.sexMapping.entries
+        .firstWhere(
+          (entry) => entry.value == pet.sex,
+          orElse: () => const MapEntry('', ''),
+        )
+        .key;
+    if (_selectedSex?.isEmpty ?? true) {
+      _selectedSex = pet.sex; // 매핑되지 않은 경우 원본 값 사용
+    }
     _isNeutered = pet.neutered;
     _birthDate = pet.birthDate;
     _selectedDefaultIcon = pet.defaultIcon;
@@ -1257,10 +1262,10 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     // _selectedImage는 이미 ProfileImagePicker에서 저장된 파일이므로 경로만 사용
     final String? avatarUrl = _selectedImage?.path ?? widget.pet.avatarUrl;
     
-    // 남아/여아를 Male/Female로 변환 (DB 저장용)
-    String? sexForDb = _selectedSex;
-    if (_selectedSex == '남아') sexForDb = 'Male';
-    if (_selectedSex == '여아') sexForDb = 'Female';
+    // 성별 변환 (표시값 -> DB 값)
+    final sexForDb = _selectedSex != null 
+        ? AppConstants.sexMapping[_selectedSex] 
+        : null;
     
     final updatedPet = widget.pet.copyWith(
       name: _nameController.text.trim(),
