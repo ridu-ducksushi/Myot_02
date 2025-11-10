@@ -380,10 +380,11 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                 if (index < pets.length) {
                   // 기존 펫 카드
                   final pet = pets[index];
+                  final isSelected = pet.id == preferredId;
                   return Container(
                     width: 200, // 카드 너비
                     margin: const EdgeInsets.only(right: 26),
-                    child: _buildHorizontalPetCard(context, ref, pet),
+                    child: _buildHorizontalPetCard(context, ref, pet, isSelected: isSelected),
                   );
                 } else {
                   // 새 펫 추가 카드
@@ -502,14 +503,26 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     );
   }
 
-  Widget _buildHorizontalPetCard(BuildContext context, WidgetRef ref, pet) {
+  Widget _buildHorizontalPetCard(BuildContext context, WidgetRef ref, pet, {bool isSelected = false}) {
     final speciesColor = AppColors.getSpeciesColor(pet.species);
+    final primaryColor = Theme.of(context).colorScheme.primary;
     
     return AppCard(
       margin: EdgeInsets.zero,
+      elevation: isSelected ? 4 : 2,
       onTap: () => context.go('/pets/${pet.id}'),
       onLongPress: () => _showDeletePetDialog(context, ref, pet),
-      child: Padding(
+      child: Container(
+        decoration: isSelected
+            ? BoxDecoration(
+                border: Border.all(
+                  color: primaryColor,
+                  width: 2.5,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              )
+            : null,
+        child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -522,7 +535,10 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
               decoration: BoxDecoration(
                 color: speciesColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: speciesColor.withOpacity(0.3), width: 2),
+                border: Border.all(
+                  color: speciesColor.withOpacity(0.3),
+                  width: 2,
+                ),
               ),
               child: pet.defaultIcon != null
                   ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species, bgColor: pet.profileBgColor)
@@ -559,6 +575,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
               child: PetSpeciesChip(species: pet.species),
             ),
           ],
+        ),
         ),
       ),
     );
