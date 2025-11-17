@@ -10,14 +10,12 @@ import 'package:petcare/data/models/record.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import 'package:petcare/features/records/records_chart_screen.dart';
 
 class _RecordCategoryAction {
-  const _RecordCategoryAction({
-    required this.icon,
-    required this.type,
-  });
+  const _RecordCategoryAction({required this.icon, required this.type});
 
   final IconData icon;
   final String type;
@@ -33,7 +31,10 @@ const Map<String, List<_RecordCategoryAction>> _recordCategoryActions = {
   ],
   'activity': [
     _RecordCategoryAction(icon: Icons.gamepad_outlined, type: 'activity_play'),
-    _RecordCategoryAction(icon: Icons.explore_outlined, type: 'activity_explore'),
+    _RecordCategoryAction(
+      icon: Icons.explore_outlined,
+      type: 'activity_explore',
+    ),
     _RecordCategoryAction(icon: Icons.directions_walk, type: 'activity_outing'),
     _RecordCategoryAction(icon: Icons.hotel_outlined, type: 'activity_rest'),
     _RecordCategoryAction(icon: Icons.more_horiz, type: 'activity_other'),
@@ -54,25 +55,44 @@ const Map<String, List<_RecordCategoryAction>> _recordCategoryActions = {
 // 전역 헬퍼 함수들
 IconData getIconForType(String type) {
   switch (type) {
-    case 'food_meal': return Icons.dinner_dining;
-    case 'food_snack': return Icons.cookie;
-    case 'food_water': return Icons.water_drop;
-    case 'food_med': return Icons.medical_services;
-    case 'food_supplement': return Icons.medication;
-    case 'health_supplement': return Icons.medication;
-    case 'health_vaccine': return Icons.vaccines;
-    case 'health_visit': return Icons.local_hospital;
-    case 'health_weight': return Icons.more_horiz;
-    case 'activity_play': return Icons.gamepad_outlined;
-    case 'activity_explore': return Icons.explore_outlined;
-    case 'activity_outing': return Icons.directions_walk;
-    case 'activity_rest': return Icons.hotel_outlined;
-    case 'activity_other': return Icons.more_horiz;
-    case 'poop_urine': return Icons.opacity;
-    case 'poop_feces': return Icons.pets;
-    case 'hygiene_brush': return Icons.brush;
-    case 'poop_other': return Icons.more_horiz;
-    default: return Icons.add_circle_outline;
+    case 'food_meal':
+      return Icons.dinner_dining;
+    case 'food_snack':
+      return Icons.cookie;
+    case 'food_water':
+      return Icons.water_drop;
+    case 'food_med':
+      return Icons.medical_services;
+    case 'food_supplement':
+      return Icons.medication;
+    case 'health_supplement':
+      return Icons.medication;
+    case 'health_vaccine':
+      return Icons.vaccines;
+    case 'health_visit':
+      return Icons.local_hospital;
+    case 'health_weight':
+      return Icons.more_horiz;
+    case 'activity_play':
+      return Icons.gamepad_outlined;
+    case 'activity_explore':
+      return Icons.explore_outlined;
+    case 'activity_outing':
+      return Icons.directions_walk;
+    case 'activity_rest':
+      return Icons.hotel_outlined;
+    case 'activity_other':
+      return Icons.more_horiz;
+    case 'poop_urine':
+      return Icons.opacity;
+    case 'poop_feces':
+      return Icons.pets;
+    case 'hygiene_brush':
+      return Icons.brush;
+    case 'poop_other':
+      return Icons.more_horiz;
+    default:
+      return Icons.add_circle_outline;
   }
 }
 
@@ -126,10 +146,7 @@ String _translationCategoryKey(String category) {
 }
 
 class PetRecordsScreen extends ConsumerStatefulWidget {
-  const PetRecordsScreen({
-    super.key,
-    required this.petId,
-  });
+  const PetRecordsScreen({super.key, required this.petId});
 
   final String petId;
 
@@ -143,6 +160,9 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   bool _isPoopMenuVisible = false;
   bool _isHealthMenuVisible = false;
   DateTime _selectedDate = DateTime.now();
+
+  DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 
   @override
   void initState() {
@@ -176,9 +196,168 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   Future<void> _saveSelectedDate(DateTime date) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final iso = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final iso =
+          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
       await prefs.setString('selected_date_${widget.petId}', iso);
     } catch (_) {}
+  }
+
+  Future<void> _showRecordCalendar(
+    BuildContext context,
+    List<Record> allRecords,
+  ) async {
+    final Set<DateTime> recordDates = allRecords
+        .map((record) => _dateOnly(record.at))
+        .toSet();
+    DateTime? tempSelected = _selectedDate;
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TableCalendar(
+                firstDay: DateTime(2000),
+                lastDay: DateTime.now(),
+                focusedDay: tempSelected ?? _selectedDate,
+                selectedDayPredicate: (day) => isSameDay(day, tempSelected),
+                onDaySelected: (selectedDay, focusedDay) {
+                  tempSelected = selectedDay;
+                  Navigator.pop(dialogContext);
+                },
+                calendarFormat: CalendarFormat.month,
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+                calendarStyle: CalendarStyle(
+                  todayDecoration: BoxDecoration(
+                    color: Theme.of(
+                      dialogContext,
+                    ).colorScheme.primary.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: BoxDecoration(
+                    color: Theme.of(dialogContext).colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                calendarBuilders: CalendarBuilders(
+                  defaultBuilder: (context, day, focusedDay) {
+                    final hasRecord = recordDates.any((d) => isSameDay(d, day));
+                    if (!hasRecord) return null;
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${day.day}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  todayBuilder: (context, day, focusedDay) {
+                    final hasRecord = recordDates.any((d) => isSameDay(d, day));
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${day.day}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (hasRecord)
+                              Container(
+                                width: 4,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                  selectedBuilder: (context, day, focusedDay) {
+                    final hasRecord = recordDates.any((d) => isSameDay(d, day));
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${day.day}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            if (hasRecord)
+                              Container(
+                                width: 4,
+                                height: 4,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: Text('common.cancel'.tr()),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (tempSelected != null && !isSameDay(tempSelected, _selectedDate)) {
+      setState(() => _selectedDate = _dateOnly(tempSelected!));
+      _saveSelectedDate(_selectedDate);
+    }
   }
 
   Widget _buildSubMenuItem({
@@ -191,27 +370,32 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             Icon(icon, color: color, size: 20),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
                 color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildCategorySubMenu(BuildContext context, Pet pet, String categoryKey) {
-    final actions = _recordCategoryActions[categoryKey] ?? const <_RecordCategoryAction>[];
+  Widget _buildCategorySubMenu(
+    BuildContext context,
+    Pet pet,
+    String categoryKey,
+  ) {
+    final actions =
+        _recordCategoryActions[categoryKey] ?? const <_RecordCategoryAction>[];
     if (actions.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -230,7 +414,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           for (int i = 0; i < actions.length; i++) ...[
-          _buildSubMenuItem(
+            _buildSubMenuItem(
               icon: actions[i].icon,
               label: getLabelForType(context, actions[i].type),
               onTap: () => _addRecord(context, pet, actions[i].type),
@@ -256,13 +440,11 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     final background = AppColors.getRecordCategorySoftColor(categoryKey);
     final foreground = AppColors.getRecordCategoryDarkColor(categoryKey);
     return Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-        if (isMenuVisible)
-          _buildCategorySubMenu(context, pet, categoryKey),
-        if (isMenuVisible)
-          const SizedBox(width: 12),
+      children: [
+        if (isMenuVisible) _buildCategorySubMenu(context, pet, categoryKey),
+        if (isMenuVisible) const SizedBox(width: 12),
         FloatingActionButton(
           heroTag: heroTag,
           tooltip: tr(tooltipKey, context: context),
@@ -270,8 +452,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           foregroundColor: foreground,
           onPressed: onToggle,
           child: Icon(fabIcon),
-          ),
-        ],
+        ),
+      ],
     );
   }
 
@@ -279,12 +461,14 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   Widget build(BuildContext context) {
     final pet = ref.watch(petByIdProvider(widget.petId));
     // 선택된 날짜에 해당하는 레코드만 필터링
-    final List<Record> allRecords = ref.watch(recordsForPetProvider(widget.petId));
+    final List<Record> allRecords = ref.watch(
+      recordsForPetProvider(widget.petId),
+    );
     final List<Record> records = allRecords.where((record) {
       final recordDate = record.at;
       return recordDate.year == _selectedDate.year &&
-             recordDate.month == _selectedDate.month &&
-             recordDate.day == _selectedDate.day;
+          recordDate.month == _selectedDate.month &&
+          recordDate.day == _selectedDate.day;
     }).toList();
 
     if (pet == null) {
@@ -321,46 +505,42 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
                       onTap: () {
-                      setState(() {
-                        _selectedDate = _selectedDate.subtract(const Duration(days: 1));
-                      });
+                        setState(() {
+                          _selectedDate = _selectedDate.subtract(
+                            const Duration(days: 1),
+                          );
+                        });
                         _saveSelectedDate(_selectedDate);
-                    },
-                    child: SizedBox(
-                      width: 56,
-                      height: 36,
-                      child: Center(
-                        child: Icon(
-                      Icons.chevron_left,
-                      color: Theme.of(context).colorScheme.primary,
-                          size: 24,
-                    ),
-                      ),
+                      },
+                      child: SizedBox(
+                        width: 56,
+                        height: 36,
+                        child: Center(
+                          child: Icon(
+                            Icons.chevron_left,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 24,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  
+
                   // 날짜 표시 및 선택 + 차트 아이콘 (중앙 정렬)
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       InkWell(
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: _selectedDate,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime.now(),
-                          );
-                          if (picked != null) {
-                            setState(() => _selectedDate = DateTime(picked.year, picked.month, picked.day));
-                            _saveSelectedDate(_selectedDate);
-                          }
-                        },
+                        onTap: () => _showRecordCalendar(context, allRecords),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Theme.of(context).colorScheme.outline),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Row(
@@ -368,10 +548,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                             children: [
                               Text(
                                 DateFormat('yyyy-MM-dd').format(_selectedDate),
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                               const SizedBox(width: 6),
                               Icon(
@@ -387,15 +570,21 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                       // 차트 아이콘 (Health 화면과 동일한 스타일)
                       InkWell(
                         onTap: () {
-                          context.go('/pets/${widget.petId}/records-chart?name=${Uri.encodeComponent(pet.name)}');
+                          context.go(
+                            '/pets/${widget.petId}/records-chart?name=${Uri.encodeComponent(pet.name)}',
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.3),
                               width: 1,
                             ),
                           ),
@@ -408,42 +597,42 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                       ),
                     ],
                   ),
-                  
+
                   // 다음 날짜 버튼
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
                       onTap: () {
-                      final tomorrow = _selectedDate.add(const Duration(days: 1));
-                      if (tomorrow.isBefore(DateTime.now().add(const Duration(days: 1)))) {
-                        setState(() {
-                          _selectedDate = tomorrow;
-                        });
+                        final tomorrow = _selectedDate.add(
+                          const Duration(days: 1),
+                        );
+                        if (tomorrow.isBefore(
+                          DateTime.now().add(const Duration(days: 1)),
+                        )) {
+                          setState(() {
+                            _selectedDate = tomorrow;
+                          });
                           _saveSelectedDate(_selectedDate);
-                      }
-                    },
-                    child: SizedBox(
-                      width: 56,
-                      height: 36,
-                      child: Center(
-                        child: Icon(
-                      Icons.chevron_right,
-                      color: Theme.of(context).colorScheme.primary,
-                          size: 24,
-                    ),
-                      ),
+                        }
+                      },
+                      child: SizedBox(
+                        width: 56,
+                        height: 36,
+                        child: Center(
+                          child: Icon(
+                            Icons.chevron_right,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 24,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: recordsView,
-                ),
-              ),
+              Expanded(child: SingleChildScrollView(child: recordsView)),
             ],
           ),
         ),
@@ -457,13 +646,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             pet: pet,
             isMenuVisible: _isFoodMenuVisible,
             onToggle: () {
-                  setState(() {
-                    _isFoodMenuVisible = !_isFoodMenuVisible;
-                    _isActivityMenuVisible = false;
-                    _isPoopMenuVisible = false;
+              setState(() {
+                _isFoodMenuVisible = !_isFoodMenuVisible;
+                _isActivityMenuVisible = false;
+                _isPoopMenuVisible = false;
                 _isHealthMenuVisible = false;
-                  });
-                },
+              });
+            },
             categoryKey: 'food',
             fabIcon: Icons.restaurant,
             heroTag: 'record-food',
@@ -475,13 +664,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             pet: pet,
             isMenuVisible: _isActivityMenuVisible,
             onToggle: () {
-                  setState(() {
-                    _isActivityMenuVisible = !_isActivityMenuVisible;
-                    _isFoodMenuVisible = false;
-                    _isPoopMenuVisible = false;
+              setState(() {
+                _isActivityMenuVisible = !_isActivityMenuVisible;
+                _isFoodMenuVisible = false;
+                _isPoopMenuVisible = false;
                 _isHealthMenuVisible = false;
-                  });
-                },
+              });
+            },
             categoryKey: 'activity',
             fabIcon: Icons.sports_tennis,
             heroTag: 'record-play',
@@ -493,13 +682,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             pet: pet,
             isMenuVisible: _isPoopMenuVisible,
             onToggle: () {
-                  setState(() {
-                    _isPoopMenuVisible = !_isPoopMenuVisible;
-                    _isFoodMenuVisible = false;
-                    _isActivityMenuVisible = false;
+              setState(() {
+                _isPoopMenuVisible = !_isPoopMenuVisible;
+                _isFoodMenuVisible = false;
+                _isActivityMenuVisible = false;
                 _isHealthMenuVisible = false;
-                  });
-                },
+              });
+            },
             categoryKey: 'poop',
             fabIcon: Icons.cleaning_services,
             heroTag: 'record-poop',
@@ -511,13 +700,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             pet: pet,
             isMenuVisible: _isHealthMenuVisible,
             onToggle: () {
-                  setState(() {
-                    _isHealthMenuVisible = !_isHealthMenuVisible;
-                    _isFoodMenuVisible = false;
-                    _isActivityMenuVisible = false;
-                    _isPoopMenuVisible = false;
-                  });
-                },
+              setState(() {
+                _isHealthMenuVisible = !_isHealthMenuVisible;
+                _isFoodMenuVisible = false;
+                _isActivityMenuVisible = false;
+                _isPoopMenuVisible = false;
+              });
+            },
             categoryKey: 'health',
             fabIcon: Icons.favorite,
             heroTag: 'record-health',
@@ -538,8 +727,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   }
 
   void _addRecord(BuildContext context, Pet pet, String type) {
-        final TextEditingController noteController = TextEditingController();
-        TimeOfDay selectedTime = TimeOfDay.now();
+    final TextEditingController noteController = TextEditingController();
+    TimeOfDay selectedTime = TimeOfDay.now();
 
     showDialog(
       context: context,
@@ -550,7 +739,10 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
               backgroundColor: Theme.of(context).colorScheme.surface,
               title: Row(
                 children: [
-                  Icon(getIconForType(type), color: Theme.of(context).colorScheme.primary),
+                  Icon(
+                    getIconForType(type),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(width: 8),
                   Text('records.add_new'.tr()),
                 ],
@@ -558,39 +750,47 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
               content: SizedBox(
                 width: double.maxFinite,
                 child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: noteController,
-                    decoration: InputDecoration(hintText: 'records.content'.tr()),
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 16),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: noteController,
+                      decoration: InputDecoration(
+                        hintText: 'records.content'.tr(),
+                      ),
+                      autofocus: true,
+                    ),
+                    const SizedBox(height: 16),
                     InkWell(
                       onTap: () async {
-                          final TimeOfDay? picked = await showTimePicker(
-                            context: context,
-                            initialTime: selectedTime,
-                          );
-                            if (picked != null) {
-                            setState(() {
-                              selectedTime = picked;
-                            });
-                          }
-                        },
+                        final TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTime,
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            selectedTime = picked;
+                          });
+                        }
+                      },
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 8,
+                        ),
                         child: Row(
                           children: [
-                            Icon(Icons.access_time, color: Theme.of(context).colorScheme.primary),
+                            Icon(
+                              Icons.access_time,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                             const SizedBox(width: 8),
-                      Text('Time: ${selectedTime.format(context)}'),
-                    ],
+                            Text('Time: ${selectedTime.format(context)}'),
+                          ],
                         ),
                       ),
-                  ),
-                ],
+                    ),
+                  ],
                 ),
               ),
               actions: <Widget>[
@@ -607,7 +807,13 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                       child: Text('common.save'.tr()),
                       onPressed: () {
                         final now = DateTime.now();
-                        final recordAt = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, selectedTime.hour, selectedTime.minute);
+                        final recordAt = DateTime(
+                          _selectedDate.year,
+                          _selectedDate.month,
+                          _selectedDate.day,
+                          selectedTime.hour,
+                          selectedTime.minute,
+                        );
                         final newRecord = Record(
                           id: DateTime.now().millisecondsSinceEpoch.toString(),
                           petId: pet.id,
@@ -634,7 +840,9 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   }
 
   void _showRecordEditDialog(BuildContext context, Record record, Pet pet) {
-    final TextEditingController contentController = TextEditingController(text: record.content ?? '');
+    final TextEditingController contentController = TextEditingController(
+      text: record.content ?? '',
+    );
     DateTime selectedDate = record.at;
     TimeOfDay selectedTime = TimeOfDay.fromDateTime(record.at);
 
@@ -649,137 +857,185 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
               content: SizedBox(
                 width: double.maxFinite,
                 child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 항목명 (읽기 전용)
-                    Text(
-                      '항목명',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                        border: Border.all(color: Theme.of(context).colorScheme.outline),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(getIconForType(record.type), size: 20, color: Theme.of(context).colorScheme.primary),
-                          const SizedBox(width: 8),
-                          Text(
-                            getLabelForType(context, record.type),
-                            style: Theme.of(context).textTheme.bodyMedium,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 항목명 (읽기 전용)
+                      Text(
+                        '항목명',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                        ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // 날짜
-                    Text(
-                      '날짜',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: selectedDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime.now().add(const Duration(days: 1)),
-                        );
-                        if (picked != null) {
-                          setState(() {
-                            selectedDate = DateTime(picked.year, picked.month, picked.day, selectedTime.hour, selectedTime.minute);
-                          });
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Theme.of(context).colorScheme.outline),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceVariant.withOpacity(0.5),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.calendar_today, size: 16, color: Theme.of(context).colorScheme.primary),
+                            Icon(
+                              getIconForType(record.type),
+                              size: 20,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                             const SizedBox(width: 8),
-                            Text(DateFormat('yyyy-MM-dd').format(selectedDate)),
+                            Text(
+                              getLabelForType(context, record.type),
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // 시간
-                    Text(
-                      '시간',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () async {
-                        final TimeOfDay? picked = await showTimePicker(
-                          context: context,
-                          initialTime: selectedTime,
-                        );
-                        if (picked != null) {
-                          setState(() {
-                            selectedTime = picked;
-                            selectedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, picked.hour, picked.minute);
-                          });
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Theme.of(context).colorScheme.outline),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.access_time, size: 16, color: Theme.of(context).colorScheme.primary),
-                            const SizedBox(width: 8),
-                            Text(selectedTime.format(context)),
-                          ],
+                      const SizedBox(height: 16),
+
+                      // 날짜
+                      Text(
+                        '날짜',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // 메모
-                    Text(
-                      '메모',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: contentController,
-                      maxLines: 3,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: '메모를 입력하세요',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 1),
+                            ),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedDate = DateTime(
+                                picked.year,
+                                picked.month,
+                                picked.day,
+                                selectedTime.hour,
+                                selectedTime.minute,
+                              );
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                DateFormat('yyyy-MM-dd').format(selectedDate),
+                              ),
+                            ],
+                          ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+
+                      // 시간
+                      Text(
+                        '시간',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () async {
+                          final TimeOfDay? picked = await showTimePicker(
+                            context: context,
+                            initialTime: selectedTime,
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedTime = picked;
+                              selectedDate = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                picked.hour,
+                                picked.minute,
+                              );
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(selectedTime.format(context)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 메모
+                      Text(
+                        '메모',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: contentController,
+                        maxLines: 3,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: '메모를 입력하세요',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -813,7 +1069,9 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                           at: selectedDate,
                           updatedAt: DateTime.now(),
                         );
-                        ref.read(recordsProvider.notifier).updateRecord(updatedRecord);
+                        ref
+                            .read(recordsProvider.notifier)
+                            .updateRecord(updatedRecord);
                         Navigator.of(context).pop();
                         _closeAllSubMenus();
                       },
@@ -837,7 +1095,9 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           title: Text('기록 삭제'),
           content: SizedBox(
             width: double.maxFinite,
-            child: Text('이 기록을 삭제하시겠습니까?\n"${getLabelForType(context, record.type)}"'),
+            child: Text(
+              '이 기록을 삭제하시겠습니까?\n"${getLabelForType(context, record.type)}"',
+            ),
           ),
           actions: <Widget>[
             TextButton(
@@ -876,7 +1136,9 @@ class _Time24Table extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color outline = Theme.of(context).colorScheme.outlineVariant;
     final Color surface = Theme.of(context).colorScheme.surface;
-    final Color onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
+    final Color onSurfaceVariant = Theme.of(
+      context,
+    ).colorScheme.onSurfaceVariant;
 
     return Container(
       decoration: BoxDecoration(
@@ -888,10 +1150,12 @@ class _Time24Table extends StatelessWidget {
         children: List.generate(24, (i) {
           final recordsForHour = records.where((r) => r.at.hour == i).toList();
           final String label = _labelForRow(i);
-          final BorderSide bottomLine = i == 23 ? BorderSide.none : BorderSide(color: outline);
-           return SizedBox(
-             height: 32, // 행 높이를 32로 변경
-             child: Row(
+          final BorderSide bottomLine = i == 23
+              ? BorderSide.none
+              : BorderSide(color: outline);
+          return SizedBox(
+            height: 32, // 행 높이를 32로 변경
+            child: Row(
               children: [
                 // Left time label cell
                 Container(
@@ -899,7 +1163,9 @@ class _Time24Table extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withOpacity(0.3),
                     border: Border(
                       right: BorderSide(color: outline),
                       bottom: bottomLine,
@@ -908,24 +1174,26 @@ class _Time24Table extends StatelessWidget {
                   child: Text(
                     label,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: onSurfaceVariant,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 // Right content cell
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      border: Border(
-                        bottom: bottomLine,
-                      ),
+                      border: Border(bottom: bottomLine),
                     ),
                     child: recordsForHour.isEmpty
                         ? null
                         : Row(
                             children: recordsForHour.map((record) {
-                              return _buildRecordButton(context, record, recordsForHour.length);
+                              return _buildRecordButton(
+                                context,
+                                record,
+                                recordsForHour.length,
+                              );
                             }).toList(),
                           ),
                   ),
@@ -938,12 +1206,16 @@ class _Time24Table extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordButton(BuildContext context, Record record, int totalRecords) {
+  Widget _buildRecordButton(
+    BuildContext context,
+    Record record,
+    int totalRecords,
+  ) {
     final typeColor = AppColors.getRecordTypeColor(record.type);
-    
+
     // 총 기록 개수에 따라 버튼 크기 조정 (1개면 전체 너비, 2개면 각각 50%, 3개면 각각 33% 등)
     final double flexValue = 1.0 / totalRecords;
-    
+
     return Expanded(
       flex: (flexValue * 100).round(), // flex는 정수여야 하므로 100을 곱해서 반올림
       child: Padding(
@@ -952,23 +1224,19 @@ class _Time24Table extends StatelessWidget {
           onTap: () => onRecordTap(record),
           borderRadius: BorderRadius.circular(6),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), // 타임라인 행 높이 32px에 맞춰 패딩 조정
+            padding: const EdgeInsets.symmetric(
+              horizontal: 6,
+              vertical: 2,
+            ), // 타임라인 행 높이 32px에 맞춰 패딩 조정
             decoration: BoxDecoration(
               color: typeColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: typeColor.withOpacity(0.3),
-                width: 1,
-              ),
+              border: Border.all(color: typeColor.withOpacity(0.3), width: 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  _getRecordIcon(record.type),
-                  size: 18,
-                  color: typeColor,
-                ),
+                Icon(_getRecordIcon(record.type), size: 18, color: typeColor),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
@@ -992,21 +1260,38 @@ class _Time24Table extends StatelessWidget {
 
   IconData _getRecordIcon(String type) {
     switch (type.toLowerCase()) {
-      case 'food_meal': return Icons.restaurant;
-      case 'food_snack': return Icons.cookie;
-      case 'food_water': return Icons.water_drop;
-      case 'health_med': case 'food_med': return Icons.medical_services;
-      case 'health_supplement': case 'food_supplement': return Icons.medication;
-      case 'activity_play': return Icons.sports_tennis;
-      case 'activity_explore': return Icons.explore_outlined;
-      case 'activity_outing': return Icons.directions_walk;
-      case 'activity_rest': return Icons.hotel_outlined;
-      case 'activity_other': return Icons.more_horiz;
-      case 'poop_urine': return Icons.opacity;
-      case 'poop_feces': return Icons.pets;
-      case 'poop_other': return Icons.more_horiz;
-      case 'health': return Icons.favorite;
-      default: return Icons.note;
+      case 'food_meal':
+        return Icons.restaurant;
+      case 'food_snack':
+        return Icons.cookie;
+      case 'food_water':
+        return Icons.water_drop;
+      case 'health_med':
+      case 'food_med':
+        return Icons.medical_services;
+      case 'health_supplement':
+      case 'food_supplement':
+        return Icons.medication;
+      case 'activity_play':
+        return Icons.sports_tennis;
+      case 'activity_explore':
+        return Icons.explore_outlined;
+      case 'activity_outing':
+        return Icons.directions_walk;
+      case 'activity_rest':
+        return Icons.hotel_outlined;
+      case 'activity_other':
+        return Icons.more_horiz;
+      case 'poop_urine':
+        return Icons.opacity;
+      case 'poop_feces':
+        return Icons.pets;
+      case 'poop_other':
+        return Icons.more_horiz;
+      case 'health':
+        return Icons.favorite;
+      default:
+        return Icons.note;
     }
   }
 
@@ -1019,10 +1304,7 @@ class _Time24Table extends StatelessWidget {
 }
 
 class _RecordCard extends StatelessWidget {
-  const _RecordCard({
-    required this.record,
-    required this.pet,
-  });
+  const _RecordCard({required this.record, required this.pet});
 
   final Record record;
   final Pet pet;
@@ -1059,9 +1341,8 @@ class _RecordCard extends StatelessWidget {
                     children: [
                       Text(
                         getLabelForType(context, record.type),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -1074,7 +1355,10 @@ class _RecordCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: typeColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -1096,7 +1380,9 @@ class _RecordCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceVariant.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -1113,16 +1399,27 @@ class _RecordCard extends StatelessWidget {
 
   IconData _getRecordIcon(String type) {
     switch (type.toLowerCase()) {
-      case 'meal': return Icons.restaurant;
-      case 'snack': return Icons.cookie;
-      case 'med': case 'medicine': return Icons.medical_services;
-      case 'vaccine': return Icons.vaccines;
-      case 'visit': return Icons.local_hospital;
-      case 'weight': return Icons.monitor_weight;
-      case 'litter': return Icons.cleaning_services;
-      case 'play': return Icons.sports_tennis;
-      case 'groom': return Icons.content_cut;
-      default: return Icons.note;
+      case 'meal':
+        return Icons.restaurant;
+      case 'snack':
+        return Icons.cookie;
+      case 'med':
+      case 'medicine':
+        return Icons.medical_services;
+      case 'vaccine':
+        return Icons.vaccines;
+      case 'visit':
+        return Icons.local_hospital;
+      case 'weight':
+        return Icons.monitor_weight;
+      case 'litter':
+        return Icons.cleaning_services;
+      case 'play':
+        return Icons.sports_tennis;
+      case 'groom':
+        return Icons.content_cut;
+      default:
+        return Icons.note;
     }
   }
 }
