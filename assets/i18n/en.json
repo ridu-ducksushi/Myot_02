@@ -122,6 +122,16 @@
       "litter": "Litter",
       "play": "Play",
       "groom": "Grooming"
+    },
+    "dialog": {
+      "edit_title": "Edit Record",
+      "field_label": "Item",
+      "date": "Date",
+      "time": "Time",
+      "note": "Memo",
+      "note_hint": "Enter memo",
+      "delete_title": "Delete Record",
+      "delete_message": "Do you want to delete this record?\n\"{}\""
     }
   },
   "reminders": {

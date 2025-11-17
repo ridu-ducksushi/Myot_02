@@ -12,10 +12,7 @@ class AppConstants {
   static const List<String> sexOptions = ['남아', '여아'];
 
   // Sex mapping (display -> DB)
-  static const Map<String, String> sexMapping = {
-    '남아': 'Male',
-    '여아': 'Female',
-  };
+  static const Map<String, String> sexMapping = {'남아': 'Male', '여아': 'Female'};
 
   // Settings UI dimensions
   static const double petCardHeight = 240.0;
@@ -30,11 +27,15 @@ class AppConstants {
   static const double iconSize = 30.0;
   static const double defaultPadding = 16.0;
   static const double mediumPadding = 24.0;
+  static const double xSmallSpacing = 4.0;
   static const double smallSpacing = 8.0;
   static const double mediumSpacing = 12.0;
   static const double largeSpacing = 16.0;
+  static const double calendarMarkerSize = 4.0;
+  static const double calendarMarkerGap = 2.0;
+  static const double recordsNavButtonWidth = 56.0;
+  static const double recordsNavButtonHeight = 36.0;
 
   // Edge Function timeout
   static const Duration edgeFunctionTimeout = Duration(seconds: 20);
 }
-

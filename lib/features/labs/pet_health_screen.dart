@@ -7,6 +7,7 @@ import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/core/providers/reminders_provider.dart';
 import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
+import 'package:petcare/ui/widgets/app_record_calendar.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,10 +17,7 @@ import 'dart:convert';
 import 'weight_chart_screen.dart';
 
 class PetHealthScreen extends ConsumerStatefulWidget {
-  const PetHealthScreen({
-    super.key,
-    required this.petId,
-  });
+  const PetHealthScreen({super.key, required this.petId});
 
   final String petId;
 
@@ -55,11 +53,19 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('tabs.health'.tr()),
-        backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.95),
+        backgroundColor: Theme.of(
+          context,
+        ).colorScheme.surfaceVariant.withOpacity(0.95),
         elevation: 2,
         automaticallyImplyLeading: false,
       ),
-      body: _LabTable(species: pet.species, petId: pet.id, petName: pet.name, petWeight: pet.weightKg, key: ValueKey(pet.id)),
+      body: _LabTable(
+        species: pet.species,
+        petId: pet.id,
+        petName: pet.name,
+        petWeight: pet.weightKg,
+        key: ValueKey(pet.id),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddItemDialog(pet.species, pet.id),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -75,10 +81,7 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => WeightChartScreen(
-          petId: petId,
-          petName: petName,
-        ),
+        builder: (context) => WeightChartScreen(petId: petId, petName: petName),
       ),
     );
   }
@@ -87,10 +90,7 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => WeightChartScreen(
-          petId: petId,
-          petName: petName,
-        ),
+        builder: (context) => WeightChartScreen(petId: petId, petName: petName),
       ),
     );
   }
@@ -175,7 +175,13 @@ class _ReminderSection extends StatelessWidget {
 }
 
 class _LabTable extends StatefulWidget {
-  const _LabTable({required this.species, required this.petId, required this.petName, this.petWeight, Key? key}) : super(key: key);
+  const _LabTable({
+    required this.species,
+    required this.petId,
+    required this.petName,
+    this.petWeight,
+    Key? key,
+  }) : super(key: key);
   final String species; // 'Dog' or 'Cat'
   final String petId;
   final String petName;
@@ -202,15 +208,15 @@ class _LabTableState extends State<_LabTable> {
   // Pinned keys order for drag and drop
   List<String> _pinnedKeysOrder = [];
   List<String> _customOrder = []; // 사용자 정의 순서
-  
+
   // Basic info data
   String _weight = '';
   String _hospitalName = '';
   String _cost = '';
-  
+
   // 기록이 있는 날짜 목록
   Set<DateTime> _recordDates = {};
-  
+
   static DateTime _today() {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
@@ -222,9 +228,29 @@ class _LabTableState extends State<_LabTable> {
     _initRefs();
     // 기본 검사 항목들에 대해서만 컨트롤러 생성
     final baseKeys = [
-      'RBC', 'WBC', 'Hb', 'HCT', 'PLT',
-      'ALT', 'AST', 'ALP', '총빌리루빈', 'BUN', 'Creatinine', 'SDMA', 'Glucose', '총단백', '알부민', '글로불린', '콜레스테롤', '중성지방',
-      'Na', 'K', 'Cl', 'Ca', 'P',
+      'RBC',
+      'WBC',
+      'Hb',
+      'HCT',
+      'PLT',
+      'ALT',
+      'AST',
+      'ALP',
+      '총빌리루빈',
+      'BUN',
+      'Creatinine',
+      'SDMA',
+      'Glucose',
+      '총단백',
+      '알부민',
+      '글로불린',
+      '콜레스테롤',
+      '중성지방',
+      'Na',
+      'K',
+      'Cl',
+      'Ca',
+      'P',
     ];
     for (final key in baseKeys) {
       _valueCtrls[key] = TextEditingController();
@@ -256,8 +282,8 @@ class _LabTableState extends State<_LabTable> {
   @override
   Widget build(BuildContext context) {
     final isCat = widget.species.toLowerCase() == 'cat';
-    final dateLabel = '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}'
-        ;
+    final dateLabel =
+        '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
     final header = Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -273,19 +299,32 @@ class _LabTableState extends State<_LabTable> {
                 InkWell(
                   onTap: _showCalendarDialog,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Theme.of(context).colorScheme.outline),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(dateLabel, style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                        )),
+                        Text(
+                          dateLabel,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
                         const SizedBox(width: 4),
-                        Icon(Icons.calendar_today, size: 16, color: Theme.of(context).colorScheme.primary),
+                        Icon(
+                          Icons.calendar_today,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ],
                     ),
                   ),
@@ -297,10 +336,14 @@ class _LabTableState extends State<_LabTable> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.3),
                         width: 1,
                       ),
                     ),
@@ -346,9 +389,12 @@ class _LabTableState extends State<_LabTable> {
                   children: [
                     const Icon(Icons.history, size: 16, color: Colors.grey),
                     const SizedBox(width: 4),
-                    Text('직전: ${_previousDateStr!}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    )),
+                    Text(
+                      '직전: ${_previousDateStr!}',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                    ),
                   ],
                 ),
               ),
@@ -374,7 +420,9 @@ class _LabTableState extends State<_LabTable> {
           const SizedBox(height: 3),
           Container(
             decoration: BoxDecoration(
-              border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -395,9 +443,7 @@ class _LabTableState extends State<_LabTable> {
     final sortedKeys = _customOrder.isEmpty ? baseKeys : _customOrder;
 
     return _isLoading
-        ? const Center(
-            child: CircularProgressIndicator(),
-          )
+        ? const Center(child: CircularProgressIndicator())
         : Column(
             children: [
               header,
@@ -406,24 +452,30 @@ class _LabTableState extends State<_LabTable> {
               Stack(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surfaceVariant,
                       border: Border(
                         bottom: BorderSide(
-                          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withOpacity(0.3),
                         ),
                       ),
                     ),
                     child: Row(
                       children: [
-                        const Expanded(flex: 2, child: Text('검사명', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 60,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 5),
-                            child: const Text('현재', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        const Expanded(
+                          flex: 2,
+                          child: Text(
+                            '검사명',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -431,7 +483,27 @@ class _LabTableState extends State<_LabTable> {
                           width: 60,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 5),
-                            child: const Text('직전', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              '현재',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 60,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 5),
+                            child: const Text(
+                              '직전',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -439,7 +511,13 @@ class _LabTableState extends State<_LabTable> {
                           flex: 2,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 5),
-                            child: const Text('기준치', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              '기준치',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -447,7 +525,13 @@ class _LabTableState extends State<_LabTable> {
                           width: 60,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 5),
-                            child: const Text('단위', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              '단위',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -458,28 +542,37 @@ class _LabTableState extends State<_LabTable> {
                     right: 8,
                     top: 6,
                     child: InkWell(
-                      onTap: _customOrder.isNotEmpty ? () async {
-                        setState(() {
-                          _customOrder.clear();
-                        });
-                        // 저장된 순서 삭제
-                        try {
-                          final prefs = await SharedPreferences.getInstance();
-                          final uid = Supabase.instance.client.auth.currentUser?.id;
-                          if (uid != null) {
-                            final key = 'lab_custom_order_${uid}_${widget.petId}';
-                            await prefs.remove(key);
-                          }
-                        } catch (e) {
-                          print('순서 삭제 오류: $e');
-                        }
-                      } : null,
+                      onTap: _customOrder.isNotEmpty
+                          ? () async {
+                              setState(() {
+                                _customOrder.clear();
+                              });
+                              // 저장된 순서 삭제
+                              try {
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final uid = Supabase
+                                    .instance
+                                    .client
+                                    .auth
+                                    .currentUser
+                                    ?.id;
+                                if (uid != null) {
+                                  final key =
+                                      'lab_custom_order_${uid}_${widget.petId}';
+                                  await prefs.remove(key);
+                                }
+                              } catch (e) {
+                                print('순서 삭제 오류: $e');
+                              }
+                            }
+                          : null,
                       child: Icon(
                         Icons.refresh,
                         size: 20,
-                        color: _customOrder.isNotEmpty 
-                          ? Theme.of(context).colorScheme.primary 
-                          : Colors.grey.withOpacity(0.3),
+                        color: _customOrder.isNotEmpty
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey.withOpacity(0.3),
                       ),
                     ),
                   ),
@@ -495,7 +588,7 @@ class _LabTableState extends State<_LabTable> {
                     final k = sortedKeys[index];
                     final ref = isCat ? _refCat[k] : _refDog[k];
                     final isPinned = _pinnedKeys.contains(k);
-                    
+
                     return Container(
                       key: ValueKey(k),
                       margin: const EdgeInsets.symmetric(vertical: 1),
@@ -503,19 +596,27 @@ class _LabTableState extends State<_LabTable> {
                         color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withOpacity(0.2),
                         ),
                       ),
                       child: InkWell(
                         onTap: () => _showEditDialog(k),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
                           child: Row(
                             children: [
                               // 검사명
                               Expanded(
                                 flex: 2,
-                                child: Text(k, style: const TextStyle(fontSize: 14)),
+                                child: Text(
+                                  k,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
                               ),
                               const SizedBox(width: 8),
                               // 현재 값
@@ -528,15 +629,24 @@ class _LabTableState extends State<_LabTable> {
                                       color: Colors.pink.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
                                     child: Text(
-                                      (_valueCtrls[k]?.text ?? '').length > 5 
-                                        ? (_valueCtrls[k]?.text ?? '').substring(0, 5)
-                                        : (_valueCtrls[k]?.text ?? ''),
+                                      (_valueCtrls[k]?.text ?? '').length > 5
+                                          ? (_valueCtrls[k]?.text ?? '')
+                                                .substring(0, 5)
+                                          : (_valueCtrls[k]?.text ?? ''),
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: _getValueColor(_valueCtrls[k]?.text, ref),
-                                        fontWeight: _valueCtrls[k]?.text != null && _valueCtrls[k]!.text.isNotEmpty
+                                        color: _getValueColor(
+                                          _valueCtrls[k]?.text,
+                                          ref,
+                                        ),
+                                        fontWeight:
+                                            _valueCtrls[k]?.text != null &&
+                                                _valueCtrls[k]!.text.isNotEmpty
                                             ? FontWeight.bold
                                             : FontWeight.normal,
                                       ),
@@ -551,9 +661,12 @@ class _LabTableState extends State<_LabTable> {
                                 child: Padding(
                                   padding: const EdgeInsets.only(left: 5),
                                   child: Text(
-                                    (_previousValues[k] ?? '-').length > 5 
-                                      ? (_previousValues[k] ?? '-').substring(0, 5)
-                                      : (_previousValues[k] ?? '-'),
+                                    (_previousValues[k] ?? '-').length > 5
+                                        ? (_previousValues[k] ?? '-').substring(
+                                            0,
+                                            5,
+                                          )
+                                        : (_previousValues[k] ?? '-'),
                                     style: const TextStyle(fontSize: 14),
                                     overflow: TextOverflow.clip,
                                   ),
@@ -566,9 +679,9 @@ class _LabTableState extends State<_LabTable> {
                                 child: Padding(
                                   padding: const EdgeInsets.only(left: 5),
                                   child: Text(
-                                    (ref ?? '-').length > 10 
-                                      ? (ref ?? '-').substring(0, 10)
-                                      : (ref ?? '-'),
+                                    (ref ?? '-').length > 10
+                                        ? (ref ?? '-').substring(0, 10)
+                                        : (ref ?? '-'),
                                     style: const TextStyle(fontSize: 14),
                                     overflow: TextOverflow.clip,
                                   ),
@@ -581,9 +694,9 @@ class _LabTableState extends State<_LabTable> {
                                 child: Padding(
                                   padding: const EdgeInsets.only(left: 5),
                                   child: Text(
-                                    (_units[k] ?? '').length > 5 
-                                      ? (_units[k] ?? '').substring(0, 5)
-                                      : (_units[k] ?? ''),
+                                    (_units[k] ?? '').length > 5
+                                        ? (_units[k] ?? '').substring(0, 5)
+                                        : (_units[k] ?? ''),
                                     style: const TextStyle(fontSize: 14),
                                     overflow: TextOverflow.clip,
                                   ),
@@ -607,13 +720,13 @@ class _LabTableState extends State<_LabTable> {
       if (_customOrder.isEmpty) {
         _customOrder = List<String>.from(_orderedKeys());
       }
-      
+
       if (oldIndex < newIndex) {
         newIndex -= 1;
       }
       final item = _customOrder.removeAt(oldIndex);
       _customOrder.insert(newIndex.clamp(0, _customOrder.length), item);
-      
+
       // 순서 변경 시 저장
       _saveCustomOrder();
     });
@@ -625,7 +738,7 @@ class _LabTableState extends State<_LabTable> {
       final prefs = await SharedPreferences.getInstance();
       final uid = Supabase.instance.client.auth.currentUser?.id;
       if (uid == null) return;
-      
+
       final key = 'lab_custom_order_${uid}_${widget.petId}';
       final orderJson = prefs.getString(key);
       if (orderJson != null) {
@@ -645,7 +758,7 @@ class _LabTableState extends State<_LabTable> {
       final prefs = await SharedPreferences.getInstance();
       final uid = Supabase.instance.client.auth.currentUser?.id;
       if (uid == null) return;
-      
+
       final key = 'lab_custom_order_${uid}_${widget.petId}';
       await prefs.setString(key, jsonEncode(_customOrder));
     } catch (e) {
@@ -656,42 +769,63 @@ class _LabTableState extends State<_LabTable> {
   List<String> _orderedKeys() {
     final baseKeys = [
       // 사용자 정의 순서 (ABC 순으로 정렬된 기본 검사 항목)
-      'ALB', 'ALP', 'ALT GPT', 'AST GOT', 'BUN', 'Ca', 'CK', 'Cl', 'CREA', 'GGT', 
-      'GLU', 'K', 'LIPA', 'Na', 'NH3', 'PHOS', 'TBIL', 'T-CHOL', 'TG', 'TPRO', 
-      'Na/K', 'ALB/GLB', 'BUN/CRE', 'GLOB', 'vAMY-P', 'SDMA', 'HCT', 'HGB', 'MCH', 
-      'MCHC', 'MCV', 'MPV', 'PLT', 'RBC', 'RDW-CV', 'WBC', 'WBC-GRAN(#)', 
-      'WBC-GRAN(%)', 'WBC-LYM(#)', 'WBC-LYM(%)', 'WBC-MONO(#)', 'WBC-MONO(%)', 
-      'WBC-EOS(#)', 'WBC-EOS(%)'
+      'ALB',
+      'ALP',
+      'ALT GPT',
+      'AST GOT',
+      'BUN',
+      'Ca',
+      'CK',
+      'Cl',
+      'CREA',
+      'GGT',
+      'GLU', 'K', 'LIPA', 'Na', 'NH3', 'PHOS', 'TBIL', 'T-CHOL', 'TG', 'TPRO',
+      'Na/K',
+      'ALB/GLB',
+      'BUN/CRE',
+      'GLOB',
+      'vAMY-P',
+      'SDMA',
+      'HCT',
+      'HGB',
+      'MCH',
+      'MCHC', 'MCV', 'MPV', 'PLT', 'RBC', 'RDW-CV', 'WBC', 'WBC-GRAN(#)',
+      'WBC-GRAN(%)', 'WBC-LYM(#)', 'WBC-LYM(%)', 'WBC-MONO(#)', 'WBC-MONO(%)',
+      'WBC-EOS(#)', 'WBC-EOS(%)',
     ];
-    
+
     // 기본정보 항목들 (차트에 표시하지 않음)
     final basicInfoKeys = ['체중', '병원명', '비용'];
-    
+
     // Only include custom keys that have actual data for this pet
     // This prevents showing custom items from other pets
-    final customKeys = _valueCtrls.keys.where((k) => 
-      !baseKeys.contains(k) && 
-      !basicInfoKeys.contains(k) && // 기본정보 항목 제외
-      (_valueCtrls[k]?.text.isNotEmpty == true || _units.containsKey(k))
-    ).toList();
+    final customKeys = _valueCtrls.keys
+        .where(
+          (k) =>
+              !baseKeys.contains(k) &&
+              !basicInfoKeys.contains(k) && // 기본정보 항목 제외
+              (_valueCtrls[k]?.text.isNotEmpty == true ||
+                  _units.containsKey(k)),
+        )
+        .toList();
     customKeys.sort(); // Sort custom keys alphabetically
-    
+
     return [...customKeys, ...baseKeys];
   }
 
   void _initRefs() {
     // ABC 순으로 정렬된 단위 (한글 → 영어 변경)
     _units.addAll({
-      'ALB': 'g/dL',        // 알부민 → ALB
+      'ALB': 'g/dL', // 알부민 → ALB
       'ALP': 'U/L',
       'ALT GPT': 'U/L',
       'AST GOT': 'U/L',
       'BUN': 'mg/dL',
       'Ca': 'mg/dL',
-      'CK': 'U/L',      // 크레아틴 키나아제
+      'CK': 'U/L', // 크레아틴 키나아제
       'Cl': 'mmol/L',
-      'CREA': 'mg/dL',     // Creatinine → Creat
-      'GGT': 'U/L',       // 글로불린 → Glob
+      'CREA': 'mg/dL', // Creatinine → Creat
+      'GGT': 'U/L', // 글로불린 → Glob
       'GLU': 'mg/dL',
       'K': 'mmol/L',
       'LIPA': 'U/L',
@@ -700,9 +834,9 @@ class _LabTableState extends State<_LabTable> {
       'PHOS': 'mg/dL',
       'TBIL': 'mg/dL',
       'T-CHOL': 'mg/dL',
-      'TG': 'mg/dL',      // 총빌리루빈 → TBil
-      'TPRO': 'g/dL',        // 중성지방 → TG
-      'Na/K': '-',         // 총단백 → TP
+      'TG': 'mg/dL', // 총빌리루빈 → TBil
+      'TPRO': 'g/dL', // 중성지방 → TG
+      'Na/K': '-', // 총단백 → TP
       'ALB/GLB': '-',
       'BUN/CRE': '-',
       'GLOB': 'g/dL',
@@ -727,19 +861,19 @@ class _LabTableState extends State<_LabTable> {
       'WBC-EOS(#)': '10³/mm³',
       'WBC-EOS(%)': '%',
     });
-    
+
     // 강아지 기준치 (ABC 순)
     _refDog.addAll({
-      'ALB': '2.6~4.0',     // 알부민
+      'ALB': '2.6~4.0', // 알부민
       'ALP': '20~150',
       'ALT GPT': '10~100',
       'AST GOT': '15~66',
       'BUN': '9.2~29.2',
       'Ca': '9.0~12.0',
-      'CK': '59~895',       // 크레아틴 키나아제
+      'CK': '59~895', // 크레아틴 키나아제
       'Cl': '106~120',
-      'CREA': '0.5~1.6',    // 크레아티닌
-      'GGT': '0~13',        // 감마글루타밀전이효소
+      'CREA': '0.5~1.6', // 크레아티닌
+      'GGT': '0~13', // 감마글루타밀전이효소
       'GLU': '65~118',
       'K': '3.6~5.5',
       'LIPA': '100~750',
@@ -748,8 +882,8 @@ class _LabTableState extends State<_LabTable> {
       'PHOS': '2.5~6.8',
       'TBIL': '0.1~0.6',
       'T-CHOL': '110~320',
-      'TG': '20~150',       // 중성지방
-      'TPRO': '5.4~7.8',    // 총단백
+      'TG': '20~150', // 중성지방
+      'TPRO': '5.4~7.8', // 총단백
       'Na/K': '27~38',
       'ALB/GLB': '0.8~1.5',
       'BUN/CRE': '10~27',
@@ -775,19 +909,19 @@ class _LabTableState extends State<_LabTable> {
       'WBC-EOS(#)': '0~1.2',
       'WBC-EOS(%)': '0~100',
     });
-    
+
     // 고양이 기준치 (ABC 순)
     _refCat.addAll({
-      'ALB': '2.3~3.5',     // 알부민
+      'ALB': '2.3~3.5', // 알부민
       'ALP': '9~53',
       'ALT GPT': '20~120',
       'AST GOT': '18~51',
       'BUN': '17.6~32.8',
       'Ca': '8.8~11.9',
-      'CK': '87~309',     // 크레아틴 키나아제
+      'CK': '87~309', // 크레아틴 키나아제
       'Cl': '107~120',
-      'CREA': '0.8~1.8',   // Creatinine
-      'GGT': '1~10',    // 글로불린
+      'CREA': '0.8~1.8', // Creatinine
+      'GGT': '1~10', // 글로불린
       'GLU': '71~148',
       'K': '3.4~4.6',
       'LIPA': '0~30',
@@ -796,9 +930,9 @@ class _LabTableState extends State<_LabTable> {
       'PHOS': '2.6~6.0',
       'TBIL': '0.1~0.4',
       'T-CHOL': '89~176',
-      'TG': '17~104',    // 총빌리루빈
-      'TPRO': '5.7~7.8',       // 중성지방
-      'Na/K': '33.6~44.2',      // 총단백
+      'TG': '17~104', // 총빌리루빈
+      'TPRO': '5.7~7.8', // 중성지방
+      'Na/K': '33.6~44.2', // 총단백
       'ALB/GLB': '0.4~1.1',
       'BUN/CRE': '17.5~21.9',
       'GLOB': '2.7~5.2',
@@ -831,7 +965,11 @@ class _LabTableState extends State<_LabTable> {
 
   // 현재 값이 기준치 범위 내에 있는지 확인하고 색상 반환
   Color _getValueColor(String? valueStr, String? reference) {
-    if (valueStr == null || valueStr.isEmpty || reference == null || reference.isEmpty || reference == '-') {
+    if (valueStr == null ||
+        valueStr.isEmpty ||
+        reference == null ||
+        reference.isEmpty ||
+        reference == '-') {
       return Colors.black; // 기본 색상
     }
 
@@ -855,7 +993,7 @@ class _LabTableState extends State<_LabTable> {
       if (parts.length == 2) {
         final minValue = double.tryParse(parts[0].replaceAll(',', '').trim());
         final maxValue = double.tryParse(parts[1].replaceAll(',', '').trim());
-        
+
         if (minValue != null && maxValue != null) {
           if (value < minValue) {
             return Colors.blue; // 기준치 미달
@@ -876,7 +1014,7 @@ class _LabTableState extends State<_LabTable> {
         await _loadFromSupabase();
         return;
       }
-      
+
       // Supabase에서 이 펫의 모든 기록 날짜를 가져옴
       final resList = await Supabase.instance.client
           .from('labs')
@@ -884,41 +1022,47 @@ class _LabTableState extends State<_LabTable> {
           .eq('user_id', uid)
           .eq('pet_id', widget.petId)
           .order('date', ascending: false);
-      
+
       final validDates = <DateTime>[];
-      
+
       for (final row in resList) {
         // Check if this row has actual data (non-empty values)
         final items = row['items'];
         if (items is! Map) continue;
-        
+
         bool hasData = false;
         for (final k in items.keys) {
           final v = items[k];
-          final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+          final value = (v is Map && v['value'] is String)
+              ? v['value'] as String
+              : '';
           if (value.isNotEmpty) {
             hasData = true;
             break;
           }
         }
-        
+
         if (hasData) {
           final dateStr = row['date'] as String;
           final parts = dateStr.split('-');
-          validDates.add(DateTime(
-            int.parse(parts[0]),
-            int.parse(parts[1]),
-            int.parse(parts[2]),
-          ));
+          validDates.add(
+            DateTime(
+              int.parse(parts[0]),
+              int.parse(parts[1]),
+              int.parse(parts[2]),
+            ),
+          );
         }
       }
-      
+
       setState(() {
         _recordDates = validDates.toSet();
-        
+
         // 가장 최근 기록 날짜를 선택 (오늘 이전의 가장 최근 날짜)
         final today = _today();
-        final pastDates = validDates.where((d) => d.isBefore(today) || isSameDay(d, today)).toList();
+        final pastDates = validDates
+            .where((d) => d.isBefore(today) || isSameDay(d, today))
+            .toList();
         if (pastDates.isNotEmpty) {
           pastDates.sort((a, b) => b.compareTo(a)); // 내림차순 정렬
           _selectedDate = pastDates.first;
@@ -928,7 +1072,7 @@ class _LabTableState extends State<_LabTable> {
           _selectedDate = _today();
         }
       });
-      
+
       // 날짜 설정 후 데이터 로드
       await _loadFromSupabase();
     } catch (e) {
@@ -941,24 +1085,26 @@ class _LabTableState extends State<_LabTable> {
     try {
       final uid = Supabase.instance.client.auth.currentUser?.id;
       if (uid == null) return;
-      
+
       // Supabase에서 이 펫의 모든 기록 날짜를 가져옴
       final resList = await Supabase.instance.client
           .from('labs')
           .select('date, items')
           .eq('user_id', uid)
           .eq('pet_id', widget.petId);
-      
+
       setState(() {
         _recordDates = resList
             .where((row) {
               // Check if this row has actual data (non-empty values)
               final items = row['items'];
               if (items is! Map) return false;
-              
+
               for (final k in items.keys) {
                 final v = items[k];
-                final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+                final value = (v is Map && v['value'] is String)
+                    ? v['value'] as String
+                    : '';
                 if (value.isNotEmpty) {
                   return true; // Has actual data
                 }
@@ -983,188 +1129,90 @@ class _LabTableState extends State<_LabTable> {
   }
 
   Future<void> _showCalendarDialog() async {
-    DateTime? tempSelected = _selectedDate;
-    
-    await showDialog(
+    final pickedDate = await showRecordCalendarDialog(
       context: context,
-      builder: (context) => Dialog(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TableCalendar(
-                firstDay: DateTime(2000),
-                lastDay: DateTime.now(),
-                focusedDay: tempSelected ?? _selectedDate,
-                selectedDayPredicate: (day) => isSameDay(day, tempSelected),
-                onDaySelected: (selectedDay, focusedDay) {
-                  tempSelected = selectedDay;
-                  Navigator.pop(context);
-                },
-                calendarFormat: CalendarFormat.month,
-                headerStyle: const HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                ),
-                calendarStyle: CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                calendarBuilders: CalendarBuilders(
-                  defaultBuilder: (context, day, focusedDay) {
-                    final hasRecord = _recordDates.any((d) => isSameDay(d, day));
-                    if (hasRecord) {
-                      return Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${day.day}',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            Container(
-                              width: 4,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return null;
-                  },
-                  todayBuilder: (context, day, focusedDay) {
-                    final hasRecord = _recordDates.any((d) => isSameDay(d, day));
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${day.day}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (hasRecord)
-                              Container(
-                                width: 4,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                  selectedBuilder: (context, day, focusedDay) {
-                    final hasRecord = _recordDates.any((d) => isSameDay(d, day));
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${day.day}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            if (hasRecord)
-                              Container(
-                                width: 4,
-                                height: 4,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('취소'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+      initialDate: _selectedDate,
+      markedDates: _recordDates,
+      lastDay: DateTime.now(),
     );
-    
-    if (tempSelected != null && !isSameDay(tempSelected, _selectedDate)) {
-      setState(() => _selectedDate = DateTime(
-        tempSelected!.year,
-        tempSelected!.month,
-        tempSelected!.day,
-      ));
+
+    if (pickedDate != null && !isSameDay(pickedDate, _selectedDate)) {
+      setState(() => _selectedDate = pickedDate);
       await _loadFromSupabase();
     }
   }
 
   Future<void> _loadFromSupabase() async {
     if (_isLoading) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final uid = Supabase.instance.client.auth.currentUser?.id;
-      print('🔍 Loading data: uid=$uid, petId=${widget.petId}, date=${_dateKey()}');
-      
+      print(
+        '🔍 Loading data: uid=$uid, petId=${widget.petId}, date=${_dateKey()}',
+      );
+
       if (uid == null) {
         print('❌ User not authenticated → 로컬 캐시에서 로드');
         await _loadFromLocal();
         setState(() => _isLoading = false);
         return;
       }
-      
+
       // Clear custom controllers from previous pets to avoid cross-contamination
       // Use the same baseKeys as _orderedKeys() to ensure consistency
       final baseKeys = [
-        'ALB', 'ALP', 'ALT GPT', 'AST GOT', 'BUN', 'Ca', 'CK', 'Cl', 'CREA', 'GGT', 
-        'GLU', 'K', 'LIPA', 'Na', 'NH3', 'PHOS', 'TBIL', 'T-CHOL', 'TG', 'TPRO', 
-        'Na/K', 'ALB/GLB', 'BUN/CRE', 'GLOB', 'vAMY-P', 'SDMA', 'HCT', 'HGB', 'MCH', 
-        'MCHC', 'MCV', 'MPV', 'PLT', 'RBC', 'RDW-CV', 'WBC', 'WBC-GRAN(#)', 
-        'WBC-GRAN(%)', 'WBC-LYM(#)', 'WBC-LYM(%)', 'WBC-MONO(#)', 'WBC-MONO(%)', 
-        'WBC-EOS(#)', 'WBC-EOS(%)'
+        'ALB',
+        'ALP',
+        'ALT GPT',
+        'AST GOT',
+        'BUN',
+        'Ca',
+        'CK',
+        'Cl',
+        'CREA',
+        'GGT',
+        'GLU',
+        'K',
+        'LIPA',
+        'Na',
+        'NH3',
+        'PHOS',
+        'TBIL',
+        'T-CHOL',
+        'TG',
+        'TPRO',
+        'Na/K',
+        'ALB/GLB',
+        'BUN/CRE',
+        'GLOB',
+        'vAMY-P',
+        'SDMA',
+        'HCT',
+        'HGB',
+        'MCH',
+        'MCHC',
+        'MCV',
+        'MPV',
+        'PLT',
+        'RBC',
+        'RDW-CV',
+        'WBC',
+        'WBC-GRAN(#)',
+        'WBC-GRAN(%)',
+        'WBC-LYM(#)',
+        'WBC-LYM(%)',
+        'WBC-MONO(#)',
+        'WBC-MONO(%)',
+        'WBC-EOS(#)',
+        'WBC-EOS(%)',
       ];
-      
+
       // Remove custom controllers that are not in base keys
-      final customKeysToRemove = _valueCtrls.keys.where((k) => !baseKeys.contains(k)).toList();
+      final customKeysToRemove = _valueCtrls.keys
+          .where((k) => !baseKeys.contains(k))
+          .toList();
       for (final key in customKeysToRemove) {
         _valueCtrls[key]?.dispose();
         _valueCtrls.remove(key);
@@ -1172,7 +1220,7 @@ class _LabTableState extends State<_LabTable> {
         _refDog.remove(key);
         _refCat.remove(key);
       }
-      
+
       // Fetch up to 10 entries to find the most recent with actual data
       final resList = await Supabase.instance.client
           .from('labs')
@@ -1201,7 +1249,7 @@ class _LabTableState extends State<_LabTable> {
             break;
           }
         }
-        
+
         // Find previous row with actual data (skip empty data)
         for (final row in resList) {
           final r = row as Map<String, dynamic>;
@@ -1211,7 +1259,9 @@ class _LabTableState extends State<_LabTable> {
             bool hasData = false;
             for (final k in items.keys) {
               final v = items[k];
-              final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+              final value = (v is Map && v['value'] is String)
+                  ? v['value'] as String
+                  : '';
               if (value.isNotEmpty) {
                 hasData = true;
                 break;
@@ -1229,13 +1279,13 @@ class _LabTableState extends State<_LabTable> {
       if (currentRow != null && currentRow['items'] is Map) {
         final Map items = currentRow['items'] as Map;
         print('✅ Current found with ${items.length} items');
-        
+
         // Create controllers for any new items that don't exist yet
         for (final k in items.keys) {
           if (!_valueCtrls.containsKey(k)) {
             _valueCtrls[k] = TextEditingController();
             _valueCtrls[k]!.addListener(_onChanged);
-            
+
             // Set unit and reference values from the stored data
             final v = items[k];
             if (v is Map) {
@@ -1253,25 +1303,31 @@ class _LabTableState extends State<_LabTable> {
             }
           }
         }
-        
+
         // Update existing controllers with values
         for (final k in items.keys) {
           final v = items[k];
-          final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+          final value = (v is Map && v['value'] is String)
+              ? v['value'] as String
+              : '';
           _valueCtrls[k]?.text = value;
         }
-        
+
         // Load basic info data
-        _weight = (items['체중'] is Map && items['체중']['value'] is String) 
-            ? items['체중']['value'] as String 
+        _weight = (items['체중'] is Map && items['체중']['value'] is String)
+            ? items['체중']['value'] as String
             : (widget.petWeight != null ? widget.petWeight.toString() : '');
-        _hospitalName = (items['병원명'] is Map && items['병원명']['value'] is String) 
-            ? items['병원명']['value'] as String : '';
-        _cost = (items['비용'] is Map && items['비용']['value'] is String) 
-            ? items['비용']['value'] as String : '';
-        
-        print('🏋️ Weight loaded: $_weight (from labs: ${items['체중']}, from pet: ${widget.petWeight})');
-        
+        _hospitalName = (items['병원명'] is Map && items['병원명']['value'] is String)
+            ? items['병원명']['value'] as String
+            : '';
+        _cost = (items['비용'] is Map && items['비용']['value'] is String)
+            ? items['비용']['value'] as String
+            : '';
+
+        print(
+          '🏋️ Weight loaded: $_weight (from labs: ${items['체중']}, from pet: ${widget.petWeight})',
+        );
+
         // Clear controllers for items not in current data
         for (final k in _orderedKeys()) {
           if (!items.containsKey(k)) {
@@ -1283,13 +1339,15 @@ class _LabTableState extends State<_LabTable> {
         for (final k in _orderedKeys()) {
           _valueCtrls[k]?.text = '';
         }
-        
+
         // Use pet's weight as default if no lab data exists
         _weight = widget.petWeight != null ? widget.petWeight.toString() : '';
         _hospitalName = '';
         _cost = '';
-        
-        print('🏋️ No lab data, using pet weight: $_weight (from pet: ${widget.petWeight})');
+
+        print(
+          '🏋️ No lab data, using pet weight: $_weight (from pet: ${widget.petWeight})',
+        );
         // 서버 데이터 없을 때 로컬 캐시에서 보강 로드
         await _loadFromLocal();
       }
@@ -1297,25 +1355,31 @@ class _LabTableState extends State<_LabTable> {
       // Store previous values for display (only if there's actual data)
       if (previousRow != null && previousRow['items'] is Map) {
         final Map items = previousRow['items'] as Map;
-        
+
         // Check if there's any actual data (non-empty values)
         bool hasActualData = false;
         for (final k in items.keys) {
           final v = items[k];
-          final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+          final value = (v is Map && v['value'] is String)
+              ? v['value'] as String
+              : '';
           if (value.isNotEmpty) {
             hasActualData = true;
             break;
           }
         }
-        
+
         // Only set as previous if there's actual data
         if (hasActualData) {
           _previousDateStr = previousRow['date'] as String?;
-          print('ℹ️ Previous (${_previousDateStr ?? '-'}) with ${items.length} items');
+          print(
+            'ℹ️ Previous (${_previousDateStr ?? '-'}) with ${items.length} items',
+          );
           for (final k in _orderedKeys()) {
             final v = items[k];
-            final value = (v is Map && v['value'] is String) ? v['value'] as String : '';
+            final value = (v is Map && v['value'] is String)
+                ? v['value'] as String
+                : '';
             _previousValues[k] = value;
           }
         } else {
@@ -1324,9 +1388,9 @@ class _LabTableState extends State<_LabTable> {
       }
     } catch (e) {
       print('❌ Load error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('데이터 로드 실패: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('데이터 로드 실패: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -1353,7 +1417,7 @@ class _LabTableState extends State<_LabTable> {
               _units.remove(itemKey);
               _refDog.remove(itemKey);
               _refCat.remove(itemKey);
-              
+
               _valueCtrls[newItemKey] = TextEditingController(text: newValue);
               _valueCtrls[newItemKey]!.addListener(_onChanged);
               _units[newItemKey] = unit;
@@ -1379,15 +1443,17 @@ class _LabTableState extends State<_LabTable> {
 
   Future<void> _saveToSupabase() async {
     if (_isSaving) return;
-    
+
     if (!mounted) return; // Add mounted check
-    
+
     setState(() => _isSaving = true);
-    
+
     try {
       final uid = Supabase.instance.client.auth.currentUser?.id;
-      print('💾 Saving data: uid=$uid, petId=${widget.petId}, date=${_dateKey()}');
-      
+      print(
+        '💾 Saving data: uid=$uid, petId=${widget.petId}, date=${_dateKey()}',
+      );
+
       if (uid == null) {
         print('❌ User not authenticated → 로컬 저장');
         final offlineItems = _collectItemsForSave();
@@ -1395,10 +1461,10 @@ class _LabTableState extends State<_LabTable> {
         if (mounted) setState(() => _isSaving = false);
         return;
       }
-      
+
       final Map<String, dynamic> items = {};
       int nonEmptyCount = 0;
-      
+
       // Only save items that actually have data or are custom items for this pet
       for (final k in _valueCtrls.keys) {
         final val = _valueCtrls[k]?.text ?? '';
@@ -1414,9 +1480,9 @@ class _LabTableState extends State<_LabTable> {
           }
         }
       }
-      
+
       print('📝 Saving $nonEmptyCount non-empty items');
-      
+
       final result = await Supabase.instance.client.from('labs').upsert({
         'user_id': uid,
         'pet_id': widget.petId,
@@ -1424,14 +1490,14 @@ class _LabTableState extends State<_LabTable> {
         'panel': 'BloodTest', // 필수 컬럼 추가
         'items': items,
       }, onConflict: 'user_id,pet_id,date');
-      
+
       print('✅ Save successful: $result');
       // 로컬 캐시에도 저장 (오프라인 표시/재로딩용)
       await _saveToLocal(items);
-      
+
       // 저장 후 기록 날짜 목록 업데이트
       await _loadRecordDates();
-      
+
       // 성공 시에는 알림을 띄우지 않음 (건강 탭 UX 정책)
     } catch (e) {
       print('❌ Save error: $e');
@@ -1439,9 +1505,9 @@ class _LabTableState extends State<_LabTable> {
       final fallback = _collectItemsForSave();
       await _saveToLocal(fallback, enqueuePending: true);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
       }
     } finally {
       setState(() => _isSaving = false);
@@ -1462,7 +1528,7 @@ class _LabTableState extends State<_LabTable> {
     // 비용 항목일 때 숫자 포맷팅 적용
     String displayValue = value;
     String displayUnit = unit;
-    
+
     if (label == '비용' && value.isNotEmpty) {
       // 숫자만 추출
       final numericValue = value.replaceAll(RegExp(r'[^0-9]'), '');
@@ -1476,7 +1542,7 @@ class _LabTableState extends State<_LabTable> {
         }
       }
     }
-    
+
     return InkWell(
       onTap: () => _showBasicInfoEditDialog(label, value),
       child: Container(
@@ -1487,7 +1553,10 @@ class _LabTableState extends State<_LabTable> {
               flex: 2,
               child: Text(
                 label,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             Expanded(
@@ -1502,10 +1571,7 @@ class _LabTableState extends State<_LabTable> {
               flex: 2,
               child: Text(
                 displayUnit,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -1516,18 +1582,25 @@ class _LabTableState extends State<_LabTable> {
                   ? Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: InkWell(
-                        onTap: () => _showWeightChartDialog(widget.petId, widget.petName),
+                        onTap: () => _showWeightChartDialog(
+                          widget.petId,
+                          widget.petName,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
                             Icons.bar_chart,
                             size: 18,
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
                           ),
                         ),
                       ),
@@ -1544,40 +1617,35 @@ class _LabTableState extends State<_LabTable> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => WeightChartScreen(
-          petId: petId,
-          petName: petName,
-        ),
+        builder: (context) => WeightChartScreen(petId: petId, petName: petName),
       ),
     );
   }
 
   Widget _buildDivider() {
-    return Divider(
-      height: 1,
-      thickness: 0.5,
-      color: Colors.grey[300],
-    );
+    return Divider(height: 1, thickness: 0.5, color: Colors.grey[300]);
   }
 
   void _showBasicInfoEditDialog(String label, String currentValue) {
     final controller = TextEditingController(text: currentValue);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('$label 수정'),
         content: TextField(
           controller: controller,
-          keyboardType: label == '체중' || label == '비용' 
-              ? TextInputType.number 
+          keyboardType: label == '체중' || label == '비용'
+              ? TextInputType.number
               : TextInputType.text,
           decoration: InputDecoration(
             labelText: label,
             border: const OutlineInputBorder(),
-            hintText: label == '체중' ? '예: 5.2' 
-                    : label == '병원명' ? '예: 서울동물병원' 
-                    : '예: 150000',
+            hintText: label == '체중'
+                ? '예: 5.2'
+                : label == '병원명'
+                ? '예: 서울동물병원'
+                : '예: 150000',
           ),
         ),
         actions: [
@@ -1632,32 +1700,22 @@ class _LabTableState extends State<_LabTable> {
       }
 
       // Add basic info to items (for storage but not displayed in chart)
-      currentItems['체중'] = {
-        'value': _weight,
-        'unit': 'kg',
-        'reference': '',
-      };
+      currentItems['체중'] = {'value': _weight, 'unit': 'kg', 'reference': ''};
       currentItems['병원명'] = {
         'value': _hospitalName,
         'unit': '',
         'reference': '',
       };
-      currentItems['비용'] = {
-        'value': _cost,
-        'unit': '',
-        'reference': '',
-      };
+      currentItems['비용'] = {'value': _cost, 'unit': '', 'reference': ''};
 
       // Save to Supabase
-      await Supabase.instance.client
-          .from('labs')
-          .upsert({
-            'user_id': uid,
-            'pet_id': widget.petId,
-            'date': _dateKey(),
-            'panel': 'BloodTest',
-            'items': currentItems,
-          });
+      await Supabase.instance.client.from('labs').upsert({
+        'user_id': uid,
+        'pet_id': widget.petId,
+        'date': _dateKey(),
+        'panel': 'BloodTest',
+        'items': currentItems,
+      });
 
       // Update pet's weight if weight value is not empty
       if (_weight.isNotEmpty) {
@@ -1677,9 +1735,9 @@ class _LabTableState extends State<_LabTable> {
       // 성공 시에는 알림을 띄우지 않음 (건강 탭 UX 정책)
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
       }
     }
   }
@@ -1701,9 +1759,13 @@ class _LabTableState extends State<_LabTable> {
     return items;
   }
 
-  String _scopeId() => Supabase.instance.client.auth.currentUser?.id ?? 'local-user';
+  String _scopeId() =>
+      Supabase.instance.client.auth.currentUser?.id ?? 'local-user';
 
-  Future<void> _saveToLocal(Map<String, dynamic> items, {bool enqueuePending = false}) async {
+  Future<void> _saveToLocal(
+    Map<String, dynamic> items, {
+    bool enqueuePending = false,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final scope = _scopeId();
@@ -1735,7 +1797,8 @@ class _LabTableState extends State<_LabTable> {
         print('ℹ️ 로컬 데이터 없음: $key');
         return;
       }
-      final Map<String, dynamic> items = jsonDecode(jsonStr) as Map<String, dynamic>;
+      final Map<String, dynamic> items =
+          jsonDecode(jsonStr) as Map<String, dynamic>;
       for (final entry in items.entries) {
         final k = entry.key;
         final v = entry.value;
@@ -1756,16 +1819,26 @@ class _LabTableState extends State<_LabTable> {
           _valueCtrls[k]?.text = value;
         }
       }
-      _weight = (items['체중'] is Map && items['체중']['value'] is String) ? items['체중']['value'] as String : _weight;
-      _hospitalName = (items['병원명'] is Map && items['병원명']['value'] is String) ? items['병원명']['value'] as String : _hospitalName;
-      _cost = (items['비용'] is Map && items['비용']['value'] is String) ? items['비용']['value'] as String : _cost;
+      _weight = (items['체중'] is Map && items['체중']['value'] is String)
+          ? items['체중']['value'] as String
+          : _weight;
+      _hospitalName = (items['병원명'] is Map && items['병원명']['value'] is String)
+          ? items['병원명']['value'] as String
+          : _hospitalName;
+      _cost = (items['비용'] is Map && items['비용']['value'] is String)
+          ? items['비용']['value'] as String
+          : _cost;
       print('📥 로컬 캐시에서 로드 완료: key=$key');
       final datesKey = 'labs_dates_${scope}_${widget.petId}';
       final dates = (prefs.getStringList(datesKey) ?? <String>[]);
       setState(() {
         _recordDates = dates.map((d) {
           final parts = d.split('-');
-          return DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+          return DateTime(
+            int.parse(parts[0]),
+            int.parse(parts[1]),
+            int.parse(parts[2]),
+          );
         }).toSet();
       });
     } catch (e) {
@@ -1972,25 +2045,26 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
   Future<void> _saveNewItem() async {
     final itemKey = _itemKeyController.text.trim();
     final value = _valueController.text.trim();
-    
+
     if (itemKey.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('검사명을 입력해주세요')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('검사명을 입력해주세요')));
       return;
     }
 
     try {
       final uid = Supabase.instance.client.auth.currentUser?.id;
       if (uid == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그인이 필요합니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('로그인이 필요합니다')));
         return;
       }
 
       final today = DateTime.now();
-      final dateKey = '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      final dateKey =
+          '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
       // Get current lab data for today
       final currentRes = await Supabase.instance.client
@@ -2015,15 +2089,13 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
       };
 
       // Save to Supabase
-      await Supabase.instance.client
-          .from('labs')
-          .upsert({
-            'user_id': uid,
-            'pet_id': widget.petId,
-            'date': dateKey,
-            'panel': 'BloodTest',
-            'items': currentItems,
-          });
+      await Supabase.instance.client.from('labs').upsert({
+        'user_id': uid,
+        'pet_id': widget.petId,
+        'date': dateKey,
+        'panel': 'BloodTest',
+        'items': currentItems,
+      });
 
       if (mounted) {
         // 성공 시에는 알림을 띄우지 않음 (건강 탭 UX 정책)
@@ -2032,9 +2104,9 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 중 오류가 발생했습니다: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장 중 오류가 발생했습니다: $e')));
       }
     }
   }
@@ -2096,10 +2168,7 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('취소'),
         ),
-        ElevatedButton(
-          onPressed: _saveNewItem,
-          child: const Text('추가'),
-        ),
+        ElevatedButton(onPressed: _saveNewItem, child: const Text('추가')),
       ],
     );
   }

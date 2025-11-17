@@ -15,16 +15,21 @@ import 'package:petcare/features/pets/pets_screen.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 import 'package:petcare/data/models/pet.dart';
+import 'package:petcare/ui/widgets/app_record_calendar.dart';
 import 'package:petcare/utils/app_constants.dart';
 
 class SettingsPlaceholder extends ConsumerStatefulWidget {
   const SettingsPlaceholder({super.key});
 
   @override
-  ConsumerState<SettingsPlaceholder> createState() => _SettingsPlaceholderState();
+  ConsumerState<SettingsPlaceholder> createState() =>
+      _SettingsPlaceholderState();
 }
 
 class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
+  DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
   @override
   void initState() {
     super.initState();
@@ -41,9 +46,9 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       // 캐시는 사용자 스코프 키로 분리되어 있으므로 전역 삭제하지 않음
       await Supabase.instance.client.auth.signOut();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('settings.logout_success'.tr())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('settings.logout_success'.tr())));
       }
       // The GoRouter redirect will handle navigation to the login screen.
     } catch (e) {
@@ -60,21 +65,21 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       final email = 'contact.email'.tr();
       final subject = 'contact.email_subject'.tr();
       final body = 'contact.email_body'.tr();
-      
+
       final Uri emailUri = Uri(
         scheme: 'mailto',
         path: email,
         query: 'subject=$subject&body=$body',
       );
-      
+
       print('이메일 URI: $emailUri');
-      
+
       // canLaunchUrl 체크를 건너뛰고 직접 실행 시도
       final bool launched = await launchUrl(
         emailUri,
         mode: LaunchMode.externalApplication,
       );
-      
+
       if (launched) {
         print('이메일 앱이 성공적으로 실행되었습니다.');
       } else {
@@ -89,14 +94,20 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     }
   }
 
-  Future<void> _copyEmailToClipboard(BuildContext context, String email, {Object? error}) async {
+  Future<void> _copyEmailToClipboard(
+    BuildContext context,
+    String email, {
+    Object? error,
+  }) async {
     await Clipboard.setData(ClipboardData(text: email));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error != null 
-              ? '${'contact.email_copied'.tr()} 오류: $error'
-              : 'contact.email_copied'.tr()),
+          content: Text(
+            error != null
+                ? '${'contact.email_copied'.tr()} 오류: $error'
+                : 'contact.email_copied'.tr(),
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -134,9 +145,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
@@ -145,7 +154,9 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         if (context.mounted) Navigator.of(context).pop();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('settings.delete_account_require_login'.tr())),
+            SnackBar(
+              content: Text('settings.delete_account_require_login'.tr()),
+            ),
           );
         }
         return;
@@ -169,7 +180,9 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         if (context.mounted) Navigator.of(context).pop();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('settings.delete_account_session_expired'.tr())),
+            SnackBar(
+              content: Text('settings.delete_account_session_expired'.tr()),
+            ),
           );
         }
         return;
@@ -182,9 +195,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         final result = await Supabase.instance.client.functions.invoke(
           'delete-account',
           body: const {},
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
+          headers: {'Authorization': 'Bearer $token'},
         );
         print('📞 Edge Function 응답: ${result.data}');
         return result;
@@ -195,7 +206,9 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         response = await _call().timeout(
           AppConstants.edgeFunctionTimeout,
           onTimeout: () {
-            print('⏱️ Edge Function 타임아웃 (${AppConstants.edgeFunctionTimeout.inSeconds}초)');
+            print(
+              '⏱️ Edge Function 타임아웃 (${AppConstants.edgeFunctionTimeout.inSeconds}초)',
+            );
             throw TimeoutException('settings.delete_account_timeout'.tr());
           },
         );
@@ -205,8 +218,12 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         response = await _call().timeout(
           AppConstants.edgeFunctionTimeout,
           onTimeout: () {
-            print('⏱️ Edge Function 재시도 타임아웃 (${AppConstants.edgeFunctionTimeout.inSeconds}초)');
-            throw TimeoutException('${'settings.delete_account_timeout'.tr()} (재시도 실패)');
+            print(
+              '⏱️ Edge Function 재시도 타임아웃 (${AppConstants.edgeFunctionTimeout.inSeconds}초)',
+            );
+            throw TimeoutException(
+              '${'settings.delete_account_timeout'.tr()} (재시도 실패)',
+            );
           },
         );
       }
@@ -219,11 +236,13 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       final isSuccess = data is Map && data['ok'] == true;
 
       if (!isSuccess) {
-        final errorDetail = data is Map 
+        final errorDetail = data is Map
             ? (data['error']?.toString() ?? data.toString())
             : data?.toString() ?? '알 수 없는 오류';
         print('❌ Edge Function 실패: $errorDetail');
-        throw Exception('${'settings.delete_account_server_failed'.tr()}: $errorDetail');
+        throw Exception(
+          '${'settings.delete_account_server_failed'.tr()}: $errorDetail',
+        );
       }
 
       print('✅ 서버 데이터 삭제 완료');
@@ -254,7 +273,9 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         Navigator.of(context).pop(); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${'settings.delete_account_error'.tr()}\n오류: ${e.toString()}'),
+            content: Text(
+              '${'settings.delete_account_error'.tr()}\n오류: ${e.toString()}',
+            ),
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
               label: 'settings.delete_account_inquiry'.tr(),
@@ -266,7 +287,11 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     }
   }
 
-  Future<void> _showDeletePetDialog(BuildContext context, WidgetRef ref, Pet pet) async {
+  Future<void> _showDeletePetDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Pet pet,
+  ) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -291,7 +316,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     if (result == true) {
       try {
         await ref.read(petsProvider.notifier).deletePet(pet.id);
-        
+
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -317,7 +342,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
   Widget build(BuildContext context) {
     final petsState = ref.watch(petsProvider);
     final currentLocation = GoRouterState.of(context).matchedLocation;
-    
+
     // 현재 선택된 펫 ID 추출
     String? currentPetId;
     if (currentLocation.startsWith('/pets/')) {
@@ -335,8 +360,8 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         return null;
       }
     }
-    
-    final currentPet = currentPetId != null 
+
+    final currentPet = currentPetId != null
         ? petsState.pets.where((pet) => pet.id == currentPetId).firstOrNull
         : null;
 
@@ -349,17 +374,19 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
         children: [
           // 사용자 프로필 섹션
           _buildUserProfileSection(context),
-          
+
           const SizedBox(height: 2),
-          
+
           // 펫 정보 섹션 (통합)
           SectionHeader(title: 'settings.pet_info'.tr()),
-          
+
           // 가로 스크롤 가능한 펫 카드들
           SizedBox(
             height: AppConstants.petCardHeight,
             child: FutureBuilder<String?>(
-              future: currentPetId != null ? Future.value(currentPetId) : loadLastSelectedPetId(),
+              future: currentPetId != null
+                  ? Future.value(currentPetId)
+                  : loadLastSelectedPetId(),
               builder: (context, snapshot) {
                 final preferredId = currentPetId ?? snapshot.data;
                 // 선호 펫 ID를 첫 번째로 배치한 리스트 구성
@@ -372,35 +399,42 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                   }
                 }
                 return ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              clipBehavior: Clip.none,
-              itemCount: pets.length + 1, // 펫들 + 새 펫 추가 카드
-              itemBuilder: (context, index) {
-                if (index < pets.length) {
-                  // 기존 펫 카드
-                  final pet = pets[index];
-                  final isSelected = pet.id == preferredId;
-                  return Container(
-                    width: AppConstants.petCardWidth,
-                    margin: EdgeInsets.only(right: AppConstants.petCardSpacing),
-                    child: _buildHorizontalPetCard(context, ref, pet, isSelected: isSelected),
-                  );
-                } else {
-                  // 새 펫 추가 카드
-                  return Container(
-                    width: AppConstants.petCardWidth,
-                    child: _buildAddPetCard(context),
-                  );
-                }
-              },
-            );
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  clipBehavior: Clip.none,
+                  itemCount: pets.length + 1, // 펫들 + 새 펫 추가 카드
+                  itemBuilder: (context, index) {
+                    if (index < pets.length) {
+                      // 기존 펫 카드
+                      final pet = pets[index];
+                      final isSelected = pet.id == preferredId;
+                      return Container(
+                        width: AppConstants.petCardWidth,
+                        margin: EdgeInsets.only(
+                          right: AppConstants.petCardSpacing,
+                        ),
+                        child: _buildHorizontalPetCard(
+                          context,
+                          ref,
+                          pet,
+                          isSelected: isSelected,
+                        ),
+                      );
+                    } else {
+                      // 새 펫 추가 카드
+                      return Container(
+                        width: AppConstants.petCardWidth,
+                        child: _buildAddPetCard(context),
+                      );
+                    }
+                  },
+                );
               },
             ),
           ),
-          
+
           const SizedBox(height: 2),
-          
+
           // 문의하기 섹션
           SectionHeader(title: 'contact.title'.tr()),
           AppCard(
@@ -411,9 +445,9 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
               onTap: () => _sendEmail(context),
             ),
           ),
-          
+
           const SizedBox(height: 2),
-          
+
           // 계정 설정 섹션
           SectionHeader(title: 'settings.account_settings'.tr()),
           AppCard(
@@ -449,10 +483,11 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
   Widget _buildUserProfileSection(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
     final email = user?.email ?? 'Unknown';
-    final displayName = user?.userMetadata?['display_name'] as String? ?? 
-                      user?.userMetadata?['full_name'] as String? ?? 
-                      email.split('@').first;
-    
+    final displayName =
+        user?.userMetadata?['display_name'] as String? ??
+        user?.userMetadata?['full_name'] as String? ??
+        email.split('@').first;
+
     return Container(
       margin: const EdgeInsets.all(16),
       child: AppCard(
@@ -481,7 +516,10 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
@@ -503,13 +541,20 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     );
   }
 
-  Widget _buildHorizontalPetCard(BuildContext context, WidgetRef ref, pet, {bool isSelected = false}) {
+  Widget _buildHorizontalPetCard(
+    BuildContext context,
+    WidgetRef ref,
+    pet, {
+    bool isSelected = false,
+  }) {
     final speciesColor = AppColors.getSpeciesColor(pet.species);
     final primaryColor = Theme.of(context).colorScheme.primary;
-    
+
     return AppCard(
       margin: EdgeInsets.zero,
-      elevation: isSelected ? AppConstants.selectedPetElevation : AppConstants.defaultPetElevation,
+      elevation: isSelected
+          ? AppConstants.selectedPetElevation
+          : AppConstants.defaultPetElevation,
       onTap: () => context.go('/pets/${pet.id}'),
       onLongPress: () => _showDeletePetDialog(context, ref, pet),
       child: Container(
@@ -523,59 +568,81 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
               )
             : null,
         child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 펫 아바타
-            Container(
-              width: AppConstants.avatarSize,
-              height: AppConstants.avatarSize,
-              decoration: BoxDecoration(
-                color: speciesColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppConstants.avatarSize / 2),
-                border: Border.all(
-                  color: speciesColor.withOpacity(0.3),
-                  width: 2,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 펫 아바타
+              Container(
+                width: AppConstants.avatarSize,
+                height: AppConstants.avatarSize,
+                decoration: BoxDecoration(
+                  color: speciesColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.avatarSize / 2,
+                  ),
+                  border: Border.all(
+                    color: speciesColor.withOpacity(0.3),
+                    width: 2,
+                  ),
                 ),
+                child: pet.defaultIcon != null
+                    ? _buildDefaultIcon(
+                        context,
+                        pet.defaultIcon,
+                        speciesColor,
+                        species: pet.species,
+                        bgColor: pet.profileBgColor,
+                      )
+                    : pet.avatarUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.avatarSize / 2,
+                        ),
+                        child: Image.file(
+                          File(pet.avatarUrl!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildDefaultIcon(
+                                context,
+                                pet.defaultIcon,
+                                speciesColor,
+                                species: pet.species,
+                                bgColor: pet.profileBgColor,
+                              ),
+                        ),
+                      )
+                    : _buildDefaultIcon(
+                        context,
+                        pet.defaultIcon,
+                        speciesColor,
+                        species: pet.species,
+                        bgColor: pet.profileBgColor,
+                      ),
               ),
-              child: pet.defaultIcon != null
-                  ? _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species, bgColor: pet.profileBgColor)
-                  : pet.avatarUrl != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(AppConstants.avatarSize / 2),
-                          child: Image.file(
-                            File(pet.avatarUrl!),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species, bgColor: pet.profileBgColor),
-                          ),
-                        )
-                      : _buildDefaultIcon(context, pet.defaultIcon, speciesColor, species: pet.species, bgColor: pet.profileBgColor),
-            ),
-            SizedBox(height: AppConstants.mediumSpacing),
-            
-            // 펫 이름
-            Text(
-              pet.name,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: AppConstants.defaultPadding,
+              SizedBox(height: AppConstants.mediumSpacing),
+
+              // 펫 이름
+              Text(
+                pet.name,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: AppConstants.defaultPadding,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            SizedBox(height: AppConstants.smallSpacing),
-            
-            // 펫 종류
-            Transform.scale(
-              scale: 0.8,
-              child: PetSpeciesChip(species: pet.species),
-            ),
-          ],
-        ),
+              SizedBox(height: AppConstants.smallSpacing),
+
+              // 펫 종류
+              Transform.scale(
+                scale: 0.8,
+                child: PetSpeciesChip(species: pet.species),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -597,7 +664,9 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
               height: AppConstants.avatarSize,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppConstants.avatarSize / 2),
+                borderRadius: BorderRadius.circular(
+                  AppConstants.avatarSize / 2,
+                ),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                   width: 2,
@@ -610,7 +679,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
               ),
             ),
             SizedBox(height: AppConstants.mediumSpacing),
-            
+
             // 추가 텍스트
             Text(
               'settings.add_pet'.tr(),
@@ -637,56 +706,61 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     );
   }
 
-  Widget _buildDefaultIcon(BuildContext context, String? defaultIcon, Color fallbackColor, {String? species, String? bgColor}) {
+  Widget _buildDefaultIcon(
+    BuildContext context,
+    String? defaultIcon,
+    Color fallbackColor, {
+    String? species,
+    String? bgColor,
+  }) {
     if (defaultIcon != null) {
       // Supabase Storage에서 이미지 URL 가져오기
-      final imageUrl = ImageService.getDefaultIconUrl(species ?? 'cat', defaultIcon);
+      final imageUrl = ImageService.getDefaultIconUrl(
+        species ?? 'cat',
+        defaultIcon,
+      );
       if (imageUrl.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(AppConstants.avatarSize / 2),
-        child: Stack(
-          children: [
-            // 배경색
-            if (bgColor != null)
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(AppConstants.avatarSize / 2),
+          child: Stack(
+            children: [
+              // 배경색
+              if (bgColor != null)
+                Image.asset(
+                  'assets/images/profile_bg/$bgColor.png',
+                  width: AppConstants.avatarSize,
+                  height: AppConstants.avatarSize,
+                  fit: BoxFit.cover,
+                ),
+              // 아이콘
               Image.asset(
-                'assets/images/profile_bg/$bgColor.png',
+                imageUrl,
                 width: AppConstants.avatarSize,
                 height: AppConstants.avatarSize,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Assets 이미지 로드 실패 시 기존 아이콘으로 폴백
+                  final iconData = _getDefaultIconData(defaultIcon);
+                  final color = _getDefaultIconColor(defaultIcon);
+                  return Icon(
+                    iconData,
+                    size: AppConstants.iconSize,
+                    color: color,
+                  );
+                },
               ),
-            // 아이콘
-            Image.asset(
-              imageUrl,
-              width: AppConstants.avatarSize,
-              height: AppConstants.avatarSize,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                // Assets 이미지 로드 실패 시 기존 아이콘으로 폴백
-                final iconData = _getDefaultIconData(defaultIcon);
-                final color = _getDefaultIconColor(defaultIcon);
-                return Icon(
-                  iconData,
-                  size: AppConstants.iconSize,
-                  color: color,
-                );
-              },
-            ),
-          ],
-        ),
-      );
+            ],
+          ),
+        );
       }
-      
+
       // 폴백: 기존 아이콘 방식
       final iconData = _getDefaultIconData(defaultIcon);
       final color = _getDefaultIconColor(defaultIcon);
-      
-      return Icon(
-        iconData,
-        size: AppConstants.iconSize,
-        color: color,
-      );
+
+      return Icon(iconData, size: AppConstants.iconSize, color: color);
     }
-    
+
     return Icon(Icons.pets, color: fallbackColor, size: AppConstants.iconSize);
   }
 
@@ -757,7 +831,7 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   final _formKey = GlobalKey<FormState>();
   final _displayNameController = TextEditingController();
-  
+
   bool _isLoading = false;
 
   @override
@@ -768,10 +842,11 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   void _loadCurrentProfile() {
     final user = Supabase.instance.client.auth.currentUser;
-    final displayName = user?.userMetadata?['display_name'] as String? ?? 
-                      user?.userMetadata?['full_name'] as String? ?? 
-                      '';
-    
+    final displayName =
+        user?.userMetadata?['display_name'] as String? ??
+        user?.userMetadata?['full_name'] as String? ??
+        '';
+
     _displayNameController.text = displayName;
   }
 
@@ -783,7 +858,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() {
       _isLoading = true;
     });
@@ -795,13 +870,11 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       }
 
       final displayName = _displayNameController.text.trim();
-      
+
       print('🔧 프로필 업데이트 시도: displayName=$displayName');
 
       // 사용자 메타데이터 업데이트 (닉네임만)
-      final metadata = <String, dynamic>{
-        'display_name': displayName,
-      };
+      final metadata = <String, dynamic>{'display_name': displayName};
 
       final response = await Supabase.instance.client.auth.updateUser(
         UserAttributes(data: metadata),
@@ -819,7 +892,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       print('❌ 프로필 업데이트 오류: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${'settings.profile_update_failed'.tr()}: $e')),
+          SnackBar(
+            content: Text('${'settings.profile_update_failed'.tr()}: $e'),
+          ),
         );
       }
     } finally {
@@ -859,14 +934,14 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Title
                   Text(
                     'settings.edit_profile'.tr(),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   SizedBox(height: AppConstants.mediumPadding),
-                  
+
                   // Display Name
                   AppTextField(
                     controller: _displayNameController,
@@ -879,21 +954,21 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                       return null;
                     },
                   ),
-                  
+
                   // Spacer to push buttons to bottom
-                  Expanded(
-                    child: const SizedBox.shrink(),
-                  ),
-                  
+                  Expanded(child: const SizedBox.shrink()),
+
                   // Spacing between field and buttons
                   SizedBox(height: AppConstants.profileEditButtonSpacing),
-                  
+
                   // Buttons
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                          onPressed: _isLoading
+                              ? null
+                              : () => Navigator.of(context).pop(),
                           child: Text('common.cancel'.tr()),
                         ),
                       ),
@@ -905,7 +980,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : Text('common.save'.tr()),
                         ),
@@ -936,14 +1013,17 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   final _breedController = TextEditingController();
   final _weightController = TextEditingController();
   final _noteController = TextEditingController();
-  
+
   String _selectedSpecies = AppConstants.petSpecies.first;
   String? _selectedSex;
   bool? _isNeutered;
   DateTime? _birthDate;
-  
+
+  DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
   final List<String> _species = AppConstants.petSpecies;
-  
+
   final List<String> _sexOptions = AppConstants.sexOptions;
 
   @override
@@ -983,14 +1063,14 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Title
                   Text(
                     'pets.add_new'.tr(),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Form fields
                   Expanded(
                     child: ListView(
@@ -1008,7 +1088,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        
+
                         DropdownButtonFormField<String>(
                           value: _selectedSpecies,
                           decoration: InputDecoration(
@@ -1028,14 +1108,14 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        
+
                         AppTextField(
                           controller: _breedController,
                           labelText: 'pets.breed'.tr(),
                           prefixIcon: const Icon(Icons.info_outline),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         DropdownButtonFormField<String>(
                           value: _selectedSex,
                           decoration: InputDecoration(
@@ -1055,7 +1135,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        
+
                         CheckboxListTile(
                           title: Text('pets.neutered'.tr()),
                           subtitle: Text('pets.neutered_description'.tr()),
@@ -1068,7 +1148,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                           contentPadding: EdgeInsets.zero,
                         ),
                         const SizedBox(height: 16),
-                        
+
                         AppTextField(
                           controller: _weightController,
                           labelText: 'pets.weight_kg'.tr(),
@@ -1085,7 +1165,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        
+
                         ListTile(
                           leading: const Icon(Icons.cake),
                           title: Text('pets.birth_date'.tr()),
@@ -1098,7 +1178,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                           contentPadding: EdgeInsets.zero,
                         ),
                         const SizedBox(height: 16),
-                        
+
                         AppTextField(
                           controller: _noteController,
                           labelText: 'pets.notes'.tr(),
@@ -1108,7 +1188,7 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
                       ],
                     ),
                   ),
-                  
+
                   // Buttons
                   const SizedBox(height: 24),
                   Row(
@@ -1138,49 +1218,58 @@ class _AddPetSheetState extends ConsumerState<_AddPetSheet> {
   }
 
   Future<void> _selectBirthDate() async {
-    final date = await showDatePicker(
+    final now = DateTime.now();
+    final initial = _birthDate ?? now.subtract(const Duration(days: 365));
+    final first = now.subtract(const Duration(days: 365 * 30));
+
+    final picked = await showRecordCalendarDialog(
       context: context,
-      initialDate: _birthDate ?? DateTime.now().subtract(const Duration(days: 365)),
-      firstDate: DateTime.now().subtract(const Duration(days: 365 * 30)),
-      lastDate: DateTime.now(),
+      initialDate: _dateOnly(initial),
+      firstDay: _dateOnly(first),
+      lastDay: _dateOnly(now),
+      markedDates: {if (_birthDate != null) _dateOnly(_birthDate!)},
     );
-    
-    if (date != null) {
+
+    if (picked != null && mounted) {
       setState(() {
-        _birthDate = date;
+        _birthDate = _dateOnly(picked);
       });
     }
   }
 
   Future<void> _savePet() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     // 성별 변환 (표시값 -> DB 값)
-    final sexForDb = _selectedSex != null 
-        ? AppConstants.sexMapping[_selectedSex] 
+    final sexForDb = _selectedSex != null
+        ? AppConstants.sexMapping[_selectedSex]
         : null;
-    
+
     final pet = Pet(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       ownerId: '', // Will be set by repository
       name: _nameController.text.trim(),
       species: _selectedSpecies,
-      breed: _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
+      breed: _breedController.text.trim().isEmpty
+          ? null
+          : _breedController.text.trim(),
       sex: sexForDb,
       neutered: _isNeutered,
       birthDate: _birthDate,
-      weightKg: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text),
-      note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+      weightKg: _weightController.text.isEmpty
+          ? null
+          : double.tryParse(_weightController.text),
+      note: _noteController.text.trim().isEmpty
+          ? null
+          : _noteController.text.trim(),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    
+
     await ref.read(petsProvider.notifier).addPet(pet);
-    
+
     if (mounted) {
       Navigator.of(context).pop();
     }
   }
-
 }
-

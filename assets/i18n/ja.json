@@ -112,6 +112,16 @@
       "play": "遊び",
       "groom": "ケア"
     },
+    "dialog": {
+      "edit_title": "記録を編集",
+      "field_label": "項目名",
+      "date": "日付",
+      "time": "時間",
+      "note": "メモ",
+      "note_hint": "メモを入力してください",
+      "delete_title": "記録を削除",
+      "delete_message": "この記録を削除しますか？\n\"{}\""
+    },
     "title_required": "タイトルを入力してください",
     "content": "内容",
     "datetime": "日時",

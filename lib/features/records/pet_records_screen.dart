@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,8 @@ import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/data/models/record.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
+import 'package:petcare/ui/widgets/app_record_calendar.dart';
+import 'package:petcare/utils/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -190,7 +193,9 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           });
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to load selected date: $e');
+    }
   }
 
   Future<void> _saveSelectedDate(DateTime date) async {
@@ -199,163 +204,28 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       final iso =
           '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
       await prefs.setString('selected_date_${widget.petId}', iso);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to save selected date: $e');
+    }
   }
 
   Future<void> _showRecordCalendar(
     BuildContext context,
     List<Record> allRecords,
   ) async {
-    final Set<DateTime> recordDates = allRecords
+    final recordDates = allRecords
         .map((record) => _dateOnly(record.at))
         .toSet();
-    DateTime? tempSelected = _selectedDate;
 
-    await showDialog(
+    final pickedDate = await showRecordCalendarDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TableCalendar(
-                firstDay: DateTime(2000),
-                lastDay: DateTime.now(),
-                focusedDay: tempSelected ?? _selectedDate,
-                selectedDayPredicate: (day) => isSameDay(day, tempSelected),
-                onDaySelected: (selectedDay, focusedDay) {
-                  tempSelected = selectedDay;
-                  Navigator.pop(dialogContext);
-                },
-                calendarFormat: CalendarFormat.month,
-                headerStyle: const HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                ),
-                calendarStyle: CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: Theme.of(
-                      dialogContext,
-                    ).colorScheme.primary.withOpacity(0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: BoxDecoration(
-                    color: Theme.of(dialogContext).colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                calendarBuilders: CalendarBuilders(
-                  defaultBuilder: (context, day, focusedDay) {
-                    final hasRecord = recordDates.any((d) => isSameDay(d, day));
-                    if (!hasRecord) return null;
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '${day.day}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          Container(
-                            width: 4,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  todayBuilder: (context, day, focusedDay) {
-                    final hasRecord = recordDates.any((d) => isSameDay(d, day));
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.3),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${day.day}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (hasRecord)
-                              Container(
-                                width: 4,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                  selectedBuilder: (context, day, focusedDay) {
-                    final hasRecord = recordDates.any((d) => isSameDay(d, day));
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${day.day}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            if (hasRecord)
-                              Container(
-                                width: 4,
-                                height: 4,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    child: Text('common.cancel'.tr()),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+      initialDate: _selectedDate,
+      markedDates: recordDates,
+      lastDay: DateTime.now(),
     );
 
-    if (tempSelected != null && !isSameDay(tempSelected, _selectedDate)) {
-      setState(() => _selectedDate = _dateOnly(tempSelected!));
+    if (pickedDate != null && !isSameDay(pickedDate, _selectedDate)) {
+      setState(() => _selectedDate = pickedDate);
       _saveSelectedDate(_selectedDate);
     }
   }
@@ -444,7 +314,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (isMenuVisible) _buildCategorySubMenu(context, pet, categoryKey),
-        if (isMenuVisible) const SizedBox(width: 12),
+        if (isMenuVisible) const SizedBox(width: AppConstants.mediumSpacing),
         FloatingActionButton(
           heroTag: heroTag,
           tooltip: tr(tooltipKey, context: context),
@@ -491,10 +361,10 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppConstants.mediumSpacing),
           child: Column(
             children: [
-              const SizedBox(height: 12),
+              const SizedBox(height: AppConstants.mediumSpacing),
               // 날짜 선택 헤더 with 네비게이션 버튼
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -513,8 +383,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         _saveSelectedDate(_selectedDate);
                       },
                       child: SizedBox(
-                        width: 56,
-                        height: 36,
+                        width: AppConstants.recordsNavButtonWidth,
+                        height: AppConstants.recordsNavButtonHeight,
                         child: Center(
                           child: Icon(
                             Icons.chevron_left,
@@ -534,8 +404,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         onTap: () => _showRecordCalendar(context, allRecords),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
+                            horizontal: AppConstants.smallSpacing,
+                            vertical: AppConstants.xSmallSpacing,
                           ),
                           decoration: BoxDecoration(
                             border: Border.all(
@@ -566,7 +436,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppConstants.mediumSpacing),
                       // 차트 아이콘 (Health 화면과 동일한 스타일)
                       InkWell(
                         onTap: () {
@@ -575,7 +445,9 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                           );
                         },
                         child: Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(
+                            AppConstants.smallSpacing,
+                          ),
                           decoration: BoxDecoration(
                             color: Theme.of(
                               context,
@@ -617,8 +489,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         }
                       },
                       child: SizedBox(
-                        width: 56,
-                        height: 36,
+                        width: AppConstants.recordsNavButtonWidth,
+                        height: AppConstants.recordsNavButtonHeight,
                         child: Center(
                           child: Icon(
                             Icons.chevron_right,
@@ -631,7 +503,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppConstants.mediumSpacing),
               Expanded(child: SingleChildScrollView(child: recordsView)),
             ],
           ),
@@ -658,7 +530,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             heroTag: 'record-food',
             tooltipKey: 'records.type.food',
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppConstants.mediumSpacing),
           _buildCategorySection(
             context: context,
             pet: pet,
@@ -676,7 +548,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             heroTag: 'record-play',
             tooltipKey: 'records.type.play',
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppConstants.mediumSpacing),
           _buildCategorySection(
             context: context,
             pet: pet,
@@ -694,7 +566,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             heroTag: 'record-poop',
             tooltipKey: 'records.type.poop',
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppConstants.mediumSpacing),
           _buildCategorySection(
             context: context,
             pet: pet,
@@ -743,7 +615,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                     getIconForType(type),
                     color: Theme.of(context).colorScheme.primary,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppConstants.smallSpacing),
                   Text('records.add_new'.tr()),
                 ],
               ),
@@ -853,7 +725,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor: Theme.of(context).colorScheme.surface,
-              title: Text('기록 편집'),
+              title: Text('records.dialog.edit_title'.tr()),
               content: SizedBox(
                 width: double.maxFinite,
                 child: SingleChildScrollView(
@@ -863,17 +735,17 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                     children: [
                       // 항목명 (읽기 전용)
                       Text(
-                        '항목명',
+                        'records.dialog.field_label'.tr(),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppConstants.smallSpacing),
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
+                          horizontal: AppConstants.mediumSpacing,
+                          vertical: AppConstants.mediumSpacing,
                         ),
                         decoration: BoxDecoration(
                           color: Theme.of(
@@ -899,16 +771,16 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppConstants.largeSpacing),
 
                       // 날짜
                       Text(
-                        '날짜',
+                        'records.dialog.date'.tr(),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppConstants.smallSpacing),
                       InkWell(
                         onTap: () async {
                           final picked = await showDatePicker(
@@ -933,8 +805,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
+                            horizontal: AppConstants.mediumSpacing,
+                            vertical: AppConstants.mediumSpacing,
                           ),
                           decoration: BoxDecoration(
                             border: Border.all(
@@ -949,7 +821,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                                 size: 16,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppConstants.smallSpacing),
                               Text(
                                 DateFormat('yyyy-MM-dd').format(selectedDate),
                               ),
@@ -957,16 +829,16 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppConstants.largeSpacing),
 
                       // 시간
                       Text(
-                        '시간',
+                        'records.dialog.time'.tr(),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppConstants.smallSpacing),
                       InkWell(
                         onTap: () async {
                           final TimeOfDay? picked = await showTimePicker(
@@ -988,8 +860,8 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
+                            horizontal: AppConstants.mediumSpacing,
+                            vertical: AppConstants.mediumSpacing,
                           ),
                           decoration: BoxDecoration(
                             border: Border.all(
@@ -1004,34 +876,34 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                                 size: 16,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppConstants.smallSpacing),
                               Text(selectedTime.format(context)),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppConstants.largeSpacing),
 
                       // 메모
                       Text(
-                        '메모',
+                        'records.dialog.note'.tr(),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppConstants.smallSpacing),
                       TextField(
                         controller: contentController,
                         maxLines: 3,
                         autofocus: true,
                         decoration: InputDecoration(
-                          hintText: '메모를 입력하세요',
+                          hintText: 'records.dialog.note_hint'.tr(),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                            horizontal: AppConstants.mediumSpacing,
+                            vertical: AppConstants.smallSpacing,
                           ),
                         ),
                       ),
@@ -1047,12 +919,15 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                     _showDeleteConfirmDialog(context, record);
                   },
                   icon: Icon(Icons.delete, color: Colors.red),
-                  label: Text('삭제', style: TextStyle(color: Colors.red)),
+                  label: Text(
+                    'common.delete'.tr(),
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppConstants.largeSpacing),
                 // 취소 버튼
                 TextButton(
-                  child: Text('취소'),
+                  child: Text('common.cancel'.tr()),
                   onPressed: () {
                     Navigator.of(context).pop();
                     _closeAllSubMenus();
@@ -1062,7 +937,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
                 Consumer(
                   builder: (context, ref, child) {
                     return TextButton(
-                      child: Text('저장'),
+                      child: Text('common.save'.tr()),
                       onPressed: () {
                         final updatedRecord = record.copyWith(
                           content: contentController.text,
@@ -1092,16 +967,18 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Theme.of(context).colorScheme.surface,
-          title: Text('기록 삭제'),
+          title: Text('records.dialog.delete_title'.tr()),
           content: SizedBox(
             width: double.maxFinite,
             child: Text(
-              '이 기록을 삭제하시겠습니까?\n"${getLabelForType(context, record.type)}"',
+              'records.dialog.delete_message'.tr(
+                args: [getLabelForType(context, record.type)],
+              ),
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('취소'),
+              child: Text('common.cancel'.tr()),
               onPressed: () {
                 Navigator.of(context).pop();
                 _closeAllSubMenus();
@@ -1110,7 +987,10 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
             Consumer(
               builder: (context, ref, child) {
                 return TextButton(
-                  child: Text('삭제', style: TextStyle(color: Colors.red)),
+                  child: Text(
+                    'common.delete'.tr(),
+                    style: const TextStyle(color: Colors.red),
+                  ),
                   onPressed: () {
                     ref.read(recordsProvider.notifier).deleteRecord(record.id);
                     Navigator.of(context).pop();
@@ -1316,14 +1196,14 @@ class _RecordCard extends StatelessWidget {
 
     return AppCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppConstants.smallSpacing),
                   decoration: BoxDecoration(
                     color: typeColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -1334,7 +1214,7 @@ class _RecordCard extends StatelessWidget {
                     size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppConstants.mediumSpacing),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1356,8 +1236,8 @@ class _RecordCard extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: AppConstants.smallSpacing,
+                    vertical: AppConstants.xSmallSpacing,
                   ),
                   decoration: BoxDecoration(
                     color: typeColor.withOpacity(0.1),
@@ -1375,10 +1255,10 @@ class _RecordCard extends StatelessWidget {
               ],
             ),
             if (content != null && content.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppConstants.mediumSpacing),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppConstants.mediumSpacing),
                 decoration: BoxDecoration(
                   color: Theme.of(
                     context,
