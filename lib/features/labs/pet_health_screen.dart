@@ -1699,14 +1699,33 @@ class _LabTableState extends State<_LabTable> {
         currentItems = Map<String, dynamic>.from(currentRes['items'] ?? {});
       }
 
+      String _resolvedBasicValue(String key, String currentValue) {
+        if (currentValue.isNotEmpty) {
+          return currentValue;
+        }
+        final existing = currentItems[key];
+        if (existing is Map && existing['value'] is String) {
+          return existing['value'] as String;
+        }
+        return '';
+      }
+
+      final resolvedWeight = _resolvedBasicValue('체중', _weight);
+      final resolvedHospital = _resolvedBasicValue('병원명', _hospitalName);
+      final resolvedCost = _resolvedBasicValue('비용', _cost);
+
       // Add basic info to items (for storage but not displayed in chart)
-      currentItems['체중'] = {'value': _weight, 'unit': 'kg', 'reference': ''};
+      currentItems['체중'] = {
+        'value': resolvedWeight,
+        'unit': 'kg',
+        'reference': '',
+      };
       currentItems['병원명'] = {
-        'value': _hospitalName,
+        'value': resolvedHospital,
         'unit': '',
         'reference': '',
       };
-      currentItems['비용'] = {'value': _cost, 'unit': '', 'reference': ''};
+      currentItems['비용'] = {'value': resolvedCost, 'unit': '', 'reference': ''};
 
       // Save to Supabase
       await Supabase.instance.client.from('labs').upsert({
