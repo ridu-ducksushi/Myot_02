@@ -81,6 +81,12 @@
       "health": "健康",
       "chart": "チャート"
     },
+    "category": {
+      "food": "食事",
+      "activity": "活動",
+      "poop": "うんち",
+      "health": "健康"
+    },
     "items": {
       "food_meal": "ごはん",
       "food_snack": "おやつ",

@@ -309,6 +309,7 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
   }) {
     final background = AppColors.getRecordCategorySoftColor(categoryKey);
     final foreground = AppColors.getRecordCategoryDarkColor(categoryKey);
+    final categoryLabel = tr('records.category.$categoryKey', context: context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -321,7 +322,22 @@ class _PetRecordsScreenState extends ConsumerState<PetRecordsScreen> {
           backgroundColor: background,
           foregroundColor: foreground,
           onPressed: onToggle,
-          child: Icon(fabIcon),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(fabIcon, size: 20),
+              const SizedBox(height: 2),
+              Text(
+                categoryLabel,
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

@@ -81,6 +81,12 @@
       "health": "건강",
       "chart": "차트"
     },
+    "category": {
+      "food": "식사",
+      "activity": "활동",
+      "poop": "배변",
+      "health": "건강"
+    },
     "items": {
       "food_meal": "사료",
       "food_snack": "간식",

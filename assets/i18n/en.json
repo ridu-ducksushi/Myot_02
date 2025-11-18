@@ -92,6 +92,12 @@
       "health": "Health",
       "chart": "Chart"
     },
+    "category": {
+      "food": "Meal",
+      "activity": "Activity",
+      "poop": "Poop",
+      "health": "Health"
+    },
     "items": {
       "food_meal": "Meal",
       "food_snack": "Snack",
