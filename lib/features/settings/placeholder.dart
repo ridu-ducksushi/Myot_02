@@ -477,6 +477,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      enableDrag: false,
       builder: (context) => const _EditProfileSheet(),
     );
   }
@@ -703,6 +704,7 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      enableDrag: false,
       builder: (context) => const AddPetSheet(),
     );
   }
@@ -916,7 +918,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       child: DraggableScrollableSheet(
         initialChildSize: 0.6,
         maxChildSize: 0.8,
-        minChildSize: 0.4,
+        minChildSize: 0.0,
         expand: false,
         builder: (context, scrollController) {
           return Container(

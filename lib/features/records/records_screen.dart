@@ -123,6 +123,7 @@ class _RecordsScreenState extends ConsumerState<RecordsScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      enableDrag: false,
       builder: (context) => const _AddRecordSheet(),
     );
   }
@@ -295,7 +296,7 @@ class _AddRecordSheetState extends ConsumerState<_AddRecordSheet> {
       child: DraggableScrollableSheet(
         initialChildSize: 0.9,
         maxChildSize: 0.9,
-        minChildSize: 0.5,
+        minChildSize: 0.0,
         expand: false,
         builder: (context, scrollController) {
           return Container(

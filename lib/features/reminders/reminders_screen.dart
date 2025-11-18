@@ -148,6 +148,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      enableDrag: false,
       builder: (context) => const _AddReminderSheet(),
     );
   }
@@ -375,7 +376,7 @@ class _AddReminderSheetState extends ConsumerState<_AddReminderSheet> {
       child: DraggableScrollableSheet(
         initialChildSize: 0.9,
         maxChildSize: 0.9,
-        minChildSize: 0.5,
+        minChildSize: 0.0,
         expand: false,
         builder: (context, scrollController) {
           return Container(

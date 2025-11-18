@@ -139,6 +139,7 @@ class _PetsScreenState extends ConsumerState<PetsScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      enableDrag: false,
       builder: (context) => const AddPetSheet(),
     );
   }
