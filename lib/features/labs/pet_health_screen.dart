@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/core/providers/reminders_provider.dart';
 import 'package:petcare/data/models/pet.dart';
+import 'package:petcare/data/services/lab_reference_ranges.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/widgets/app_record_calendar.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
@@ -586,7 +587,7 @@ class _LabTableState extends State<_LabTable> {
                   itemCount: sortedKeys.length,
                   itemBuilder: (context, index) {
                     final k = sortedKeys[index];
-                    final ref = isCat ? _refCat[k] : _refDog[k];
+                    final ref = _getReference(k);
                     final isPinned = _pinnedKeys.contains(k);
 
                     return Container(
@@ -862,105 +863,23 @@ class _LabTableState extends State<_LabTable> {
       'WBC-EOS(%)': '%',
     });
 
-    // 강아지 기준치 (ABC 순)
-    _refDog.addAll({
-      'ALB': '2.6~4.0', // 알부민
-      'ALP': '20~150',
-      'ALT GPT': '10~100',
-      'AST GOT': '15~66',
-      'BUN': '9.2~29.2',
-      'Ca': '9.0~12.0',
-      'CK': '59~895', // 크레아틴 키나아제
-      'Cl': '106~120',
-      'CREA': '0.5~1.6', // 크레아티닌
-      'GGT': '0~13', // 감마글루타밀전이효소
-      'GLU': '65~118',
-      'K': '3.6~5.5',
-      'LIPA': '100~750',
-      'Na': '140~155',
-      'NH3': '16~90',
-      'PHOS': '2.5~6.8',
-      'TBIL': '0.1~0.6',
-      'T-CHOL': '110~320',
-      'TG': '20~150', // 중성지방
-      'TPRO': '5.4~7.8', // 총단백
-      'Na/K': '27~38',
-      'ALB/GLB': '0.8~1.5',
-      'BUN/CRE': '10~27',
-      'GLOB': '2.0~4.5',
-      'vAMY-P': '500~1500',
-      'SDMA': '~14',
-      'HCT': '37~55',
-      'HGB': '12~18',
-      'MCH': '19~23',
-      'MCHC': '32~36',
-      'MCV': '60~77',
-      'MPV': '7~12',
-      'PLT': '200~500',
-      'RBC': '5.5~8.5',
-      'RDW-CV': '14~18',
-      'WBC': '6~17',
-      'WBC-GRAN(#)': '4~12',
-      'WBC-GRAN(%)': '0~100',
-      'WBC-LYM(#)': '1~4.8',
-      'WBC-LYM(%)': '0~100',
-      'WBC-MONO(#)': '0~1.3',
-      'WBC-MONO(%)': '0~100',
-      'WBC-EOS(#)': '0~1.2',
-      'WBC-EOS(%)': '0~100',
-    });
-
-    // 고양이 기준치 (ABC 순)
-    _refCat.addAll({
-      'ALB': '2.3~3.5', // 알부민
-      'ALP': '9~53',
-      'ALT GPT': '20~120',
-      'AST GOT': '18~51',
-      'BUN': '17.6~32.8',
-      'Ca': '8.8~11.9',
-      'CK': '87~309', // 크레아틴 키나아제
-      'Cl': '107~120',
-      'CREA': '0.8~1.8', // Creatinine
-      'GGT': '1~10', // 글로불린
-      'GLU': '71~148',
-      'K': '3.4~4.6',
-      'LIPA': '0~30',
-      'Na': '147~156',
-      'NH3': '23~78',
-      'PHOS': '2.6~6.0',
-      'TBIL': '0.1~0.4',
-      'T-CHOL': '89~176',
-      'TG': '17~104', // 총빌리루빈
-      'TPRO': '5.7~7.8', // 중성지방
-      'Na/K': '33.6~44.2', // 총단백
-      'ALB/GLB': '0.4~1.1',
-      'BUN/CRE': '17.5~21.9',
-      'GLOB': '2.7~5.2',
-      'vAMY-P': '200~1900',
-      'SDMA': '~14',
-      'HCT': '27~47',
-      'HGB': '8~17',
-      'MCH': '13~17',
-      'MCHC': '31~36',
-      'MCV': '40~55',
-      'MPV': '6.5~15',
-      'PLT': '180~430',
-      'RBC': '5~10',
-      'RDW-CV': '17~22',
-      'WBC': '5~11',
-      'WBC-GRAN(#)': '3~12',
-      'WBC-GRAN(%)': '0~100',
-      'WBC-LYM(#)': '1~4',
-      'WBC-LYM(%)': '0~100',
-      'WBC-MONO(#)': '0~0.5',
-      'WBC-MONO(%)': '0~100',
-      'WBC-EOS(#)': '0~0.6',
-      'WBC-EOS(%)': '0~100',
-    });
+    // 기본 기준치는 LabReferenceRanges에서 가져오므로 여기서는 초기화하지 않음
+    // _refDog와 _refCat는 사용자가 수정한 커스텀 기준치만 저장
   }
 
   String _dateKey() {
     return '${_selectedDate.year.toString().padLeft(4, '0')}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
+  }
+
+  /// 검사 항목의 기준치를 반환합니다.
+  /// 커스텀 기준치가 있으면 그것을 사용하고, 없으면 LabReferenceRanges에서 가져옵니다.
+  String _getReference(String testItem) {
+    final isCat = widget.species.toLowerCase() == 'cat';
+    final customRef = isCat ? _refCat[testItem] : _refDog[testItem];
+    if (customRef != null && customRef.isNotEmpty) {
+      return customRef;
+    }
+    return LabReferenceRanges.getReference(widget.species, testItem);
   }
 
   // 현재 값이 기준치 범위 내에 있는지 확인하고 색상 반환
@@ -1399,8 +1318,7 @@ class _LabTableState extends State<_LabTable> {
   void _showEditDialog(String itemKey) {
     final currentValue = _valueCtrls[itemKey]?.text ?? '';
     final unit = _units[itemKey] ?? '';
-    final isCat = widget.species.toLowerCase() == 'cat';
-    final ref = isCat ? _refCat[itemKey] : _refDog[itemKey];
+    final ref = _getReference(itemKey);
 
     showDialog(
       context: context,
@@ -1466,13 +1384,14 @@ class _LabTableState extends State<_LabTable> {
       int nonEmptyCount = 0;
 
       // Only save items that actually have data or are custom items for this pet
+      final isCat = widget.species.toLowerCase() == 'cat';
       for (final k in _valueCtrls.keys) {
         final val = _valueCtrls[k]?.text ?? '';
         if (val.isNotEmpty || _units.containsKey(k)) {
           items[k] = {
             'value': val,
             'unit': _units[k] ?? '',
-            'reference': _refDog[k] ?? _refCat[k] ?? '',
+            'reference': _getReference(k),
           };
           if (val.isNotEmpty) {
             nonEmptyCount++;
@@ -1769,7 +1688,7 @@ class _LabTableState extends State<_LabTable> {
       items[k] = {
         'value': val,
         'unit': _units[k] ?? '',
-        'reference': _refDog[k] ?? _refCat[k] ?? '',
+        'reference': _getReference(k),
       };
     }
     items['체중'] = {'value': _weight, 'unit': 'kg', 'reference': ''};

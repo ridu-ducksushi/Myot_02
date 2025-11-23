@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:petcare/core/providers/pets_provider.dart';
+import 'package:petcare/data/models/pet.dart';
+import 'package:petcare/data/services/lab_reference_ranges.dart';
 
 class ChartScreen extends ConsumerStatefulWidget {
   const ChartScreen({
@@ -403,7 +405,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                           ],
                         ),
                       )
-                    : _buildChart(),
+                    : _buildChart(pet),
           ),
         ],
       ),
@@ -515,7 +517,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     }
   }
 
-  Widget _buildChart() {
+  Widget _buildChart(Pet? pet) {
     if (_chartData.isEmpty) return const SizedBox.shrink();
     
     final spots = _chartData.asMap().entries.map((entry) {
@@ -527,7 +529,11 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     final firstEntry =
         _chartData.isNotEmpty ? _chartData.first as Map<String, dynamic> : null;
     final unit = firstEntry?['unit'] as String? ?? '';
-    final reference = firstEntry?['reference'] as String? ?? '';
+    
+    // 펫 종류에 따라 올바른 기준치 사용
+    final species = pet?.species ?? '';
+    final testItem = _selectedTestItem ?? '';
+    final reference = LabReferenceRanges.getReference(species, testItem);
     
     final values = _chartData
         .map((data) => (data as Map<String, dynamic>)['value'] as double)
