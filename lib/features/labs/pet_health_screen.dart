@@ -1355,6 +1355,17 @@ class _LabTableState extends State<_LabTable> {
           });
           _saveToSupabase();
         },
+        onDelete: () {
+          setState(() {
+            // 값만 비워서 해당 날짜의 검사 수치를 삭제 (항목 자체는 유지)
+            if (_valueCtrls[itemKey] == null) {
+              _valueCtrls[itemKey] = TextEditingController();
+              _valueCtrls[itemKey]!.addListener(_onChanged);
+            }
+            _valueCtrls[itemKey]!.text = '';
+          });
+          _saveToSupabase();
+        },
       ),
     );
   }
@@ -1835,6 +1846,7 @@ class _EditLabValueDialog extends StatefulWidget {
   final String reference;
   final String unit;
   final Function(String, String) onSave; // (newItemKey, newValue)
+  final VoidCallback? onDelete; // 현재 수치 삭제
 
   const _EditLabValueDialog({
     required this.itemKey,
@@ -1842,6 +1854,7 @@ class _EditLabValueDialog extends StatefulWidget {
     required this.reference,
     required this.unit,
     required this.onSave,
+    this.onDelete,
   });
 
   @override
@@ -1924,6 +1937,13 @@ class _EditLabValueDialogState extends State<_EditLabValueDialog> {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('취소'),
+        ),
+        TextButton(
+          onPressed: () {
+            widget.onDelete?.call();
+            Navigator.of(context).pop();
+          },
+          child: const Text('삭제'),
         ),
         ElevatedButton(
           onPressed: () {
