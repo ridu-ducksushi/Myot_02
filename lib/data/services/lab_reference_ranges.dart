@@ -25,6 +25,16 @@ class LabReferenceRanges {
     return _dogRanges[testItem] ?? _catRanges[testItem] ?? '';
   }
 
+  /// 모든 검사 항목 키 목록을 반환합니다 (강아지 + 고양이 통합)
+  /// 
+  /// Returns 중복 제거된 검사 항목 키 목록
+  static List<String> getAllTestKeys() {
+    final keys = <String>{};
+    keys.addAll(_dogRanges.keys);
+    keys.addAll(_catRanges.keys);
+    return keys.toList();
+  }
+
   /// 강아지 기준치 (ABC 순)
   static final Map<String, String> _dogRanges = {
     'ALB': '2.6~4.0', // 알부민
