@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import 'package:petcare/data/services/lab_reference_ranges.dart';
 
 /// OCR 서비스 - 건강검진표 이미지에서 검사 수치 인식
@@ -14,18 +16,27 @@ class OcrService {
   static const String _errorCameraUnavailable = '카메라를 사용할 수 없습니다';
   
   static final _picker = ImagePicker();
-  static TextRecognizer? _textRecognizer;
+  static TextRecognizer? _koreanRecognizer;
+  static TextRecognizer? _latinRecognizer;
   
-  /// TextRecognizer 인스턴스 (lazy initialization)
-  static TextRecognizer get _recognizer {
-    _textRecognizer ??= TextRecognizer(script: TextRecognitionScript.korean);
-    return _textRecognizer!;
+  /// 한국어 TextRecognizer 인스턴스 (lazy initialization)
+  static TextRecognizer get _koreanRec {
+    _koreanRecognizer ??= TextRecognizer(script: TextRecognitionScript.korean);
+    return _koreanRecognizer!;
+  }
+  
+  /// 라틴 스크립트 TextRecognizer 인스턴스 (lazy initialization)
+  static TextRecognizer get _latinRec {
+    _latinRecognizer ??= TextRecognizer(script: TextRecognitionScript.latin);
+    return _latinRecognizer!;
   }
   
   /// 리소스 정리
   static Future<void> dispose() async {
-    await _textRecognizer?.close();
-    _textRecognizer = null;
+    await _koreanRecognizer?.close();
+    await _latinRecognizer?.close();
+    _koreanRecognizer = null;
+    _latinRecognizer = null;
   }
   
   /// 카메라로 이미지 촬영
@@ -54,11 +65,151 @@ class OcrService {
     }
   }
   
-  /// 이미지에서 텍스트 인식
+  /// 이미지 전처리 (명도, 대비 개선)
+  static Future<File?> _preprocessImage(File imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      img.Image? image = img.decodeImage(bytes);
+      if (image == null) return null;
+      
+      // 그레이스케일 변환 (OCR 정확도 향상)
+      image = img.grayscale(image);
+      
+      // 대비 개선
+      image = img.adjustColor(
+        image,
+        contrast: 1.2,
+        brightness: 1.1,
+      );
+      
+      // 선명도 개선
+      image = img.convolution(image, filter: [
+        0, -1, 0,
+        -1, 5, -1,
+        0, -1, 0,
+      ]);
+      
+      // 임시 파일로 저장 (원본 확장자 유지)
+      final extension = imageFile.path.split('.').last.toLowerCase();
+      final processedBytes = extension == 'png' 
+          ? img.encodePng(image)
+          : img.encodeJpg(image, quality: 95);
+      final tempFile = File('${imageFile.path}_processed.$extension');
+      await tempFile.writeAsBytes(processedBytes);
+      return tempFile;
+    } catch (e) {
+      // 전처리 실패 시 원본 파일 반환
+      return imageFile;
+    }
+  }
+  
+  /// 이미지에서 텍스트 인식 (다중 스크립트 지원)
   static Future<String> recognizeText(File imageFile) async {
-    final inputImage = InputImage.fromFile(imageFile);
-    final recognizedText = await _recognizer.processImage(inputImage);
-    return recognizedText.text;
+    // 이미지 전처리
+    final processedFile = await _preprocessImage(imageFile) ?? imageFile;
+    
+    try {
+      final inputImage = InputImage.fromFile(processedFile);
+      
+      // 한국어와 라틴 스크립트 동시 인식
+      final koreanResult = await _koreanRec.processImage(inputImage);
+      final latinResult = await _latinRec.processImage(inputImage);
+      
+      // 두 결과를 결합 (더 긴 텍스트 우선)
+      final koreanText = koreanResult.text.trim();
+      final latinText = latinResult.text.trim();
+      
+      // 텍스트 길이와 품질을 고려하여 선택
+      if (koreanText.length > latinText.length * 0.7) {
+        return koreanText;
+      } else if (latinText.length > koreanText.length * 0.7) {
+        return latinText;
+      } else {
+        // 두 결과를 결합 (중복 제거)
+        return _mergeTexts(koreanText, latinText);
+      }
+    } finally {
+      // 전처리된 임시 파일 삭제
+      if (processedFile.path != imageFile.path && processedFile.existsSync()) {
+        try {
+          await processedFile.delete();
+        } catch (_) {
+          // 삭제 실패는 무시
+        }
+      }
+    }
+  }
+  
+  /// 두 텍스트 결과를 병합 (중복 제거)
+  static String _mergeTexts(String text1, String text2) {
+    if (text1.isEmpty) return text2;
+    if (text2.isEmpty) return text1;
+    
+    // 더 긴 텍스트를 기준으로 병합
+    final base = text1.length > text2.length ? text1 : text2;
+    final supplement = text1.length > text2.length ? text2 : text1;
+    
+    // 보완 텍스트에서 새로 추가할 부분만 추출
+    final baseLines = base.split('\n');
+    final suppLines = supplement.split('\n');
+    
+    final merged = <String>[];
+    for (final line in baseLines) {
+      merged.add(line);
+    }
+    
+    // 보완 텍스트에서 유사하지 않은 라인 추가
+    for (final suppLine in suppLines) {
+      if (suppLine.trim().isEmpty) continue;
+      bool isDuplicate = false;
+      for (final baseLine in baseLines) {
+        if (_isSimilarLine(suppLine, baseLine)) {
+          isDuplicate = true;
+          break;
+        }
+      }
+      if (!isDuplicate) {
+        merged.add(suppLine);
+      }
+    }
+    
+    return merged.join('\n');
+  }
+  
+  /// 두 라인이 유사한지 확인 (편집 거리 기반)
+  static bool _isSimilarLine(String line1, String line2) {
+    if (line1.isEmpty || line2.isEmpty) return false;
+    final l1 = line1.trim().toLowerCase();
+    final l2 = line2.trim().toLowerCase();
+    
+    // 완전 일치
+    if (l1 == l2) return true;
+    
+    // 한쪽이 다른 쪽을 포함
+    if (l1.contains(l2) || l2.contains(l1)) return true;
+    
+    // 길이 차이가 크면 다른 라인
+    if ((l1.length - l2.length).abs() > l1.length * 0.5) return false;
+    
+    // 공통 문자 비율 확인
+    final commonChars = _countCommonChars(l1, l2);
+    final similarity = commonChars / (l1.length + l2.length - commonChars);
+    return similarity > 0.6;
+  }
+  
+  /// 공통 문자 개수 계산
+  static int _countCommonChars(String s1, String s2) {
+    final chars1 = s1.split('');
+    final chars2 = s2.split('').toList();
+    int count = 0;
+    for (final char in chars1) {
+      final index = chars2.indexOf(char);
+      if (index != -1) {
+        count++;
+        chars2.removeAt(index);
+      }
+    }
+    return count;
   }
   
   /// 인식된 텍스트에서 검사 항목과 수치 파싱
@@ -151,15 +302,38 @@ class OcrService {
   }
   
   static String _normalizeText(String text) {
-    return text
+    // 기본 정규화
+    var normalized = text
         .replaceAll('\r', '\n')
         .replaceAll('\t', ' ')
         .replaceAllMapped(RegExp(r'[^\S\r\n]+'), (match) => ' ')
         .toUpperCase();
+    
+    // OCR 자주 발생하는 오타 보정
+    normalized = _fixCommonOcrErrors(normalized);
+    
+    return normalized;
+  }
+  
+  /// OCR에서 자주 발생하는 오타 보정
+  static String _fixCommonOcrErrors(String text) {
+    // 숫자와 문자 혼동 (예: 0 → O, 1 → I, 5 → S)
+    // 하지만 검사 항목명에서는 보정하지 않음 (ALB, ALT 등)
+    
+    // 공백 제거 및 정리
+    text = text.replaceAll(RegExp(r'\s+'), ' ');
+    
+    // 특수문자 정리
+    text = text.replaceAll(RegExp(r'[|]'), 'I'); // | → I
+    text = text.replaceAll(RegExp(r'[`]'), ''); // 백틱 제거
+    
+    return text;
   }
 
   static String? _extractValueFromText(String normalizedText, String alias) {
     final aliasPattern = _aliasToPattern(alias);
+    
+    // 패턴 1: 키워드 바로 뒤 숫자 (예: ALT: 45, ALT = 45, ALT 45)
     final directPattern = RegExp(
       r'(?<![A-Z0-9])' + aliasPattern + r'(?:\s*[:=]?\s*)(-?\d+(?:\.\d+)?)',
       caseSensitive: false,
@@ -169,7 +343,7 @@ class OcrService {
       return directMatch.group(1);
     }
 
-    // 숫자가 키워드 앞에 오는 경우 (예: 45 ALT)
+    // 패턴 2: 숫자가 키워드 앞에 오는 경우 (예: 45 ALT, 45=ALT)
     final reversedPattern = RegExp(
       r'(-?\d+(?:\.\d+)?)\s*(?:[=:])?\s*' + aliasPattern,
       caseSensitive: false,
@@ -179,7 +353,37 @@ class OcrService {
       return reversedMatch.group(1);
     }
 
-    // 느슨한 검색: 키워드 주변 범위 내 숫자 추출
+    // 패턴 3: 키워드와 숫자가 같은 라인에 있는 경우 (표 형식)
+    final lines = normalizedText.split('\n');
+    for (final line in lines) {
+      final lowerLine = line.toLowerCase();
+      final lowerAlias = alias.toLowerCase();
+      if (lowerLine.contains(lowerAlias)) {
+        // 라인에서 숫자 추출
+        final numbers = RegExp(r'-?\d+(?:\.\d+)?').allMatches(line).toList();
+        if (numbers.isNotEmpty) {
+          // 키워드 위치 기준으로 가장 가까운 숫자 선택
+          final aliasIndex = lowerLine.indexOf(lowerAlias);
+          String? closestValue;
+          int minDistance = 999;
+          
+          for (final match in numbers) {
+            final numIndex = match.start;
+            final distance = (numIndex - aliasIndex).abs();
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestValue = match.group(0);
+            }
+          }
+          
+          if (closestValue != null && minDistance < 50) {
+            return closestValue;
+          }
+        }
+      }
+    }
+
+    // 패턴 4: 느슨한 검색 - 키워드 주변 범위 내 숫자 추출
     final lowerText = normalizedText.toLowerCase();
     final lowerAlias = alias.toLowerCase();
     final idx = lowerText.indexOf(lowerAlias);
