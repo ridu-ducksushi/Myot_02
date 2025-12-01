@@ -9,7 +9,7 @@ import 'package:petcare/data/models/pet.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petcare/data/services/lab_reference_ranges.dart';
 import 'package:petcare/data/services/ocr_service.dart';
-import 'package:petcare/utils/date_utils.dart';
+import 'package:petcare/utils/date_utils.dart' as app_date_utils;
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/widgets/app_record_calendar.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
@@ -399,7 +399,7 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
         return;
       }
 
-      final dateKey = DateUtils.toDateKey(DateTime.now());
+      final dateKey = app_date_utils.DateUtils.toDateKey(DateTime.now());
 
       // 현재 날짜의 기존 데이터 가져오기
       final currentRes = await Supabase.instance.client
@@ -1251,7 +1251,7 @@ class _LabTableState extends State<_LabTable> {
   }
 
   String _dateKey() {
-    return DateUtils.toDateKey(_selectedDate);
+    return app_date_utils.DateUtils.toDateKey(_selectedDate);
   }
 
   /// 검사 항목의 기준치를 반환합니다.
@@ -2403,7 +2403,7 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
         return;
       }
 
-      final dateKey = DateUtils.toDateKey(DateTime.now());
+      final dateKey = app_date_utils.DateUtils.toDateKey(DateTime.now());
 
       // Get current lab data for today
       final currentRes = await Supabase.instance.client
