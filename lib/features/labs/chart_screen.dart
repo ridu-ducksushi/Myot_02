@@ -529,11 +529,24 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     final firstEntry =
         _chartData.isNotEmpty ? _chartData.first as Map<String, dynamic> : null;
     final unit = firstEntry?['unit'] as String? ?? '';
-    
-    // 펫 종류에 따라 올바른 기준치 사용
-    final species = pet?.species ?? '';
+
+    // 기준치: 우선 저장된 커스텀 기준치(차트 데이터에 포함된 reference)를 사용하고,
+    // 없으면 LabReferenceRanges의 기본 기준치를 사용
     final testItem = _selectedTestItem ?? '';
-    final reference = LabReferenceRanges.getReference(species, testItem);
+    String reference = '';
+    if (_chartData.isNotEmpty) {
+      final Map<String, dynamic> entryWithRef =
+          _chartData.cast<Map<String, dynamic>>().firstWhere(
+                (e) =>
+                    (e['reference'] as String?)?.trim().isNotEmpty ?? false,
+                orElse: () => <String, dynamic>{},
+              );
+      reference = (entryWithRef['reference'] as String?)?.trim() ?? '';
+    }
+    if (reference.isEmpty) {
+      final species = pet?.species ?? '';
+      reference = LabReferenceRanges.getReference(species, testItem);
+    }
     
     final values = _chartData
         .map((data) => (data as Map<String, dynamic>)['value'] as double)

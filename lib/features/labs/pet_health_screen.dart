@@ -32,6 +32,8 @@ class PetHealthScreen extends ConsumerStatefulWidget {
 }
 
 class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
+  // 건강 차트 테이블에 접근하기 위한 키 (새 검사 항목 추가 시 현재 날짜만 다시 로드)
+  final GlobalKey<_LabTableState> _labTableKey = GlobalKey<_LabTableState>();
   @override
   void initState() {
     super.initState();
@@ -66,11 +68,11 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
         automaticallyImplyLeading: false,
       ),
       body: _LabTable(
+        key: _labTableKey,
         species: pet.species,
         petId: pet.id,
         petName: pet.name,
         petWeight: pet.weightKg,
-        key: ValueKey(pet.id),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddOptions(pet),
@@ -193,8 +195,9 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
         species: species,
         petId: petId,
         onItemAdded: () {
-          // Force rebuild the widget by changing the key
-          setState(() {});
+          // 새 검사 항목이 추가되면 현재 선택된 날짜만 다시 로드
+          // (날짜는 유지하고 내용만 갱신)
+          _labTableKey.currentState?.reloadCurrentDate();
         },
       ),
     );
@@ -556,6 +559,58 @@ class _LabTableState extends State<_LabTable> {
   final Map<String, String> _units = {};
   final Map<String, String> _refDog = {};
   final Map<String, String> _refCat = {};
+  // 검사 항목 리스트 스크롤 위치 유지용 컨트롤러
+  final ScrollController _listScrollController = ScrollController();
+  // 기본 검사 항목 키 목록 (표에 항상 표시되는 항목)
+  static const List<String> _baseKeys = [
+    // 사용자 정의 순서 (ABC 순으로 정렬된 기본 검사 항목)
+    'ALB',
+    'ALP',
+    'ALT GPT',
+    'AST GOT',
+    'BUN',
+    'Ca',
+    'CK',
+    'Cl',
+    'CREA',
+    'GGT',
+    'GLU',
+    'K',
+    'LIPA',
+    'Na',
+    'NH3',
+    'PHOS',
+    'TBIL',
+    'T-CHOL',
+    'TG',
+    'TPRO',
+    'Na/K',
+    'ALB/GLB',
+    'BUN/CRE',
+    'GLOB',
+    'vAMY-P',
+    'SDMA',
+    'HCT',
+    'HGB',
+    'MCH',
+    'MCHC',
+    'MCV',
+    'MPV',
+    'PLT',
+    'RBC',
+    'RDW-CV',
+    'WBC',
+    'WBC-GRAN(#)',
+    'WBC-GRAN(%)',
+    'WBC-LYM(#)',
+    'WBC-LYM(%)',
+    'WBC-MONO(#)',
+    'WBC-MONO(%)',
+    'WBC-EOS(#)',
+    'WBC-EOS(%)',
+  ];
+  // 기본정보 항목 (차트에 표시하지 않음)
+  static const List<String> _basicInfoKeys = ['체중', '병원명', '비용'];
   DateTime _selectedDate = _today();
   Timer? _saveTimer;
   bool _isLoading = false;
@@ -576,46 +631,50 @@ class _LabTableState extends State<_LabTable> {
 
   // 기록이 있는 날짜 목록
   Set<DateTime> _recordDates = {};
+  // 마지막으로 기억한 스크롤 위치
+  double _lastScrollOffset = 0;
 
   static DateTime _today() {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
   }
 
+  /// 외부(상위 위젯)에서 현재 선택된 날짜의 데이터를 다시 불러올 때 사용
+  void reloadCurrentDate() {
+    _loadFromSupabase();
+  }
+
+  /// 기본 검사 항목들은 값이 없더라도 항상 리스트에 표시하기 위해
+  /// 최소한의 컨트롤러만 보장해 둔다.
+  void _ensureBaseControllers() {
+    for (final key in _baseKeys) {
+      if (!_valueCtrls.containsKey(key)) {
+        _valueCtrls[key] = TextEditingController();
+        _valueCtrls[key]!.addListener(_onChanged);
+      }
+    }
+  }
+
+  void _captureScrollOffset() {
+    if (_listScrollController.hasClients) {
+      _lastScrollOffset = _listScrollController.offset;
+    }
+  }
+
+  void _restoreScrollOffset() {
+    if (!_listScrollController.hasClients) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_listScrollController.hasClients) return;
+      final max = _listScrollController.position.maxScrollExtent;
+      final target = _lastScrollOffset.clamp(0.0, max);
+      _listScrollController.jumpTo(target);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _initRefs();
-    // 기본 검사 항목들에 대해서만 컨트롤러 생성
-    final baseKeys = [
-      'RBC',
-      'WBC',
-      'Hb',
-      'HCT',
-      'PLT',
-      'ALT',
-      'AST',
-      'ALP',
-      '총빌리루빈',
-      'BUN',
-      'Creatinine',
-      'SDMA',
-      'Glucose',
-      '총단백',
-      '알부민',
-      '글로불린',
-      '콜레스테롤',
-      '중성지방',
-      'Na',
-      'K',
-      'Cl',
-      'Ca',
-      'P',
-    ];
-    for (final key in baseKeys) {
-      _valueCtrls[key] = TextEditingController();
-      _valueCtrls[key]!.addListener(_onChanged);
-    }
     _loadCustomOrder();
     // 기록 날짜를 먼저 로드하고, 가장 최근 날짜를 선택
     _loadRecordDatesAndSetLatest();
@@ -633,6 +692,7 @@ class _LabTableState extends State<_LabTable> {
   @override
   void dispose() {
     _saveTimer?.cancel();
+    _listScrollController.dispose();
     for (final c in _valueCtrls.values) {
       c.dispose();
     }
@@ -798,6 +858,8 @@ class _LabTableState extends State<_LabTable> {
         ],
       ),
     );
+    // 기본 검사 항목 컨트롤러를 먼저 보장한 뒤 정렬된 키 목록을 계산
+    _ensureBaseControllers();
     final baseKeys = _orderedKeys();
     // 사용자 정의 순서가 있으면 사용, 없으면 기본 순서
     final sortedKeys = _customOrder.isEmpty ? baseKeys : _customOrder;
@@ -944,6 +1006,7 @@ class _LabTableState extends State<_LabTable> {
                   padding: const EdgeInsets.all(8),
                   onReorder: _onReorder,
                   itemCount: sortedKeys.length,
+                  scrollController: _listScrollController,
                   itemBuilder: (context, index) {
                     final k = sortedKeys[index];
                     final ref = _getReference(k);
@@ -1127,50 +1190,51 @@ class _LabTableState extends State<_LabTable> {
   }
 
   List<String> _orderedKeys() {
-    final baseKeys = [
-      // 사용자 정의 순서 (ABC 순으로 정렬된 기본 검사 항목)
-      'ALB',
-      'ALP',
-      'ALT GPT',
-      'AST GOT',
-      'BUN',
-      'Ca',
-      'CK',
-      'Cl',
-      'CREA',
-      'GGT',
-      'GLU', 'K', 'LIPA', 'Na', 'NH3', 'PHOS', 'TBIL', 'T-CHOL', 'TG', 'TPRO',
-      'Na/K',
-      'ALB/GLB',
-      'BUN/CRE',
-      'GLOB',
-      'vAMY-P',
-      'SDMA',
-      'HCT',
-      'HGB',
-      'MCH',
-      'MCHC', 'MCV', 'MPV', 'PLT', 'RBC', 'RDW-CV', 'WBC', 'WBC-GRAN(#)',
-      'WBC-GRAN(%)', 'WBC-LYM(#)', 'WBC-LYM(%)', 'WBC-MONO(#)', 'WBC-MONO(%)',
-      'WBC-EOS(#)', 'WBC-EOS(%)',
-    ];
+    // 기본 항목: 값이 없어도 항상 표시
+    final List<String> baseKeys = List<String>.from(_baseKeys);
 
-    // 기본정보 항목들 (차트에 표시하지 않음)
-    final basicInfoKeys = ['체중', '병원명', '비용'];
-
-    // Only include custom keys that have actual data for this pet
-    // This prevents showing custom items from other pets
+    // 커스텀 항목: 실제 데이터(값/단위)가 있는 항목만 표시
+    // → 사용자가 새로 추가한 항목은 기본 항목보다 위쪽에 보이도록 먼저 배치
     final customKeys = _valueCtrls.keys
         .where(
           (k) =>
-              !baseKeys.contains(k) &&
-              !basicInfoKeys.contains(k) && // 기본정보 항목 제외
+              !_baseKeys.contains(k) &&
+              !_basicInfoKeys.contains(k) && // 기본정보 항목 제외
               (_valueCtrls[k]?.text.isNotEmpty == true ||
                   _units.containsKey(k)),
         )
-        .toList();
-    customKeys.sort(); // Sort custom keys alphabetically
+        .toList()
+      ..sort();
 
+    // 사용자 경험상: 커스텀(사용자 추가) 항목이 위, 기본 항목이 아래에 오도록 정렬
     return [...customKeys, ...baseKeys];
+  }
+
+  bool _isCustomItemKey(String key) {
+    return !_baseKeys.contains(key) && !_basicInfoKeys.contains(key);
+  }
+
+  void _clearItemValue(String key) {
+    if (!_valueCtrls.containsKey(key)) {
+      _valueCtrls[key] = TextEditingController();
+      _valueCtrls[key]!.addListener(_onChanged);
+    }
+    _valueCtrls[key]!.text = '';
+  }
+
+  void _removeItemCompletely(String key) {
+    _valueCtrls[key]?.dispose();
+    _valueCtrls.remove(key);
+    if (_isCustomItemKey(key)) {
+      // 커스텀 항목은 단위/기준치까지 완전히 제거
+      _units.remove(key);
+      _refDog.remove(key);
+      _refCat.remove(key);
+    }
+    _previousValues.remove(key);
+    _pinnedKeys.remove(key);
+    _pinnedKeysOrder.removeWhere((k) => k == key);
+    _customOrder.remove(key);
   }
 
   void _initRefs() {
@@ -1558,37 +1622,48 @@ class _LabTableState extends State<_LabTable> {
         final Map items = currentRow['items'] as Map;
         print('✅ Current found with ${items.length} items');
 
-        // Create controllers for any new items that don't exist yet
+        // Ensure controllers exist for all items
         for (final k in items.keys) {
           if (!_valueCtrls.containsKey(k)) {
             _valueCtrls[k] = TextEditingController();
             _valueCtrls[k]!.addListener(_onChanged);
-
-            // Set unit and reference values from the stored data
-            final v = items[k];
-            if (v is Map) {
-              if (v['unit'] is String) {
-                _units[k] = v['unit'] as String;
-              }
-              if (v['reference'] is String) {
-                final isCat = widget.species.toLowerCase() == 'cat';
-                if (isCat) {
-                  _refCat[k] = v['reference'] as String;
-                } else {
-                  _refDog[k] = v['reference'] as String;
-                }
-              }
-            }
           }
         }
 
-        // Update existing controllers with values
+        // Update unit, reference, and values from stored data
         for (final k in items.keys) {
           final v = items[k];
-          final value = (v is Map && v['value'] is String)
-              ? v['value'] as String
-              : '';
-          _valueCtrls[k]?.text = value;
+          if (v is Map) {
+            // 단위 동기화
+            if (v['unit'] is String) {
+              _units[k] = v['unit'] as String;
+            }
+
+            // 기준치 동기화: 저장된 reference가 있으면 커스텀 기준치로 사용
+            // 없으면 커스텀 기준치를 제거하고 기본값을 사용
+            final refStr =
+                v['reference'] is String ? (v['reference'] as String).trim() : '';
+            final isCat = widget.species.toLowerCase() == 'cat';
+            if (refStr.isEmpty) {
+              if (isCat) {
+                _refCat.remove(k);
+              } else {
+                _refDog.remove(k);
+              }
+            } else {
+              if (isCat) {
+                _refCat[k] = refStr;
+              } else {
+                _refDog[k] = refStr;
+              }
+            }
+
+            // 값 동기화
+            final value = v['value'] is String ? v['value'] as String : '';
+            _valueCtrls[k]?.text = value;
+          } else {
+            _valueCtrls[k]?.text = '';
+          }
         }
 
         // Load basic info data
@@ -1679,6 +1754,8 @@ class _LabTableState extends State<_LabTable> {
     final unit = _units[itemKey] ?? '';
     final ref = _getReference(itemKey);
 
+    _captureScrollOffset();
+
     showDialog(
       context: context,
       builder: (context) => _EditLabValueDialog(
@@ -1686,9 +1763,10 @@ class _LabTableState extends State<_LabTable> {
         currentValue: currentValue,
         reference: ref ?? '',
         unit: unit,
-        onSave: (newItemKey, newValue) {
+        onSave: (newItemKey, newValue, newReference, newUnit) {
+          _captureScrollOffset();
           setState(() {
-            // If item key changed, remove old controller and add new one
+            // 키가 변경된 경우: 기존 항목 정리 후 새 키로 이동
             if (newItemKey != itemKey) {
               _valueCtrls.remove(itemKey);
               _units.remove(itemKey);
@@ -1697,31 +1775,67 @@ class _LabTableState extends State<_LabTable> {
 
               _valueCtrls[newItemKey] = TextEditingController(text: newValue);
               _valueCtrls[newItemKey]!.addListener(_onChanged);
-              _units[newItemKey] = unit;
-              if (ref != null) {
-                _refDog[newItemKey] = ref;
-                _refCat[newItemKey] = ref;
+
+              // 단위 업데이트 (빈 문자열이면 이전 값 유지)
+              if (newUnit.isNotEmpty) {
+                _units[newItemKey] = newUnit;
+              } else if (unit.isNotEmpty) {
+                _units[newItemKey] = unit;
+              }
+
+              // 기준치 업데이트 (빈 문자열이면 커스텀 기준치 제거 → 기본값 사용)
+              final trimmedRef = newReference.trim();
+              final isCat = widget.species.toLowerCase() == 'cat';
+              if (trimmedRef.isEmpty) {
+                if (isCat) {
+                  _refCat.remove(newItemKey);
+                } else {
+                  _refDog.remove(newItemKey);
+                }
+              } else {
+                if (isCat) {
+                  _refCat[newItemKey] = trimmedRef;
+                } else {
+                  _refDog[newItemKey] = trimmedRef;
+                }
               }
             } else {
-              // Ensure controller exists before setting value
+              // 같은 키에서 값/단위/기준치만 수정
               if (_valueCtrls[itemKey] == null) {
                 _valueCtrls[itemKey] = TextEditingController(text: newValue);
                 _valueCtrls[itemKey]!.addListener(_onChanged);
               } else {
                 _valueCtrls[itemKey]!.text = newValue;
               }
+
+              if (newUnit.isNotEmpty) {
+                _units[itemKey] = newUnit;
+              }
+
+              final trimmedRef = newReference.trim();
+              final isCat = widget.species.toLowerCase() == 'cat';
+              if (trimmedRef.isEmpty) {
+                if (isCat) {
+                  _refCat.remove(itemKey);
+                } else {
+                  _refDog.remove(itemKey);
+                }
+              } else {
+                if (isCat) {
+                  _refCat[itemKey] = trimmedRef;
+                } else {
+                  _refDog[itemKey] = trimmedRef;
+                }
+              }
             }
           });
           _saveToSupabase();
         },
         onDelete: () {
+          _captureScrollOffset();
           setState(() {
-            // 값만 비워서 해당 날짜의 검사 수치를 삭제 (항목 자체는 유지)
-            if (_valueCtrls[itemKey] == null) {
-              _valueCtrls[itemKey] = TextEditingController();
-              _valueCtrls[itemKey]!.addListener(_onChanged);
-            }
-            _valueCtrls[itemKey]!.text = '';
+            // 모든 항목에 대해 행 자체를 제거 (기본/커스텀 공통)
+            _removeItemCompletely(itemKey);
           });
           _saveToSupabase();
         },
@@ -1800,6 +1914,9 @@ class _LabTableState extends State<_LabTable> {
       }
     } finally {
       setState(() => _isSaving = false);
+      // 저장 과정에서 빌드/레이아웃이 변경된 후에도
+      // 사용자가 보던 검사 항목 위치를 유지하도록 스크롤 복원
+      _restoreScrollOffset();
     }
   }
 
@@ -1958,7 +2075,10 @@ class _LabTableState extends State<_LabTable> {
                     break;
                 }
               });
+              // Supabase에 저장 후, 현재 날짜 데이터를 다시 로드해서
+              // 기본 정보와 연동된 리스트/그래프가 즉시 반영되도록 한다.
               _saveBasicInfoToSupabase();
+              _loadFromSupabase();
               Navigator.of(context).pop();
             },
             child: const Text('저장'),
@@ -2204,7 +2324,8 @@ class _EditLabValueDialog extends StatefulWidget {
   final String currentValue;
   final String reference;
   final String unit;
-  final Function(String, String) onSave; // (newItemKey, newValue)
+  // (newItemKey, newValue, newReference, newUnit)
+  final void Function(String, String, String, String) onSave;
   final VoidCallback? onDelete; // 현재 수치 삭제
 
   const _EditLabValueDialog({
@@ -2308,8 +2429,10 @@ class _EditLabValueDialogState extends State<_EditLabValueDialog> {
           onPressed: () {
             final newItemKey = _itemKeyController.text.trim();
             final newValue = _valueController.text.trim();
+            final newReference = _referenceController.text.trim();
+            final newUnit = _unitController.text.trim();
             if (newItemKey.isNotEmpty) {
-              widget.onSave(newItemKey, newValue);
+              widget.onSave(newItemKey, newValue, newReference, newUnit);
               Navigator.of(context).pop();
             }
           },
