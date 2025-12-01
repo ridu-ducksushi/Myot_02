@@ -8,7 +8,6 @@ import 'package:petcare/core/providers/pets_provider.dart';
 import 'package:petcare/data/models/pet.dart';
 import 'package:petcare/ui/widgets/common_widgets.dart';
 import 'package:petcare/ui/widgets/profile_image_picker.dart';
-import 'package:petcare/ui/widgets/app_record_calendar.dart';
 import 'package:petcare/utils/app_constants.dart';
 
 class AddPetSheet extends ConsumerStatefulWidget {
@@ -273,16 +272,12 @@ class _AddPetSheetState extends ConsumerState<AddPetSheet> {
   Future<void> _selectBirthDate() async {
     final now = DateTime.now();
     final initial = _birthDate ?? now.subtract(const Duration(days: 365));
-    final first = now.subtract(const Duration(days: 365 * 30));
 
-    final picked = await showRecordCalendarDialog(
+    final picked = await showDatePicker(
       context: context,
-      initialDate: _dateOnly(initial),
-      firstDay: _dateOnly(first),
-      lastDay: _dateOnly(now),
-      markedDates: {
-        if (_birthDate != null) _dateOnly(_birthDate!),
-      },
+      initialDate: initial,
+      firstDate: now.subtract(const Duration(days: 365 * 30)),
+      lastDate: now,
     );
 
     if (picked != null && mounted) {
