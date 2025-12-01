@@ -118,30 +118,6 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '촬영 팁',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildOcrTip('표 전체가 화면 안에 수평으로 들어오게 촬영해 주세요.'),
-                    _buildOcrTip('빛 반사/그림자를 줄이고 선명하게 초점을 맞춰 주세요.'),
-                    _buildOcrTip('흐릿한 부분은 갤러리에서 다시 선택해 보세요.'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(10),
