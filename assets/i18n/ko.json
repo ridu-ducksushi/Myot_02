@@ -221,7 +221,7 @@
     "add_test_value_helper": "선택사항: 검사 결과값",
     "add_reference_helper": "선택사항: 정상 범위",
     "add_unit_helper": "선택사항: 측정 단위",
-    "edit_basic_info": "{} 수정",
+    "edit_basic_info": "{label} 수정",
     "weight_hint": "예: 5.2",
     "hospital_name_hint": "예: 서울동물병원",
     "cost_hint": "예: 150000",
@@ -232,7 +232,7 @@
     "save_ocr_error": "저장 중 오류가 발생했습니다: {}",
     "camera_canceled": "사진 촬영이 취소되었습니다",
     "login_required": "로그인이 필요합니다",
-    "previous_date": "직전: {}",
+    "previous_date": "직전: {date}",
     "test_name_asterisk": "검사명 *"
   },
   "contact": {

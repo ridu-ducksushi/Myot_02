@@ -227,7 +227,7 @@
     "add_test_value_helper": "Optional: Test result value",
     "add_reference_helper": "Optional: Normal range",
     "add_unit_helper": "Optional: Measurement unit",
-    "edit_basic_info": "Edit {}",
+    "edit_basic_info": "Edit {label}",
     "weight_hint": "e.g. 5.2",
     "hospital_name_hint": "e.g. Seoul Animal Hospital",
     "cost_hint": "e.g. 150000",
@@ -238,7 +238,7 @@
     "save_ocr_error": "An error occurred while saving: {}",
     "camera_canceled": "Photo capture canceled",
     "login_required": "Login required",
-    "previous_date": "Previous: {}",
+    "previous_date": "Previous: {date}",
     "test_name_asterisk": "Test Name *"
   },
   "contact": {

@@ -221,7 +221,7 @@
     "add_test_value_helper": "任意: 検査結果値",
     "add_reference_helper": "任意: 正常範囲",
     "add_unit_helper": "任意: 測定単位",
-    "edit_basic_info": "{}編集",
+    "edit_basic_info": "{label}編集",
     "weight_hint": "例: 5.2",
     "hospital_name_hint": "例: 東京動物病院",
     "cost_hint": "例: 150000",
@@ -232,7 +232,7 @@
     "save_ocr_error": "保存中にエラーが発生しました: {}",
     "camera_canceled": "写真撮影がキャンセルされました",
     "login_required": "ログインが必要です",
-    "previous_date": "直前: {}",
+    "previous_date": "直前: {date}",
     "test_name_asterisk": "検査名 *"
   },
   "contact": {
