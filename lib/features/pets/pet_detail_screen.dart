@@ -1390,7 +1390,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   }
 
   Future<void> _updatePet() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     
     // 남아/여아를 Male/Female로 변환 (DB 저장용)
     String? sexForDb = _selectedSex;

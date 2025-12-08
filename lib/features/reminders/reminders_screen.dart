@@ -574,7 +574,7 @@ class _AddReminderSheetState extends ConsumerState<_AddReminderSheet> {
   }
 
   Future<void> _saveReminder() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     
     final reminder = Reminder(
       id: DateTime.now().millisecondsSinceEpoch.toString(),

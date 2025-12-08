@@ -318,7 +318,7 @@ class _AddPetSheetState extends ConsumerState<AddPetSheet> {
   }
 
   Future<void> _savePet() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
 
     final String? avatarUrl = _selectedImage?.path;
 

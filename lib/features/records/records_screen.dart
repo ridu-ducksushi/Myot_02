@@ -510,7 +510,7 @@ class _AddRecordSheetState extends ConsumerState<_AddRecordSheet> {
   }
 
   Future<void> _saveRecord() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     
     final record = Record(
       id: DateTime.now().millisecondsSinceEpoch.toString(),

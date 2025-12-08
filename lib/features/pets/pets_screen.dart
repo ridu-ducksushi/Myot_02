@@ -992,7 +992,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   }
 
   Future<void> _updatePet() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     
     // _selectedImage는 이미 ProfileImagePicker에서 저장된 파일이므로 경로만 사용
     final String? avatarUrl = _selectedImage?.path ?? widget.pet.avatarUrl;

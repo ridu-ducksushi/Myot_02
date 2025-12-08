@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -21,7 +22,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
 
   Future<void> _signup() async {
-    if (!_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() != true) {
       return;
     }
 
@@ -36,20 +37,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('회원가입 성공!')),
+          SnackBar(content: Text('auth.signup_success'.tr())),
         );
         context.go('/login'); // 로그인 페이지로 이동
       }
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('회원가입 실패: ${e.message}')),
+          SnackBar(content: Text('auth.signup_failed'.tr(namedArgs: {'error': e.message}))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('알 수 없는 오류가 발생했습니다: $e')),
+          SnackBar(content: Text('auth.signup_error'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     } finally {
@@ -84,11 +85,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildPasswordRequirement('8자 이상', hasMinLength),
-        _buildPasswordRequirement('소문자 포함', hasLowerCase),
-        _buildPasswordRequirement('대문자 포함', hasUpperCase),
-        _buildPasswordRequirement('숫자 포함', hasDigits),
-        _buildPasswordRequirement('특수문자 포함 (!@#\$%^&* 등)', hasSpecialChars),
+        _buildPasswordRequirement('auth.password_strength_min'.tr(), hasMinLength),
+        _buildPasswordRequirement('auth.password_strength_lowercase'.tr(), hasLowerCase),
+        _buildPasswordRequirement('auth.password_strength_uppercase'.tr(), hasUpperCase),
+        _buildPasswordRequirement('auth.password_strength_digit'.tr(), hasDigits),
+        _buildPasswordRequirement('auth.password_strength_special'.tr(), hasSpecialChars),
       ],
     );
   }
@@ -120,7 +121,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('회원가입'),
+        title: Text('auth.signup'.tr()),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -132,7 +133,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  '새 계정 만들기',
+                  'auth.create_account'.tr(),
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).primaryColor,
@@ -142,15 +143,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 const SizedBox(height: 48),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: '이메일',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+                  decoration: InputDecoration(
+                    labelText: 'auth.email'.tr(),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.email),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty || !value.contains('@')) {
-                      return '유효한 이메일을 입력해주세요.';
+                      return 'auth.email_required'.tr();
                     }
                     return null;
                   },
@@ -159,7 +160,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 TextFormField(
                   controller: _passwordController,
                   decoration: InputDecoration(
-                    labelText: '비밀번호',
+                    labelText: 'auth.password'.tr(),
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
@@ -177,22 +178,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   onChanged: (value) => setState(() {}),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '비밀번호를 입력해주세요.';
+                      return 'auth.password_required'.tr();
                     }
                     if (value.length < 8) {
-                      return '비밀번호는 8자 이상이어야 합니다.';
+                      return 'auth.password_min_length'.tr();
                     }
                     if (!RegExp(r'[a-z]').hasMatch(value)) {
-                      return '소문자를 포함해야 합니다.';
+                      return 'auth.password_lowercase'.tr();
                     }
                     if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                      return '대문자를 포함해야 합니다.';
+                      return 'auth.password_uppercase'.tr();
                     }
                     if (!RegExp(r'[0-9]').hasMatch(value)) {
-                      return '숫자를 포함해야 합니다.';
+                      return 'auth.password_digit'.tr();
                     }
                     if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
-                      return '특수문자(!@#\$%^&* 등)를 포함해야 합니다.';
+                      return 'auth.password_special'.tr();
                     }
                     return null;
                   },
@@ -203,7 +204,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 TextFormField(
                   controller: _passwordConfirmController,
                   decoration: InputDecoration(
-                    labelText: '비밀번호 확인',
+                    labelText: 'auth.password_confirm'.tr(),
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
@@ -220,7 +221,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   obscureText: _obscurePasswordConfirm,
                   validator: (value) {
                     if (value != _passwordController.text) {
-                      return '비밀번호가 일치하지 않습니다.';
+                      return 'auth.password_mismatch'.tr();
                     }
                     return null;
                   },
@@ -236,14 +237,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text('회원가입'),
+                        child: Text('auth.signup'.tr()),
                       ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
                     context.go('/login');
                   },
-                  child: const Text('이미 계정이 있으신가요? 로그인'),
+                  child: Text('auth.login_link'.tr()),
                 ),
               ],
             ),

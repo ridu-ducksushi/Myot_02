@@ -19,7 +19,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() != true) {
       return;
     }
 
@@ -34,20 +34,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그인 성공!')),
+          SnackBar(content: Text('auth.login_success'.tr())),
         );
         // The auth listener in main.dart will handle navigation
       }
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('로그인 실패: ${e.message}')),
+          SnackBar(content: Text('auth.login_failed'.tr(namedArgs: {'error': e.message}))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('알 수 없는 오류가 발생했습니다: $e')),
+          SnackBar(content: Text('auth.login_error'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     } finally {
@@ -70,7 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('로그인'),
+        title: Text('auth.login'.tr()),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -93,15 +93,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 48),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: '이메일',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+                  decoration: InputDecoration(
+                    labelText: 'auth.email'.tr(),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.email),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty || !value.contains('@')) {
-                      return '유효한 이메일을 입력해주세요.';
+                      return 'auth.email_required'.tr();
                     }
                     return null;
                   },
@@ -109,15 +109,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: '비밀번호',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                  decoration: InputDecoration(
+                    labelText: 'auth.password'.tr(),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock),
                   ),
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '비밀번호를 입력해주세요.';
+                      return 'auth.password_required'.tr();
                     }
                     return null;
                   },
@@ -133,7 +133,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text('로그인'),
+                        child: Text('auth.login'.tr()),
                       ),
                 const SizedBox(height: 16),
                 TextButton(
@@ -141,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     // GoRouter를 사용하여 회원가입 페이지로 이동
                     context.go('/signup');
                   },
-                  child: const Text('계정이 없으신가요? 회원가입'),
+                  child: Text('auth.signup_link'.tr()),
                 ),
               ],
             ),
