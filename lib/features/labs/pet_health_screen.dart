@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -2043,6 +2044,15 @@ class _LabTableState extends State<_LabTable> {
           keyboardType: label == _keyWeight || label == _keyCost
               ? TextInputType.number
               : TextInputType.text,
+          inputFormatters: label == _keyWeight
+              ? [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                ]
+              : label == _keyCost
+                  ? [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    ]
+                  : null,
           decoration: InputDecoration(
             labelText: label,
             border: const OutlineInputBorder(),

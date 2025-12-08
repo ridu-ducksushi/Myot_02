@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -229,6 +230,9 @@ class _AddPetSheetState extends ConsumerState<AddPetSheet> {
                           labelText: 'pets.weight_kg'.tr(),
                           prefixIcon: const Icon(Icons.monitor_weight),
                           keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                          ],
                           validator: (value) {
                             if (value?.isNotEmpty == true) {
                               final weight = double.tryParse(value!);

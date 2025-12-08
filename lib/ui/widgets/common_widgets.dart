@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:petcare/ui/theme/app_colors.dart';
 
 /// Custom card widget for consistent styling across the app
@@ -386,6 +387,7 @@ class AppTextField extends StatelessWidget {
     this.onTap,
     this.autofocus = false,
     this.focusNode,
+    this.inputFormatters,
   });
 
   final TextEditingController? controller;
@@ -405,6 +407,7 @@ class AppTextField extends StatelessWidget {
   final VoidCallback? onTap;
   final bool autofocus;
   final FocusNode? focusNode;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -422,6 +425,7 @@ class AppTextField extends StatelessWidget {
       onTap: onTap,
       autofocus: autofocus,
       focusNode: focusNode,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
