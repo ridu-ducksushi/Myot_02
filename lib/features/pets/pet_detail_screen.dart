@@ -1161,23 +1161,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                       controller: scrollController,
                       padding: const EdgeInsets.only(top: 8),
                       children: [
-                        AppTextField(
-                          controller: _nameController,
-                          labelText: 'pets.name'.tr(),
-                          prefixIcon: const Icon(Icons.pets),
-                          focusNode: _nameFocusNode,
-                          textInputAction: TextInputAction.next,
-                          onSubmitted: (_) =>
-                              FocusScope.of(context).requestFocus(_breedFocusNode),
-                          validator: (value) {
-                            if (value?.trim().isEmpty ?? true) {
-                              return 'pets.name_required'.tr();
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        
+                        // 종류 필드
                         DropdownButtonFormField<String>(
                           value: _selectedSpecies,
                           focusNode: _speciesFocusNode,
@@ -1230,6 +1214,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                           const SizedBox(height: 16),
                         ],
                         
+                        // 품종 필드
                         AppTextField(
                           controller: _breedController,
                           labelText: 'pets.breed'.tr(),
@@ -1237,10 +1222,29 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                           focusNode: _breedFocusNode,
                           textInputAction: TextInputAction.next,
                           onSubmitted: (_) =>
-                              FocusScope.of(context).requestFocus(_weightFocusNode),
+                              FocusScope.of(context).requestFocus(_nameFocusNode),
                         ),
                         const SizedBox(height: 16),
                         
+                        // 이름 필드
+                        AppTextField(
+                          controller: _nameController,
+                          labelText: 'pets.name'.tr(),
+                          prefixIcon: const Icon(Icons.pets),
+                          focusNode: _nameFocusNode,
+                          textInputAction: TextInputAction.next,
+                          onSubmitted: (_) =>
+                              FocusScope.of(context).requestFocus(_weightFocusNode),
+                          validator: (value) {
+                            if (value?.trim().isEmpty ?? true) {
+                              return 'pets.name_required'.tr();
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // 성별 필드
                         DropdownButtonFormField<String>(
                           value: _selectedSex,
                           decoration: InputDecoration(

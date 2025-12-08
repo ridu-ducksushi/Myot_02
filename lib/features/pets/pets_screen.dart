@@ -807,19 +807,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                     child: ListView(
                       controller: scrollController,
                       children: [
-                        AppTextField(
-                          controller: _nameController,
-                          labelText: 'pets.name'.tr(),
-                          prefixIcon: const Icon(Icons.pets),
-                          validator: (value) {
-                            if (value?.trim().isEmpty ?? true) {
-                              return 'pets.name_required'.tr();
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        
+                        // 종류 필드
                         DropdownButtonFormField<String>(
                           value: _selectedSpecies,
                           decoration: InputDecoration(
@@ -860,6 +848,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                           const SizedBox(height: 16),
                         ],
                         
+                        // 품종 필드
                         AppTextField(
                           controller: _breedController,
                           labelText: 'pets.breed'.tr(),
@@ -867,6 +856,21 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                         ),
                         const SizedBox(height: 16),
                         
+                        // 이름 필드
+                        AppTextField(
+                          controller: _nameController,
+                          labelText: 'pets.name'.tr(),
+                          prefixIcon: const Icon(Icons.pets),
+                          validator: (value) {
+                            if (value?.trim().isEmpty ?? true) {
+                              return 'pets.name_required'.tr();
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // 성별 필드
                         DropdownButtonFormField<String>(
                           value: _selectedSex,
                           decoration: InputDecoration(
