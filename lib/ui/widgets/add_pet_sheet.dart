@@ -23,6 +23,7 @@ class _AddPetSheetState extends ConsumerState<AddPetSheet> {
   final _breedController = TextEditingController();
   final _weightController = TextEditingController();
   final _noteController = TextEditingController();
+  final _customSpeciesController = TextEditingController(); // Other 선택 시 종 입력용
 
   String _selectedSpecies = AppConstants.petSpecies.first;
   String? _selectedSex;
@@ -44,6 +45,7 @@ class _AddPetSheetState extends ConsumerState<AddPetSheet> {
     _breedController.dispose();
     _weightController.dispose();
     _noteController.dispose();
+    _customSpeciesController.dispose();
     super.dispose();
   }
 
@@ -153,11 +155,32 @@ class _AddPetSheetState extends ConsumerState<AddPetSheet> {
                           onChanged: (value) {
                             setState(() {
                               _selectedSpecies = value!;
+                              // Other가 아닌 종류로 변경 시 커스텀 종 입력 필드 초기화
+                              if (value != 'Other') {
+                                _customSpeciesController.clear();
+                              }
                             });
                           },
                         ),
                         SizedBox(height: AppConstants.defaultPadding),
 
+                        // Other 선택 시 종을 직접 입력할 수 있는 필드
+                        if (_selectedSpecies == 'Other') ...[
+                          AppTextField(
+                            controller: _customSpeciesController,
+                            labelText: 'pets.custom_species_label'.tr(),
+                            prefixIcon: const Icon(Icons.pets),
+                            validator: (value) {
+                              if (value?.trim().isEmpty ?? true) {
+                                return 'pets.breed_required_for_other'.tr();
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: AppConstants.defaultPadding),
+                        ],
+
+                        // 품종 필드 (모든 종류에서 사용 가능)
                         AppTextField(
                           controller: _breedController,
                           labelText: 'pets.breed'.tr(),
@@ -296,11 +319,16 @@ class _AddPetSheetState extends ConsumerState<AddPetSheet> {
         ? AppConstants.sexMapping[_selectedSex]
         : null;
 
+    // Other 선택 시 커스텀 종을 사용, 그 외에는 선택한 종류 사용
+    final species = _selectedSpecies == 'Other'
+        ? _customSpeciesController.text.trim()
+        : _selectedSpecies;
+
     final pet = Pet(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       ownerId: Supabase.instance.client.auth.currentUser?.id ?? 'guest',
       name: _nameController.text.trim(),
-      species: _selectedSpecies,
+      species: species,
       breed: _breedController.text.trim().isEmpty
           ? null
           : _breedController.text.trim(),

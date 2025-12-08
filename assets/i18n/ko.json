@@ -19,6 +19,8 @@
     "name_required": "이름을 입력해주세요",
     "species": "종류",
     "breed": "품종",
+    "breed_required_for_other": "펫 종을 입력해 주세요",
+    "custom_species_label": "종",
     "sex": "성별",
     "neutered": "중성화 여부",
     "neutered_description": "중성화 수술을 받았습니까?",

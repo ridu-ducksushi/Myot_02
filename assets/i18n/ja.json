@@ -19,6 +19,8 @@
     "name_required": "名前を入力してください",
     "species": "種類",
     "breed": "品種",
+    "breed_required_for_other": "ペットの種類を入力してください",
+    "custom_species_label": "種類",
     "sex": "性別",
     "neutered": "去勢・避妊",
     "neutered_description": "去勢・避妊手術を受けていますか？",

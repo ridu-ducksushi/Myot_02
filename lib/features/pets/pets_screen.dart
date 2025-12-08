@@ -660,6 +660,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
   final _breedController = TextEditingController();
   final _weightController = TextEditingController();
   final _noteController = TextEditingController();
+  final _customSpeciesController = TextEditingController(); // Other 선택 시 종 입력용
   
   String _selectedSpecies = AppConstants.petSpecies.first;
   String? _selectedSex;
@@ -686,7 +687,14 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     _weightController.text = pet.weightKg?.toString() ?? '';
     _noteController.text = pet.note ?? '';
     
-    _selectedSpecies = pet.species;
+    // 기존 펫의 species가 표준 종류(Dog, Cat, Other)가 아니면 커스텀 종으로 간주
+    if (_species.contains(pet.species)) {
+      _selectedSpecies = pet.species;
+    } else {
+      // 커스텀 종인 경우 Other로 설정하고 커스텀 종 필드에 값 설정
+      _selectedSpecies = 'Other';
+      _customSpeciesController.text = pet.species;
+    }
     // DB 값 -> 표시값 변환
     _selectedSex = AppConstants.sexMapping.entries
         .firstWhere(
@@ -718,6 +726,7 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
     _breedController.dispose();
     _weightController.dispose();
     _noteController.dispose();
+    _customSpeciesController.dispose();
     super.dispose();
   }
 
@@ -826,10 +835,30 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
                           onChanged: (value) {
                             setState(() {
                               _selectedSpecies = value!;
+                              // Other가 아닌 종류로 변경 시 커스텀 종 입력 필드 초기화
+                              if (value != 'Other') {
+                                _customSpeciesController.clear();
+                              }
                             });
                           },
                         ),
                         const SizedBox(height: 16),
+
+                        // Other 선택 시 종을 직접 입력할 수 있는 필드
+                        if (_selectedSpecies == 'Other') ...[
+                          AppTextField(
+                            controller: _customSpeciesController,
+                            labelText: 'pets.custom_species_label'.tr(),
+                            prefixIcon: const Icon(Icons.pets),
+                            validator: (value) {
+                              if (value?.trim().isEmpty ?? true) {
+                                return 'pets.breed_required_for_other'.tr();
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         
                         AppTextField(
                           controller: _breedController,
@@ -965,9 +994,14 @@ class _EditPetSheetState extends ConsumerState<_EditPetSheet> {
         ? AppConstants.sexMapping[_selectedSex] 
         : null;
     
+    // Other 선택 시 커스텀 종을 사용, 그 외에는 선택한 종류 사용
+    final species = _selectedSpecies == 'Other'
+        ? _customSpeciesController.text.trim()
+        : _selectedSpecies;
+    
     final updatedPet = widget.pet.copyWith(
       name: _nameController.text.trim(),
-      species: _selectedSpecies,
+      species: species,
       breed: _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
       sex: sexForDb,
       neutered: _isNeutered,

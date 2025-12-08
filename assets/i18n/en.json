@@ -19,6 +19,8 @@
     "name_required": "Please enter a name",
     "species": "Species",
     "breed": "Breed",
+    "breed_required_for_other": "Please enter pet species",
+    "custom_species_label": "Species",
     "sex": "Sex",
     "neutered": "Neutered",
     "neutered_description": "Has your pet been neutered?",
