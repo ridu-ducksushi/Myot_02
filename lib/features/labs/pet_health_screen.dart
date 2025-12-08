@@ -94,15 +94,6 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
     );
   }
 
-  void _showLabWeightChartDialog(String petId, String petName) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WeightChartScreen(petId: petId, petName: petName),
-      ),
-    );
-  }
-
   void _showAddOptions(Pet pet) {
     showModalBottomSheet(
       context: context,
@@ -112,9 +103,9 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                '검사 수치 추가',
-                style: TextStyle(
+              Text(
+                'labs.add_test_title'.tr(),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -132,8 +123,8 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
                 ),
-                title: const Text('수동 입력'),
-                subtitle: const Text('검사 항목을 직접 입력합니다'),
+                title: Text('labs.manual_input'.tr()),
+                subtitle: Text('labs.manual_input_subtitle'.tr()),
                 onTap: () {
                   Navigator.pop(context);
                   _showAddItemDialog(pet.species, pet.id);
@@ -152,8 +143,8 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
                     color: Theme.of(context).colorScheme.onTertiaryContainer,
                   ),
                 ),
-                title: const Text('OCR 스캔'),
-                subtitle: const Text('건강검진표 사진으로 자동 인식'),
+                title: Text('labs.ocr_scan'.tr()),
+                subtitle: Text('labs.ocr_scan_subtitle'.tr()),
                 onTap: () {
                   Navigator.pop(context);
                   _showOcrOptions(pet);
@@ -212,16 +203,16 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                '건강검진표 스캔',
-                style: TextStyle(
+              Text(
+                'labs.scan_health_report'.tr(),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                '건강검진표를 촬영하거나 갤러리에서 선택하면\n검사 수치가 자동으로 인식됩니다.',
+                'labs.scan_description'.tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey[600]),
               ),
@@ -237,15 +228,15 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '촬영 팁',
+                      'labs.ocr_tips'.tr(),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                     ),
                     const SizedBox(height: 6),
-                    _buildOcrTip('표 전체를 수평으로 맞추고 글자가 잘리지는 않았는지 확인해 주세요.'),
-                    _buildOcrTip('빛 반사/그림자를 줄이고 초점을 맞춘 뒤 촬영하면 인식률이 높아집니다.'),
-                    _buildOcrTip('흐릿한 경우 갤러리에서 여러 장을 다시 선택해 보세요.'),
+                    _buildOcrTip('labs.ocr_tip_1'.tr()),
+                    _buildOcrTip('labs.ocr_tip_2'.tr()),
+                    _buildOcrTip('labs.ocr_tip_3'.tr()),
                   ],
                 ),
               ),
@@ -262,8 +253,8 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
                 ),
-                title: const Text('카메라로 촬영'),
-                subtitle: const Text('건강검진표를 직접 촬영합니다'),
+                title: Text('labs.camera_capture'.tr()),
+                subtitle: Text('labs.camera_capture_subtitle'.tr()),
                 onTap: () {
                   Navigator.pop(context);
                   _startOcrFromCamera(pet);
@@ -282,8 +273,8 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
                     color: Theme.of(context).colorScheme.onSecondaryContainer,
                   ),
                 ),
-                title: const Text('갤러리에서 선택'),
-                subtitle: const Text('저장된 이미지를 선택합니다'),
+                title: Text('labs.gallery_select'.tr()),
+                subtitle: Text('labs.gallery_select_subtitle'.tr()),
                 onTap: () {
                   Navigator.pop(context);
                   _startOcrFromGallery(pet);
@@ -308,7 +299,7 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
         await _navigateToOcrResult(imageFile, pet);
       } else if (mounted && source == ImageSource.camera) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('사진 촬영이 취소되었습니다')),
+          SnackBar(content: Text('labs.camera_canceled'.tr())),
         );
       }
     } catch (e) {
@@ -372,7 +363,7 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
       if (uid == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('로그인이 필요합니다')),
+            SnackBar(content: Text('labs.login_required'.tr())),
           );
         }
         return;
@@ -420,7 +411,7 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${results.length}개 항목이 저장되었습니다'),
+            content: Text('labs.items_saved'.tr(namedArgs: {'count': results.length.toString()})),
             backgroundColor: Colors.green,
           ),
         );
@@ -430,7 +421,7 @@ class _PetHealthScreenState extends ConsumerState<PetHealthScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 중 오류가 발생했습니다: $e')),
+          SnackBar(content: Text('labs.save_ocr_error'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -611,6 +602,9 @@ class _LabTableState extends State<_LabTable> {
   ];
   // 기본정보 항목 (차트에 표시하지 않음)
   static const List<String> _basicInfoKeys = ['체중', '병원명', '비용'];
+  static const String _keyWeight = '체중';
+  static const String _keyHospitalName = '병원명';
+  static const String _keyCost = '비용';
   DateTime _selectedDate = _today();
   Timer? _saveTimer;
   bool _isLoading = false;
@@ -714,7 +708,7 @@ class _LabTableState extends State<_LabTable> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('검사 날짜: ', style: Theme.of(context).textTheme.titleMedium),
+                Text('labs.test_date'.tr() + ': ', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(width: 4),
                 InkWell(
                   onTap: _showCalendarDialog,
@@ -810,7 +804,7 @@ class _LabTableState extends State<_LabTable> {
                     const Icon(Icons.history, size: 16, color: Colors.grey),
                     const SizedBox(width: 4),
                     Text(
-                      '직전: ${_previousDateStr!}',
+                      'labs.previous_date'.tr(namedArgs: {'date': _previousDateStr!}),
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -831,7 +825,7 @@ class _LabTableState extends State<_LabTable> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '기본정보',
+            'labs.basic_info'.tr(),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.primary,
@@ -847,11 +841,11 @@ class _LabTableState extends State<_LabTable> {
             ),
             child: Column(
               children: [
-                _buildBasicInfoRow('체중', 'kg', _weight),
+                _buildBasicInfoRow(_keyWeight, 'kg', _weight),
                 _buildDivider(),
-                _buildBasicInfoRow('병원명', '', _hospitalName),
+                _buildBasicInfoRow(_keyHospitalName, '', _hospitalName),
                 _buildDivider(),
-                _buildBasicInfoRow('비용', '', _cost),
+                _buildBasicInfoRow(_keyCost, '', _cost),
               ],
             ),
           ),
@@ -890,11 +884,11 @@ class _LabTableState extends State<_LabTable> {
                     ),
                     child: Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           flex: 2,
                           child: Text(
-                            '검사명',
-                            style: TextStyle(
+                            'labs.test_name'.tr(),
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
@@ -905,9 +899,9 @@ class _LabTableState extends State<_LabTable> {
                           width: 60,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 5),
-                            child: const Text(
-                              '현재',
-                              style: TextStyle(
+                            child: Text(
+                              'labs.current_value'.tr(),
+                              style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -919,9 +913,9 @@ class _LabTableState extends State<_LabTable> {
                           width: 60,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 5),
-                            child: const Text(
-                              '직전',
-                              style: TextStyle(
+                            child: Text(
+                              'labs.previous_value'.tr(),
+                              style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -933,9 +927,9 @@ class _LabTableState extends State<_LabTable> {
                           flex: 2,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 5),
-                            child: const Text(
-                              '기준치',
-                              style: TextStyle(
+                            child: Text(
+                              'labs.reference_range'.tr(),
+                              style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -947,9 +941,9 @@ class _LabTableState extends State<_LabTable> {
                           width: 60,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 5),
-                            child: const Text(
-                              '단위',
-                              style: TextStyle(
+                            child: Text(
+                              'labs.unit'.tr(),
+                              style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1667,18 +1661,18 @@ class _LabTableState extends State<_LabTable> {
         }
 
         // Load basic info data
-        _weight = (items['체중'] is Map && items['체중']['value'] is String)
-            ? items['체중']['value'] as String
+        _weight = (items[_keyWeight] is Map && items[_keyWeight]['value'] is String)
+            ? items[_keyWeight]['value'] as String
             : (widget.petWeight != null ? widget.petWeight.toString() : '');
-        _hospitalName = (items['병원명'] is Map && items['병원명']['value'] is String)
-            ? items['병원명']['value'] as String
+        _hospitalName = (items[_keyHospitalName] is Map && items[_keyHospitalName]['value'] is String)
+            ? items[_keyHospitalName]['value'] as String
             : '';
-        _cost = (items['비용'] is Map && items['비용']['value'] is String)
-            ? items['비용']['value'] as String
+        _cost = (items[_keyCost] is Map && items[_keyCost]['value'] is String)
+            ? items[_keyCost]['value'] as String
             : '';
 
         print(
-          '🏋️ Weight loaded: $_weight (from labs: ${items['체중']}, from pet: ${widget.petWeight})',
+          '🏋️ Weight loaded: $_weight (from labs: ${items[_keyWeight]}, from pet: ${widget.petWeight})',
         );
 
         // Clear controllers for items not in current data
@@ -1743,7 +1737,7 @@ class _LabTableState extends State<_LabTable> {
       print('❌ Load error: $e');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('데이터 로드 실패: $e')));
+      ).showSnackBar(SnackBar(content: Text('labs.load_error'.tr(namedArgs: {'error': e.toString()}))));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -1884,6 +1878,11 @@ class _LabTableState extends State<_LabTable> {
         }
       }
 
+      // 기본 정보도 항상 저장 (값이 비어있어도 저장하여 삭제 반영)
+      items[_keyWeight] = {'value': _weight, 'unit': 'kg', 'reference': ''};
+      items[_keyHospitalName] = {'value': _hospitalName, 'unit': '', 'reference': ''};
+      items[_keyCost] = {'value': _cost, 'unit': '', 'reference': ''};
+
       print('📝 Saving $nonEmptyCount non-empty items');
 
       final result = await Supabase.instance.client.from('labs').upsert({
@@ -1910,7 +1909,7 @@ class _LabTableState extends State<_LabTable> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
+        ).showSnackBar(SnackBar(content: Text('labs.save_error'.tr(namedArgs: {'error': e.toString()}))));
       }
     } finally {
       setState(() => _isSaving = false);
@@ -1935,7 +1934,7 @@ class _LabTableState extends State<_LabTable> {
     String displayValue = value;
     String displayUnit = unit;
 
-    if (label == '비용' && value.isNotEmpty) {
+    if (label == _keyCost && value.isNotEmpty) {
       // 숫자만 추출
       final numericValue = value.replaceAll(RegExp(r'[^0-9]'), '');
       if (numericValue.isNotEmpty) {
@@ -1944,7 +1943,7 @@ class _LabTableState extends State<_LabTable> {
         if (number != null) {
           final formatter = NumberFormat('#,###');
           displayValue = formatter.format(number);
-          displayUnit = '원';
+          displayUnit = 'labs.currency_unit'.tr();
         }
       }
     }
@@ -1984,7 +1983,7 @@ class _LabTableState extends State<_LabTable> {
             // 모든 행에 동일한 너비의 공간 확보 (체중 항목만 아이콘 표시)
             SizedBox(
               width: 48, // 아이콘 영역 고정 너비
-              child: label == '체중'
+              child: label == _keyWeight
                   ? Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: InkWell(
@@ -2038,50 +2037,50 @@ class _LabTableState extends State<_LabTable> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('$label 수정'),
+        title: Text('labs.edit_basic_info'.tr(namedArgs: {'label': label})),
         content: TextField(
           controller: controller,
-          keyboardType: label == '체중' || label == '비용'
+          keyboardType: label == _keyWeight || label == _keyCost
               ? TextInputType.number
               : TextInputType.text,
           decoration: InputDecoration(
             labelText: label,
             border: const OutlineInputBorder(),
-            hintText: label == '체중'
-                ? '예: 5.2'
-                : label == '병원명'
-                ? '예: 서울동물병원'
-                : '예: 150000',
+            hintText: label == _keyWeight
+                ? 'labs.weight_hint'.tr()
+                : label == _keyHospitalName
+                ? 'labs.hospital_name_hint'.tr()
+                : 'labs.cost_hint'.tr(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('취소'),
+            child: Text('common.cancel'.tr()),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final newValue = controller.text.trim();
+              // 로컬 상태 먼저 업데이트하여 UI 즉시 반영
               setState(() {
                 switch (label) {
-                  case '체중':
+                  case _keyWeight:
                     _weight = newValue;
                     break;
-                  case '병원명':
+                  case _keyHospitalName:
                     _hospitalName = newValue;
                     break;
-                  case '비용':
+                  case _keyCost:
                     _cost = newValue;
                     break;
                 }
               });
-              // Supabase에 저장 후, 현재 날짜 데이터를 다시 로드해서
-              // 기본 정보와 연동된 리스트/그래프가 즉시 반영되도록 한다.
-              _saveBasicInfoToSupabase();
-              _loadFromSupabase();
               Navigator.of(context).pop();
+              // Supabase에 저장 (비동기, 백그라운드에서 처리)
+              // 저장 실패 시에만 에러 표시, 성공 시에는 UI가 이미 업데이트됨
+              await _saveBasicInfoToSupabase();
             },
-            child: const Text('저장'),
+            child: Text('common.save'.tr()),
           ),
         ],
       ),
@@ -2108,33 +2107,19 @@ class _LabTableState extends State<_LabTable> {
         currentItems = Map<String, dynamic>.from(currentRes['items'] ?? {});
       }
 
-      String _resolvedBasicValue(String key, String currentValue) {
-        if (currentValue.isNotEmpty) {
-          return currentValue;
-        }
-        final existing = currentItems[key];
-        if (existing is Map && existing['value'] is String) {
-          return existing['value'] as String;
-        }
-        return '';
-      }
-
-      final resolvedWeight = _resolvedBasicValue('체중', _weight);
-      final resolvedHospital = _resolvedBasicValue('병원명', _hospitalName);
-      final resolvedCost = _resolvedBasicValue('비용', _cost);
-
       // Add basic info to items (for storage but not displayed in chart)
-      currentItems['체중'] = {
-        'value': resolvedWeight,
+      // 사용자가 값을 지웠을 때는 빈 문자열로 저장 (기존 값 유지하지 않음)
+      currentItems[_keyWeight] = {
+        'value': _weight,
         'unit': 'kg',
         'reference': '',
       };
-      currentItems['병원명'] = {
-        'value': resolvedHospital,
+      currentItems[_keyHospitalName] = {
+        'value': _hospitalName,
         'unit': '',
         'reference': '',
       };
-      currentItems['비용'] = {'value': resolvedCost, 'unit': '', 'reference': ''};
+      currentItems[_keyCost] = {'value': _cost, 'unit': '', 'reference': ''};
 
       // Save to Supabase
       await Supabase.instance.client.from('labs').upsert({
@@ -2143,7 +2128,7 @@ class _LabTableState extends State<_LabTable> {
         'date': _dateKey(),
         'panel': 'BloodTest',
         'items': currentItems,
-      });
+      }, onConflict: 'user_id,pet_id,date');
 
       // Update pet's weight if weight value is not empty
       if (_weight.isNotEmpty) {
@@ -2165,7 +2150,7 @@ class _LabTableState extends State<_LabTable> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
+        ).showSnackBar(SnackBar(content: Text('labs.save_error'.tr(namedArgs: {'error': e.toString()}))));
       }
     }
   }
@@ -2181,9 +2166,9 @@ class _LabTableState extends State<_LabTable> {
         'reference': _getReference(k),
       };
     }
-    items['체중'] = {'value': _weight, 'unit': 'kg', 'reference': ''};
-    items['병원명'] = {'value': _hospitalName, 'unit': '', 'reference': ''};
-    items['비용'] = {'value': _cost, 'unit': '', 'reference': ''};
+    items[_keyWeight] = {'value': _weight, 'unit': 'kg', 'reference': ''};
+    items[_keyHospitalName] = {'value': _hospitalName, 'unit': '', 'reference': ''};
+    items[_keyCost] = {'value': _cost, 'unit': '', 'reference': ''};
     return items;
   }
 
@@ -2247,14 +2232,14 @@ class _LabTableState extends State<_LabTable> {
           _valueCtrls[k]?.text = value;
         }
       }
-      _weight = (items['체중'] is Map && items['체중']['value'] is String)
-          ? items['체중']['value'] as String
+      _weight = (items[_keyWeight] is Map && items[_keyWeight]['value'] is String)
+          ? items[_keyWeight]['value'] as String
           : _weight;
-      _hospitalName = (items['병원명'] is Map && items['병원명']['value'] is String)
-          ? items['병원명']['value'] as String
+      _hospitalName = (items[_keyHospitalName] is Map && items[_keyHospitalName]['value'] is String)
+          ? items[_keyHospitalName]['value'] as String
           : _hospitalName;
-      _cost = (items['비용'] is Map && items['비용']['value'] is String)
-          ? items['비용']['value'] as String
+      _cost = (items[_keyCost] is Map && items[_keyCost]['value'] is String)
+          ? items[_keyCost]['value'] as String
           : _cost;
       print('📥 로컬 캐시에서 로드 완료: key=$key');
       final datesKey = 'labs_dates_${scope}_${widget.petId}';
@@ -2368,7 +2353,7 @@ class _EditLabValueDialogState extends State<_EditLabValueDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('검사 수치 수정'),
+      title: Text('labs.edit_test_value'.tr()),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2376,38 +2361,38 @@ class _EditLabValueDialogState extends State<_EditLabValueDialog> {
           children: [
             TextField(
               controller: _itemKeyController,
-              decoration: const InputDecoration(
-                labelText: '검사명',
-                border: OutlineInputBorder(),
-                hintText: '예: RBC, WBC, Hb 등',
+              decoration: InputDecoration(
+                labelText: 'labs.test_name_label'.tr(),
+                border: const OutlineInputBorder(),
+                hintText: 'labs.test_name_hint'.tr(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _valueController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: '현재 수치',
-                border: OutlineInputBorder(),
-                hintText: '수치를 입력하세요',
+              decoration: InputDecoration(
+                labelText: 'labs.test_value_label'.tr(),
+                border: const OutlineInputBorder(),
+                hintText: 'labs.test_value_hint'.tr(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _referenceController,
-              decoration: const InputDecoration(
-                labelText: '기준치',
-                border: OutlineInputBorder(),
-                hintText: '예: 5.5~8.5',
+              decoration: InputDecoration(
+                labelText: 'labs.reference_label'.tr(),
+                border: const OutlineInputBorder(),
+                hintText: 'labs.reference_hint'.tr(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _unitController,
-              decoration: const InputDecoration(
-                labelText: '단위',
-                border: OutlineInputBorder(),
-                hintText: '예: x10⁶/µL',
+              decoration: InputDecoration(
+                labelText: 'labs.unit_label'.tr(),
+                border: const OutlineInputBorder(),
+                hintText: 'labs.unit_hint'.tr(),
               ),
             ),
           ],
@@ -2416,14 +2401,14 @@ class _EditLabValueDialogState extends State<_EditLabValueDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
+          child: Text('common.cancel'.tr()),
         ),
         TextButton(
           onPressed: () {
             widget.onDelete?.call();
             Navigator.of(context).pop();
           },
-          child: const Text('삭제'),
+          child: Text('common.delete'.tr()),
         ),
         ElevatedButton(
           onPressed: () {
@@ -2436,7 +2421,7 @@ class _EditLabValueDialogState extends State<_EditLabValueDialog> {
               Navigator.of(context).pop();
             }
           },
-          child: const Text('저장'),
+          child: Text('common.save'.tr()),
         ),
       ],
     );
@@ -2489,7 +2474,7 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
     if (itemKey.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('검사명을 입력해주세요')));
+      ).showSnackBar(SnackBar(content: Text('labs.test_name_required'.tr())));
       return;
     }
 
@@ -2498,7 +2483,7 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
       if (uid == null) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('로그인이 필요합니다')));
+        ).showSnackBar(SnackBar(content: Text('labs.login_required'.tr())));
         return;
       }
 
@@ -2544,7 +2529,7 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('저장 중 오류가 발생했습니다: $e')));
+        ).showSnackBar(SnackBar(content: Text('labs.save_ocr_error'.tr(namedArgs: {'error': e.toString()}))));
       }
     }
   }
@@ -2552,7 +2537,7 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('새 검사 항목 추가'),
+      title: Text('labs.add_new_test_item'.tr()),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2560,42 +2545,42 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
           children: [
             TextField(
               controller: _itemKeyController,
-              decoration: const InputDecoration(
-                labelText: '검사명 *',
-                border: OutlineInputBorder(),
-                hintText: '예: 새로운 검사 항목',
-                helperText: '검사 항목의 이름을 입력하세요',
+              decoration: InputDecoration(
+                labelText: 'labs.test_name_asterisk'.tr(),
+                border: const OutlineInputBorder(),
+                hintText: 'labs.add_test_name_hint'.tr(),
+                helperText: 'labs.add_test_name_helper'.tr(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _valueController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: '검사 수치',
-                border: OutlineInputBorder(),
-                hintText: '수치를 입력하세요',
-                helperText: '선택사항: 검사 결과값',
+              decoration: InputDecoration(
+                labelText: 'labs.test_value_label'.tr(),
+                border: const OutlineInputBorder(),
+                hintText: 'labs.test_value_hint'.tr(),
+                helperText: 'labs.add_test_value_helper'.tr(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _referenceController,
-              decoration: const InputDecoration(
-                labelText: '기준치',
-                border: OutlineInputBorder(),
-                hintText: '예: 5.5~8.5',
-                helperText: '선택사항: 정상 범위',
+              decoration: InputDecoration(
+                labelText: 'labs.reference_label'.tr(),
+                border: const OutlineInputBorder(),
+                hintText: 'labs.reference_hint'.tr(),
+                helperText: 'labs.add_reference_helper'.tr(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _unitController,
-              decoration: const InputDecoration(
-                labelText: '단위',
-                border: OutlineInputBorder(),
-                hintText: '예: x10⁶/µL',
-                helperText: '선택사항: 측정 단위',
+              decoration: InputDecoration(
+                labelText: 'labs.unit_label'.tr(),
+                border: const OutlineInputBorder(),
+                hintText: 'labs.unit_hint'.tr(),
+                helperText: 'labs.add_unit_helper'.tr(),
               ),
             ),
           ],
@@ -2604,9 +2589,9 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
+          child: Text('common.cancel'.tr()),
         ),
-        ElevatedButton(onPressed: _saveNewItem, child: const Text('추가')),
+        ElevatedButton(onPressed: _saveNewItem, child: Text('common.add'.tr())),
       ],
     );
   }
