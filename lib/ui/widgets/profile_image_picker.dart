@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petcare/data/services/image_service.dart';
-import 'package:petcare/ui/theme/app_colors.dart';
+import 'package:petcare/utils/app_constants.dart';
 
 class ProfileImagePicker extends StatefulWidget {
   final String? imagePath;
@@ -480,13 +481,11 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '기본 프로필 아이콘 선택',
+                  'pets.select_default_icon'.tr(),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text('Species: ${widget.species}, Loading: $_isLoadingIcons, Icons: ${_defaultIconUrls.length}'),
                 const SizedBox(height: 16),
                 Expanded(
                   child: _isLoadingIcons

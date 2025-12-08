@@ -55,7 +55,17 @@
     "image_updated": "プロフィール画像が更新されました",
     "image_update_error": "ペットの画像更新中にエラーが発生しました",
     "image_deleted": "ペットのプロフィール画像が削除されました",
-    "image_delete_error": "ペットの画像削除中にエラーが発生しました"
+    "image_delete_error": "ペットの画像削除中にエラーが発生しました",
+    "select_profile_image": "プロフィール画像を選択",
+    "gallery": "ギャラリー",
+    "camera": "カメラ",
+    "default_icon": "デフォルトアイコン",
+    "select_default_icon": "デフォルトプロフィールアイコンを選択",
+    "select_bg_color": "背景色を選択",
+    "no_icons_found": "アイコンが見つかりません",
+    "image_save_failed": "画像の保存に失敗しました",
+    "image_compress_failed": "画像の圧縮に失敗しました",
+    "image_select_error": "画像選択中にエラーが発生しました"
   },
   "common": {
     "save": "保存",

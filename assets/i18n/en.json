@@ -58,7 +58,17 @@
     "image_updated": "Profile image has been updated",
     "image_update_error": "Error updating pet's image",
     "image_deleted": "Pet's profile image has been deleted",
-    "image_delete_error": "Error deleting pet's image"
+    "image_delete_error": "Error deleting pet's image",
+    "select_profile_image": "Select Profile Image",
+    "gallery": "Gallery",
+    "camera": "Camera",
+    "default_icon": "Default Icon",
+    "select_default_icon": "Select Default Profile Icon",
+    "select_bg_color": "Select Background Color",
+    "no_icons_found": "No icons found",
+    "image_save_failed": "Failed to save image",
+    "image_compress_failed": "Failed to compress image",
+    "image_select_error": "Error selecting image"
   },
   "common": {
     "save": "Save",
