@@ -252,7 +252,18 @@
     "email": "ridusoft@gmail.com",
     "email_copied": "이메일 주소가 클립보드에 복사되었습니다.",
     "email_subject": "Myot 문의",
-    "email_body": "안녕하세요, Myot 앱에 대해 문의드립니다."
+    "email_body": "안녕하세요, Myot 앱에 대해 문의드립니다.",
+    "greeting": "안녕하세요, Myot 앱에 대해 문의 드립니다.",
+    "account_label": "다음 묘트 계정 (이메일)",
+    "inquiry_label": "문의사항",
+    "send": "보내기",
+    "account_hint": "이메일을 입력해주세요",
+    "inquiry_hint": "문의사항을 입력해주세요",
+    "account_required": "이메일을 입력해주세요",
+    "inquiry_required": "문의사항을 입력해주세요",
+    "account_invalid": "올바른 이메일 형식을 입력해주세요",
+    "email_body_template": "안녕하세요, Myot 앱에 대해 문의 드립니다.\n\n다음 묘트 계정 (이메일): {email}\n\n문의사항:\n{inquiry}",
+    "email_sent": "이메일 앱이 열렸습니다"
   },
   "settings": {
     "pet_info": "펫 정보",

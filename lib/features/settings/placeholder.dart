@@ -62,18 +62,35 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
   }
 
   Future<void> _sendEmail(BuildContext context) async {
+    // 현재 로그인한 사용자의 이메일 가져오기
+    String userEmail = '';
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user?.email != null) {
+        userEmail = user!.email!;
+      }
+    } catch (e) {
+      // 이메일 가져오기 실패 시 빈 값으로 시작
+    }
+
+    // 다이얼로그 없이 바로 메일 앱 열기
+    await _sendInquiryEmail(context, userEmail, '');
+  }
+
+  Future<void> _sendInquiryEmail(BuildContext context, String userEmail, String inquiry) async {
     try {
       final email = 'contact.email'.tr();
       final subject = 'contact.email_subject'.tr();
-      final body = 'contact.email_body'.tr();
+      final body = 'contact.email_body_template'.tr(namedArgs: {
+        'email': userEmail,
+        'inquiry': inquiry,
+      });
 
       final Uri emailUri = Uri(
         scheme: 'mailto',
         path: email,
-        query: 'subject=$subject&body=$body',
+        query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
       );
-
-      print('이메일 URI: $emailUri');
 
       // canLaunchUrl 체크를 건너뛰고 직접 실행 시도
       final bool launched = await launchUrl(
@@ -82,13 +99,16 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
       );
 
       if (launched) {
-        print('이메일 앱이 성공적으로 실행되었습니다.');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('contact.email_sent'.tr())),
+          );
+        }
       } else {
-        print('이메일 앱 실행 실패, 클립보드에 복사합니다.');
+        // 이메일 앱 실행 실패 시 클립보드에 복사
         await _copyEmailToClipboard(context, email);
       }
     } catch (e) {
-      print('이메일 발송 오류: $e');
       // 오류 발생 시에도 클립보드에 복사
       final email = 'contact.email'.tr();
       await _copyEmailToClipboard(context, email, error: e);

@@ -252,7 +252,18 @@
     "email": "ridusoft@gmail.com",
     "email_copied": "メールアドレスがクリップボードにコピーされました。",
     "email_subject": "Myotお問い合わせ",
-    "email_body": "こんにちは、Myotアプリについてお問い合わせがあります。"
+    "email_body": "こんにちは、Myotアプリについてお問い合わせがあります。",
+    "greeting": "こんにちは、Myotアプリについてお問い合わせがあります。",
+    "account_label": "Myotアカウント（メールアドレス）",
+    "inquiry_label": "お問い合わせ内容",
+    "send": "送信",
+    "account_hint": "メールアドレスを入力してください",
+    "inquiry_hint": "お問い合わせ内容を入力してください",
+    "account_required": "メールアドレスを入力してください",
+    "inquiry_required": "お問い合わせ内容を入力してください",
+    "account_invalid": "正しいメールアドレス形式を入力してください",
+    "email_body_template": "こんにちは、Myotアプリについてお問い合わせがあります。\n\nMyotアカウント（メールアドレス）: {email}\n\nお問い合わせ内容:\n{inquiry}",
+    "email_sent": "メールアプリが開きました"
   },
   "settings": {
     "pet_info": "ペット情報",
