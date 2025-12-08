@@ -127,19 +127,7 @@ class _AddPetSheetState extends ConsumerState<AddPetSheet> {
                           ),
                         ),
                         SizedBox(height: AppConstants.defaultPadding * 1.5),
-                        AppTextField(
-                          controller: _nameController,
-                          labelText: 'pets.name'.tr(),
-                          prefixIcon: const Icon(Icons.pets),
-                          validator: (value) {
-                            if (value?.trim().isEmpty ?? true) {
-                              return 'pets.name_required'.tr();
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: AppConstants.defaultPadding),
-
+                        // 종류 필드
                         DropdownButtonFormField<String>(
                           value: _selectedSpecies,
                           decoration: InputDecoration(
@@ -188,6 +176,21 @@ class _AddPetSheetState extends ConsumerState<AddPetSheet> {
                         ),
                         SizedBox(height: AppConstants.defaultPadding),
 
+                        // 이름 필드
+                        AppTextField(
+                          controller: _nameController,
+                          labelText: 'pets.name'.tr(),
+                          prefixIcon: const Icon(Icons.pets),
+                          validator: (value) {
+                            if (value?.trim().isEmpty ?? true) {
+                              return 'pets.name_required'.tr();
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: AppConstants.defaultPadding),
+
+                        // 성별 필드
                         DropdownButtonFormField<String>(
                           value: _selectedSex,
                           decoration: InputDecoration(
