@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:petcare/data/services/lab_reference_ranges.dart';
 import 'package:petcare/data/services/ocr_service.dart';
 
@@ -393,6 +394,10 @@ class _OcrResultScreenState extends State<OcrResultScreen> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    FilteringTextInputFormatter.deny(RegExp(r',')),
+                  ],
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
                     isDense: true,

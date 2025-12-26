@@ -2380,7 +2380,11 @@ class _EditLabValueDialogState extends State<_EditLabValueDialog> {
             const SizedBox(height: 16),
             TextField(
               controller: _valueController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                FilteringTextInputFormatter.deny(RegExp(r',')),
+              ],
               decoration: InputDecoration(
                 labelText: 'labs.test_value_label'.tr(),
                 border: const OutlineInputBorder(),
@@ -2565,7 +2569,11 @@ class _AddLabItemDialogState extends State<_AddLabItemDialog> {
             const SizedBox(height: 16),
             TextField(
               controller: _valueController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                FilteringTextInputFormatter.deny(RegExp(r',')),
+              ],
               decoration: InputDecoration(
                 labelText: 'labs.test_value_label'.tr(),
                 border: const OutlineInputBorder(),
