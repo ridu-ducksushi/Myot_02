@@ -320,6 +320,9 @@
     "password_strength_lowercase": "小文字を含む",
     "password_strength_uppercase": "大文字を含む",
     "password_strength_digit": "数字を含む",
-    "password_strength_special": "特殊文字を含む (!@#$%^&*など)"
+    "password_strength_special": "特殊文字を含む (!@#$%^&*など)",
+    "guest_login": "ゲストとして開始",
+    "guest_login_description": "登録なしですぐに使用できます",
+    "guest_login_success": "ゲストモードで開始します"
   }
 }

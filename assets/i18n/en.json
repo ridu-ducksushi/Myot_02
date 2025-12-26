@@ -326,6 +326,9 @@
     "password_strength_lowercase": "Include lowercase",
     "password_strength_uppercase": "Include uppercase",
     "password_strength_digit": "Include digits",
-    "password_strength_special": "Include special characters (!@#$%^&* etc.)"
+    "password_strength_special": "Include special characters (!@#$%^&* etc.)",
+    "guest_login": "Continue as Guest",
+    "guest_login_description": "Start using the app without signing up",
+    "guest_login_success": "Starting in guest mode"
   }
 }
