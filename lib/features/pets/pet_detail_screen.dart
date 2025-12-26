@@ -1516,6 +1516,8 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
   final _litterController = TextEditingController();
   late final Map<String, FocusNode> _focusNodes;
   late PetSuppliesRepository _suppliesRepository;
+  ScrollController? _currentScrollController;
+  final Set<String> _listenersAdded = {};
 
   @override
   void initState() {
@@ -1535,6 +1537,36 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
       final target = widget.initialFocusField;
       if (target != null) {
         _focusNodes[target]?.requestFocus();
+      }
+    });
+  }
+
+  // 포커스 변경 시 자동 스크롤을 위한 메서드
+  void _setupAutoScroll(ScrollController scrollController, String fieldKey, BuildContext context) {
+    // 리스너가 이미 추가되었는지 확인
+    if (_listenersAdded.contains(fieldKey)) {
+      return;
+    }
+    
+    _listenersAdded.add(fieldKey);
+    _currentScrollController = scrollController;
+    
+    _focusNodes[fieldKey]?.addListener(() {
+      if (_focusNodes[fieldKey]!.hasFocus && _currentScrollController != null) {
+        // 키보드가 올라올 시간을 주기 위해 약간의 지연
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (_currentScrollController!.hasClients && mounted) {
+            final focusContext = _focusNodes[fieldKey]?.context;
+            if (focusContext != null) {
+              Scrollable.ensureVisible(
+                focusContext,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                alignment: 0.1, // 상단에서 10% 위치에 배치
+              );
+            }
+          }
+        });
       }
     });
   }
@@ -1579,8 +1611,8 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        maxChildSize: 0.9,
+        initialChildSize: 0.95,
+        maxChildSize: 0.95,
         minChildSize: 0.5,
         expand: false,
         builder: (context, scrollController) {
@@ -1616,58 +1648,75 @@ class _EditSuppliesSheetState extends ConsumerState<_EditSuppliesSheet> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   
                   // Form fields
-                  Expanded(
-                    child: ListView(
-                      controller: scrollController,
-                      children: [
-                        AppTextField(
-                          controller: _dryFoodController,
-                          labelText: 'supplies.dry_food'.tr(),
-                          prefixIcon: const Icon(Icons.restaurant),
-                          hintText: 'supplies.dry_food_hint'.tr(),
-                          focusNode: _focusNodes['dryFood'],
-                        ),
-                        const SizedBox(height: 16),
+                  Builder(
+                    builder: (builderContext) {
+                      // 포커스 리스너 설정 (한 번만 실행)
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _setupAutoScroll(scrollController, 'dryFood', builderContext);
+                        _setupAutoScroll(scrollController, 'wetFood', builderContext);
+                        _setupAutoScroll(scrollController, 'supplement', builderContext);
+                        _setupAutoScroll(scrollController, 'snack', builderContext);
+                        _setupAutoScroll(scrollController, 'litter', builderContext);
+                      });
+                      
+                      return Expanded(
+                        child: ListView(
+                          controller: scrollController,
+                          padding: EdgeInsets.only(
+                            top: 8,
+                            bottom: MediaQuery.of(builderContext).viewInsets.bottom + 16,
+                          ),
+                          children: [
+                            AppTextField(
+                              controller: _dryFoodController,
+                              labelText: 'supplies.dry_food'.tr(),
+                              prefixIcon: const Icon(Icons.restaurant),
+                              hintText: 'supplies.dry_food_hint'.tr(),
+                              focusNode: _focusNodes['dryFood'],
+                            ),
+                            const SizedBox(height: 16),
 
-                        AppTextField(
-                          controller: _wetFoodController,
-                          labelText: 'supplies.wet_food'.tr(),
-                          prefixIcon: const Icon(Icons.rice_bowl),
-                          hintText: 'supplies.wet_food_hint'.tr(),
-                          focusNode: _focusNodes['wetFood'],
+                            AppTextField(
+                              controller: _wetFoodController,
+                              labelText: 'supplies.wet_food'.tr(),
+                              prefixIcon: const Icon(Icons.rice_bowl),
+                              hintText: 'supplies.wet_food_hint'.tr(),
+                              focusNode: _focusNodes['wetFood'],
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            AppTextField(
+                              controller: _supplementController,
+                              labelText: 'supplies.supplement'.tr(),
+                              prefixIcon: const Icon(Icons.medication),
+                              hintText: 'supplies.supplement_hint'.tr(),
+                              focusNode: _focusNodes['supplement'],
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            AppTextField(
+                              controller: _snackController,
+                              labelText: 'supplies.snack'.tr(),
+                              prefixIcon: const Icon(Icons.cookie),
+                              hintText: 'supplies.snack_hint'.tr(),
+                              focusNode: _focusNodes['snack'],
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            AppTextField(
+                              controller: _litterController,
+                              labelText: 'supplies.litter'.tr(),
+                              prefixIcon: const Icon(Icons.cleaning_services),
+                              hintText: 'supplies.litter_hint'.tr(),
+                              focusNode: _focusNodes['litter'],
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        
-                        AppTextField(
-                          controller: _supplementController,
-                          labelText: 'supplies.supplement'.tr(),
-                          prefixIcon: const Icon(Icons.medication),
-                          hintText: 'supplies.supplement_hint'.tr(),
-                          focusNode: _focusNodes['supplement'],
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        AppTextField(
-                          controller: _snackController,
-                          labelText: 'supplies.snack'.tr(),
-                          prefixIcon: const Icon(Icons.cookie),
-                          hintText: 'supplies.snack_hint'.tr(),
-                          focusNode: _focusNodes['snack'],
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        AppTextField(
-                          controller: _litterController,
-                          labelText: 'supplies.litter'.tr(),
-                          prefixIcon: const Icon(Icons.cleaning_services),
-                          hintText: 'supplies.litter_hint'.tr(),
-                          focusNode: _focusNodes['litter'],
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                   
                   // Buttons

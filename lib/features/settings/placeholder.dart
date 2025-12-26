@@ -504,11 +504,16 @@ class _SettingsPlaceholderState extends ConsumerState<SettingsPlaceholder> {
 
   Widget _buildUserProfileSection(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    final email = user?.email ?? 'Unknown';
-    final displayName =
-        user?.userMetadata?['display_name'] as String? ??
-        user?.userMetadata?['full_name'] as String? ??
-        email.split('@').first;
+    
+    // 게스트 사용자 확인: email이 null이거나 비어있으면 게스트
+    final isGuest = user?.email == null || (user!.email?.isEmpty ?? true);
+    
+    final email = isGuest ? '게스트 계정' : (user?.email ?? 'Unknown');
+    final displayName = isGuest
+        ? '게스트'
+        : (user?.userMetadata?['display_name'] as String? ??
+            user?.userMetadata?['full_name'] as String? ??
+            email.split('@').first);
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -865,10 +870,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   void _loadCurrentProfile() {
     final user = Supabase.instance.client.auth.currentUser;
-    final displayName =
-        user?.userMetadata?['display_name'] as String? ??
-        user?.userMetadata?['full_name'] as String? ??
-        '';
+    
+    // 게스트 사용자 확인: email이 null이거나 비어있으면 게스트
+    final isGuest = user?.email == null || user!.email!.isEmpty;
+    
+    final displayName = isGuest
+        ? '게스트'
+        : (user?.userMetadata?['display_name'] as String? ??
+            user?.userMetadata?['full_name'] as String? ??
+            '');
 
     _displayNameController.text = displayName;
   }
